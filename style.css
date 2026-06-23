@@ -586,3 +586,4 @@ textarea.input-error{
   padding:5px 14px; text-decoration:none;
 }
 .btn-tool-link:active{opacity:.8;}
+.tool-link-row{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;}
