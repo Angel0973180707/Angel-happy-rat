@@ -208,17 +208,23 @@ var TIGER_PARALLEL = [
   '在平行宇宙裡，那個{topic}已經做起來的你，現在正在感謝今天敢吹牛的你。',
   '平行宇宙提醒：每一個成功的{topic}，都從某個人「先唬爛再說」開始。'
 ];
+/* 唬爛虎翻譯：把願望說清楚，不誇張，只是承認 */
+var TIGER_WISH = [
+  '你說的「{topic}」翻譯成人話就是：你準備好讓這件事變真的了。',
+  '你輸入「{topic}」這幾個字，唬爛虎解讀為：我想要，而且我認真的。',
+  '把「{topic}」這個想法翻出來，代表你已經跨過最難的那步——承認你想要。'
+];
 
-/* 迷航翻譯庫：情緒/狀態 → 大腦翻譯 */
+/* 迷航翻譯庫：情緒/狀態 → 大腦翻譯（語氣用「可能、也許」，不武斷） */
 var LOST_MAP = {
-  '羨慕': { brain:'你看到別人抵達目的地，大腦偷偷問：那我呢？', translate:'我也想要', need:['被看見','有成果','有選擇權'], action:'先寫下：我最羨慕的是哪一個部分？', rat:'酸可以，但不要醃到自己。', tiger:'很好，願望已經冒頭了，接下來換你開始唬爛。' },
-  '嫉妒': { brain:'你不是討厭他成功，你只是看到「咦，原來這條路有人走到了」。', translate:'我不敢承認我想要', need:['被肯定','有選擇權','被看見'], action:'先寫下：我最羨慕的是哪一個部分？', rat:'酸可以，但不要醃到自己。', tiger:'好消息：嫉妒就是願望的雛形。' },
-  '生氣': { brain:'有東西踩到你的底線，大腦立刻拉了警報。', translate:'有東西踩到我的底線', need:['被尊重','有界線'], action:'先寫下：這次到底是哪一條線被踩了？', rat:'先去揍空氣，空氣比較耐打。', tiger:'界線清楚的人，才有資格畫大餅。' },
-  '委屈': { brain:'你不是小題大作，是這件事剛好戳到你很在意的地方。', translate:'我其實很在意', need:['被理解','被重視'], action:'先寫下：我希望對方知道的是什麼？', rat:'委屈不用忍，先讓小天鼠幫你翻譯成笑話。', tiger:'在意，代表你還沒放棄期待，這很珍貴。' },
-  '焦慮': { brain:'你的大腦現在像手機開太多App，正在拼命幫你預測風險。', translate:'我的大腦正在拼命保護我', need:['安全感','可預測性'], action:'先寫下：我最擔心的最壞結果是什麼？通常沒那麼壞。', rat:'焦慮不是弱，是大腦太認真上班了。', tiger:'會焦慮的人，通常也最容易把事情做好。' },
-  '拖延': { brain:'不是你懶，是這個任務在大腦裡看起來太大、太可怕。', translate:'我怕失敗，或任務太大', need:['安全感','小一點的第一步'], action:'先把任務切成一個5分鐘就能做完的小動作。', rat:'拖延的人通常很會想，只是還沒開始動。', tiger:'先做最小的一步，氣勢就會自己跟上來。' },
-  '完美主義': { brain:'你不是要求高，你只是很怕丟臉，所以先把標準拉高保護自己。', translate:'我怕丟臉', need:['安全感','被接納的失敗空間'], action:'先允許自己做一個「故意不完美」的版本。', rat:'完美主義是高標準穿著焦慮的外套。', tiger:'先吹個不完美的草稿，比完美的空想值錢多了。' },
-  '想放棄': { brain:'你的電量真的低了，這不一定代表你不行，比較像手機需要充電。', translate:'我累了，不一定是我不行', need:['休息','支持'], action:'先休息一天，再決定要不要放棄。', rat:'累的時候做的決定，通常不是真正的決定。', tiger:'休息完再回來，餅還在這裡，沒人會搶走。' }
+  '羨慕': { brain:'你看到別人抵達目的地，大腦可能偷偷問：那我呢？', translate:'我也想要', need:['被看見','有成果','有選擇權'], action:'先寫下：我最羨慕的是哪一個部分？', rat:'酸可以，但不要醃到自己。', tiger:'很好，願望已經冒頭了，接下來換你開始唬爛。' },
+  '嫉妒': { brain:'你不一定是討厭他成功，也許只是看到「原來這條路有人走到了」。', translate:'我不敢承認我想要', need:['被肯定','有選擇權','被看見'], action:'先寫下：我最羨慕的是哪一個部分？', rat:'酸可以，但不要醃到自己。', tiger:'好消息：嫉妒可能就是願望的雛形。' },
+  '生氣': { brain:'有東西可能踩到你的底線，大腦拉了警報。', translate:'有東西踩到我的底線', need:['被尊重','有界線'], action:'先寫下：這次到底是哪一條線被踩了？', rat:'先去揍空氣，空氣比較耐打。', tiger:'界線清楚的人，才有資格畫大餅。' },
+  '委屈': { brain:'你不是小題大作，可能是這件事剛好戳到你很在意的地方。', translate:'我其實很在意', need:['被理解','被重視'], action:'先寫下：我希望對方知道的是什麼？', rat:'委屈不用忍，先讓小天鼠幫你翻譯成笑話。', tiger:'在意，代表你還沒放棄期待，這很珍貴。' },
+  '焦慮': { brain:'你的大腦現在像手機開太多App，可能在幫你預測風險。', translate:'我的大腦正在拼命保護我', need:['安全感','可預測性'], action:'先寫下：我最擔心的最壞結果是什麼？有時候寫出來會發現沒那麼大。', rat:'焦慮不是弱，是大腦太認真上班了。', tiger:'對細節敏感的人，往往也很謹慎——這是一種能力。' },
+  '拖延': { brain:'也許不是你懶，是這個任務在大腦裡看起來太大、太模糊。', translate:'我可能怕失敗，或任務太大', need:['安全感','小一點的第一步'], action:'先把任務切成一個5分鐘就能做完的小動作。', rat:'拖延的人通常很會想，只是還沒開始動。', tiger:'先做最小的一步，氣勢有時候就會自己跟上來。' },
+  '完美主義': { brain:'你不一定是要求高，可能只是擔心被看見失敗的那一面。', translate:'我可能擔心做出來被否定', need:['安全感','被接納的失敗空間'], action:'先允許自己做一個「故意不完美」的版本。', rat:'完美主義是高標準穿著焦慮的外套。', tiger:'先吹個不完美的草稿，比完美的空想值錢多了。' },
+  '想放棄': { brain:'你的電量可能真的低了，這不一定代表你不行，比較像手機需要充電。', translate:'我累了，不一定是我不行', need:['休息','支持'], action:'先休息一天，再決定要不要放棄。', rat:'累的時候做的決定，通常不是最真實的決定。', tiger:'休息完再回來，餅還在這裡，沒人會搶走。' }
 };
 var LOST_FALLBACK = { brain:'你的大腦其實沒那麼討厭你，它只是在用很笨拙的方式保護你。', translate:'我有一個還沒被說出來的需求', need:['被理解','被看見'], action:'先寫下：這個感覺最像哪一種情緒？', rat:'說不清楚也沒關係，小天鼠先陪你坐一下。', tiger:'迷航不是退步，是還在找方向而已。' };
 
@@ -235,17 +241,33 @@ var STRENGTH_MAP = [
   { kw:['委屈','在意','壓力'], trait:'高敏感與重視關係', power:'你對關係特別敏銳，這份敏感能讓人感覺被理解。' }
 ];
 
-/* 自導自演劇本庫 */
+/* 自導自演劇本庫（act2 用 {subject} 佔位，避免拼接重複） */
 var DIRECTOR_TEMPLATES = [
   { genre:'溫暖喜劇人生片', titlePattern:'《先吹再說》', antagonist:'不是別人，是腦中那句「我真的可以嗎？」',
-    act1:'主角想開始，但一直懷疑自己。', act2:'主角開始唬爛，把夢想的大餅一塊一塊畫出來。', act3:'主角發現原來自己不是亂想，是在打造一條陪人變好的路。',
+    act1:'你想開始，但一直懷疑自己。', act2:'你把「{subject}」的大餅一塊一塊畫出來，每塊都比上一塊大。', act3:'你發現自己不是亂想，是在打造一條陪人變好的路。',
     ending:'她不是等到準備好才開始，她是開始之後，才慢慢準備好。' },
   { genre:'逆風成長喜劇', titlePattern:'《卡關現場直播》', antagonist:'不是對手，是那句「反正我做不到」的自我預言。',
-    act1:'主角被現實打了一巴掌，覺得自己很廢。', act2:'主角開始亂吹牛，意外吹出了一條看起來還不錯的路。', act3:'主角發現自己其實一直都在準備，只是沒人跟他說。',
+    act1:'你被現實打了一巴掌，覺得自己很廢。', act2:'你對「{subject}」亂吹牛，意外吹出了一條看起來還不錯的路。', act3:'你發現自己其實一直都在準備，只是沒人跟你說。',
     ending:'卡關不是結局，是劇情正在轉場而已。' },
   { genre:'熱血翻身紀錄片', titlePattern:'《今天先唬爛，明天再努力》', antagonist:'不是市場，是心裡那個怕丟臉的小聲音。',
-    act1:'主角什麼都沒做，光是想就先累了。', act2:'主角決定先說出夢想，再說會不會成功。', act3:'主角發現自己一邊吹牛一邊真的在動手了。',
+    act1:'你什麼都沒做，光是想「{subject}」就先累了。', act2:'你決定先把「{subject}」說出來，再說會不會成功。', act3:'你發現自己一邊吹牛一邊真的在動手了。',
     ending:'你不是路人甲，你是自己人生的導演。' }
+];
+
+/* 歌曲完整句型模板（取代片語拼接，避免「原來這條路財富打到」） */
+var SONG_VERSE_TEMPLATES = [
+  '今天關於{subject}的事打到我了，一時不知道該怎麼說',
+  '原來{subject}這條路，比我想的還彎',
+  '心裡藏著一句關於{subject}的話，還沒說出口',
+  '誰說{subject}一定要有個標準答案',
+  '我一直以為{subject}離我很遠，原來早就在這裡了'
+];
+
+/* 亮點無關鍵字時的中性備選（取代隨機亂認證） */
+var NEUTRAL_TRAITS = [
+  { trait:'觀察力', power:'你能注意到別人忽略的細節，這種敏銳感知是稀缺的能力。' },
+  { trait:'行動力', power:'你願意把想法說出來，這一步就已經比大多數人走得遠了。' },
+  { trait:'適應力', power:'你能在不確定的狀況下繼續走，這本身就是一種很強的能力。' }
 ];
 
 /* 金句庫：依比例抽類別（30%吐槽/30%自嘲/20%唬爛/10%廢話哲學/10%溫暖收尾），
@@ -304,13 +326,25 @@ var QUOTE_BANK = {
     ]
   }
 };
-function pickGoldenQuote(){
+/* 金句依模式加權，避免嗆聲模式抽到唬爛句、畫大餅抽到甩鍋句 */
+var MODE_QUOTE_WEIGHTS = {
+  roast:    { roast:60, selfmock:20, bigdream:5,  nonsense:10, warm:5  },
+  selfmock: { roast:10, selfmock:60, bigdream:5,  nonsense:10, warm:15 },
+  bigdream: { roast:5,  selfmock:10, bigdream:60, nonsense:5,  warm:20 },
+  lost:     { roast:5,  selfmock:15, bigdream:20, nonsense:10, warm:50 },
+  strength: { roast:5,  selfmock:10, bigdream:30, nonsense:5,  warm:50 },
+  director: { roast:10, selfmock:10, bigdream:30, nonsense:10, warm:40 },
+  workshop: { roast:5,  selfmock:15, bigdream:40, nonsense:10, warm:30 },
+  share:    { roast:15, selfmock:25, bigdream:25, nonsense:10, warm:25 }
+};
+function pickGoldenQuote(mode){
+  var weights = (mode && MODE_QUOTE_WEIGHTS[mode]) ? MODE_QUOTE_WEIGHTS[mode] : null;
   var keys = Object.keys(QUOTE_BANK);
-  var total = keys.reduce(function(s,k){ return s + QUOTE_BANK[k].weight; }, 0);
+  var total = keys.reduce(function(s,k){ return s + (weights ? weights[k] : QUOTE_BANK[k].weight); }, 0);
   var r = Math.random() * total;
   var acc = 0, chosenKey = keys[keys.length-1];
   for(var i=0;i<keys.length;i++){
-    acc += QUOTE_BANK[keys[i]].weight;
+    acc += weights ? weights[keys[i]] : QUOTE_BANK[keys[i]].weight;
     if(r <= acc){ chosenKey = keys[i]; break; }
   }
   return pickVaried('quote_' + chosenKey, QUOTE_BANK[chosenKey].lines);
@@ -434,7 +468,7 @@ var MODES = [
   { id:'workshop', icon:'🎤', title:'創作工坊', desc:'把故事寫成歌，畫成圖，做成影片。', role:'workshop' },
   { id:'share', icon:'📣', title:'分享模式', desc:'一鍵產生社群文案，讓朋友一起笑。', role:'share' }
 ];
-var ROUTE_B_ORDER = ['roast','bigdream','lost','strength','director','workshop','share'];
+var ROUTE_B_ORDER = ['roast','lost','bigdream','strength','director','workshop','share'];
 
 /* ---------------------------------------------------
    6. 各模式生成器
@@ -452,7 +486,7 @@ function genRoast(input, target){
   }
   var bitter = pickVaried('rat_bitter', RAT_BITTER_SOUP);
   var selfmock = fill(pickVaried('rat_selfmock', RAT_SELFMOCK), { target:target });
-  var quote = pickGoldenQuote();
+  var quote = pickGoldenQuote('roast');
   return {
     role:'rat', tagClass:'vent tag-rat',
     blocks:[
@@ -470,7 +504,7 @@ function genSelfmock(input){
   var summary = '你不是真的很糟，你只是把「' + shortInput(input) + '」這件事看得太認真了。';
   var translate = pickVaried('rat_brain', RAT_BRAIN_TRANSLATE);
   var bit = pickCategoryLine(SELFMOCK_CATEGORIES, input, RAT_SELFMOCK.map(function(t){ return fill(t, { target:'生活' }); }), 'rat_selfmock');
-  var quote = pickGoldenQuote();
+  var quote = pickGoldenQuote('selfmock');
   return {
     role:'rat', tagClass:'vent tag-rat',
     blocks:[
@@ -484,15 +518,16 @@ function genSelfmock(input){
 }
 function genBigDream(input, topic){
   topic = topic || shortInput(input, 14);
-  var translate = fill(pickVaried('tiger_brag', TIGER_BRAG), { topic:topic });
+  var wishLine = fill(pickVaried('tiger_wish', TIGER_WISH), { topic:topic });
+  var bragLine = fill(pickVaried('tiger_brag', TIGER_BRAG), { topic:topic });
   var pie = fill(pickVaried('tiger_pie', TIGER_PIE), { topic:topic });
   var parallel = fill(pickVaried('tiger_parallel', TIGER_PARALLEL), { topic:topic });
-  var quote = pickGoldenQuote();
+  var quote = pickGoldenQuote('bigdream');
   return {
     role:'tiger', tagClass:'tag-tiger',
     blocks:[
-      [TIGER_ICON + ' 唬爛虎翻譯', translate],
-      [TIGER_ICON + ' 吹牛版', translate],
+      [TIGER_ICON + ' 唬爛虎翻譯', wishLine],
+      [TIGER_ICON + ' 吹牛版', bragLine],
       ['🥞 畫大餅版', pie],
       ['🌌 平行宇宙版', parallel]
     ],
@@ -503,6 +538,7 @@ function genLost(input, emotionKey){
   var entry = LOST_MAP[emotionKey] || LOST_FALLBACK;
   return {
     role:'lost', tagClass:'tag-lost',
+    need: entry.need,
     blocks:[
       ['🧭 迷航摘要', '你輸入的是：「' + shortInput(input, 24) + '」'],
       ['🧠 大腦偷偷話', entry.brain],
@@ -512,7 +548,7 @@ function genLost(input, emotionKey){
       [RAT_ICON + ' 小天鼠補一句', entry.rat],
       [TIGER_ICON + ' 唬爛虎補一句', entry.tiger]
     ],
-    quote: entry.translate
+    quote: pickGoldenQuote('lost')
   };
 }
 function genStrength(input){
@@ -521,57 +557,65 @@ function genStrength(input){
     return item.kw.some(function(k){ return lower.indexOf(k) !== -1; });
   });
   if(!matched.length){
-    matched = [STRENGTH_MAP[Math.floor(Math.random()*STRENGTH_MAP.length)]];
+    matched = [NEUTRAL_TRAITS[Math.floor(Math.random()*NEUTRAL_TRAITS.length)]];
   }
   var traits = matched.slice(0,3);
   var keywordList = traits.map(function(t){ return t.trait; }).join('、');
   var powerLine = traits.map(function(t){ return t.power; }).join('\n');
   return {
     role:'shine', tagClass:'tag-shine',
+    traits: traits.map(function(t){ return t.trait; }),
     blocks:[
       ['🔑 我聽見的關鍵字', shortInput(input, 30)],
       ['💎 可能亮點', keywordList],
       ['⚡ 你的超能力', powerLine],
       ['🧩 適合你的創作方向', traits.map(function(t){return t.trait;}).join(' x ') + ' 的內容創作或服務']
     ],
-    quote: '你不是沒有光，只是還沒打燈。'
+    quote: pickGoldenQuote('strength')
   };
 }
 function genDirector(input, context){
   var tpl = pickVaried('director', DIRECTOR_TEMPLATES);
   var subject = shortInput(context && context.topic ? context.topic : input, 16);
+  var traitHint = context && context.traits && context.traits.length ? context.traits[0] : '';
   return {
     role:'director', cinema:true,
     title: tpl.titlePattern,
     genre: tpl.genre,
-    antagonist: tpl.antagonist,
-    act1: tpl.act1.replace('主角', '你') ,
-    act2: '你開始唬爛「' + subject + '」，' + tpl.act2.replace(/^主角/, ''),
-    act3: tpl.act3.replace(/^主角/, '你'),
+    antagonist: traitHint
+      ? '不是別人，是心裡那個說「' + traitHint + '根本不算什麼」的聲音。'
+      : tpl.antagonist,
+    act1: fill(tpl.act1, { subject:subject }),
+    act2: fill(tpl.act2, { subject:subject }),
+    act3: fill(tpl.act3, { subject:subject }),
     ending: tpl.ending
   };
 }
 function genSong(context, length){
   length = length || 'standard';
-  var lineCount = length === 'quick' ? 6 : (length === 'full' ? 20 : 12);
   var subject = shortInput(context && context.topic ? context.topic : '這段故事', 14);
   var lines = [];
-  lines.push(pickVaried('song_open', SONG_OPENERS) + subject + '打到');
+  /* 使用完整句型模板，不做片語拼接 */
+  lines.push(fill(pickVaried('song_verse_1', SONG_VERSE_TEMPLATES), { subject:subject }));
   lines.push('小天鼠先笑一笑，唬爛虎先吹一吹');
   lines.push(pickVaried('song_hook', SONG_HOOKS));
   lines.push('我不是輸了，我只是還沒贏而已');
-  if(lineCount > 8){
+  if(length !== 'quick'){
+    lines.push(fill(pickVaried('song_verse_2', SONG_VERSE_TEMPLATES), { subject:subject }));
     lines.push('委屈不用忍，先讓它變成一句詞');
     lines.push('夢想不嫌大，先吹出來再上路');
   }
-  if(lineCount > 14){
+  if(length === 'full'){
     lines.push('第一幕卡關，第二幕轉場');
+    lines.push(fill(pickVaried('song_verse_3', SONG_VERSE_TEMPLATES), { subject:subject }));
     lines.push('這不是崩潰，是劇情在鋪陳');
   }
   lines.push(pickVaried('song_close', SONG_CLOSERS));
+  var actualCount = lines.length;
   return {
     title: '《' + subject + '：' + (length==='quick'?'快速版':length==='full'?'完整版':'標準版') + '》',
     lengthLabel: length === 'quick' ? '15–20秒' : (length === 'full' ? '90秒' : '45–60秒'),
+    lineCount: actualCount,
     lines: lines
   };
 }
@@ -591,7 +635,24 @@ function genStoryboard(context, length){
   return shots;
 }
 function genShareCopy(context){
-  return SHARE_TEMPLATES;
+  var event = shortInput(context && context.event ? context.event : '', 20);
+  var topic = shortInput(context && context.topic ? context.topic : '', 14);
+  var filmTitle = context && context.filmTitle ? context.filmTitle : '';
+  var lastQuote = context && context.lastQuote ? context.lastQuote : '';
+  return {
+    line: event
+      ? '今天「' + event + '」讓我有點崩潰，結果小天鼠幫我翻譯完，我笑出來了。原來不是我有問題，是人生正在做效果。'
+      : SHARE_TEMPLATES.line,
+    fb: topic
+      ? '本來只是想搞清楚「' + topic + '」這件事，結果AI幫我把它寫成了一段人生劇本。#笑鼠人了'
+      : SHARE_TEMPLATES.fb,
+    ig: filmTitle
+      ? '我的人生微電影：' + filmTitle + '。把崩潰交給小天鼠，把夢想交給唬爛虎。#笑鼠人了'
+      : SHARE_TEMPLATES.ig,
+    threads: lastQuote
+      ? '「' + lastQuote + '」——小天鼠說的，我覺得說得有點對。 #笑鼠人了'
+      : SHARE_TEMPLATES.threads
+  };
 }
 
 /* ---------------------------------------------------
@@ -739,7 +800,7 @@ function runGenerate(id){
     logEvent('GENERATE', { mode:id, safety:'crisis' });
     return;
   }
-  if(safety.level === 'violence' && (id === 'roast')){
+  if(safety.level === 'violence'){
     els.results.innerHTML = renderViolenceRedirectCard();
     logEvent('GENERATE', { mode:id, safety:'violence' });
     return;
@@ -748,26 +809,35 @@ function runGenerate(id){
   var data, html = '';
   if(id === 'roast'){
     data = genRoast(input, getChipValue('target-chip'));
+    flow.context.event = input;
     html = renderTextBlocks(data);
   } else if(id === 'selfmock'){
     data = genSelfmock(input);
+    flow.context.event = flow.context.event || input;
     html = renderTextBlocks(data);
   } else if(id === 'bigdream'){
     data = genBigDream(input, getChipValue('topic-chip'));
     flow.context.topic = getChipValue('topic-chip') || shortInput(input, 14);
+    flow.context.wish = input;
     html = renderTextBlocks(data);
   } else if(id === 'lost'){
     var emo = getChipValue('emotion-chip') || detectEmotion(input);
     data = genLost(input, emo);
+    flow.context.emotion = emo;
+    flow.context.need = data.need ? data.need.join('、') : '';
+    flow.context.event = flow.context.event || input;
     html = renderTextBlocks(data);
   } else if(id === 'strength'){
-    data = genStrength(input);
+    data = genStrength(input || flow.context.event || '');
+    flow.context.traits = data.traits || [];
     html = renderTextBlocks(data);
   } else if(id === 'director'){
     data = genDirector(input, flow.context);
+    flow.context.filmTitle = data.title;
     flow.context.topic = flow.context.topic || shortInput(input, 16);
     html = renderCinemaTicket(data);
   }
+  if(data && data.quote) flow.context.lastQuote = data.quote;
 
   els.results.innerHTML = html + actionRowHtml(id) + (flow.routeB ? routeBNextHtml(id) : '');
   bindResultActions(id, data);
@@ -888,8 +958,11 @@ function renderWorkshopArea(){
 /* ---------------- 分享畫面 ---------------- */
 function renderShareArea(){
   els.inputArea.innerHTML = '';
-  var t = SHARE_TEMPLATES;
-  var html = '<div class="result-card"><div class="who">📣 一句吸睛標題</div><div class="body-text">我本來只是想抱怨，結果AI幫我寫成了一段人生劇本。</div></div>';
+  var t = genShareCopy(flow.context);
+  var intro = flow.context.event
+    ? '你剛才跟小天鼠說了「' + shortInput(flow.context.event, 18) + '」，以下是幫你準備好的分享文案：'
+    : '我本來只是想抱怨，結果AI幫我寫成了一段人生劇本。';
+  var html = '<div class="result-card"><div class="who">📣 一句吸睛標題</div><div class="body-text">' + escapeHtml(intro) + '</div></div>';
   html += '<div class="share-grid">'
     + shareCard('LINE 分享', t.line, 'line')
     + shareCard('FB 貼文', t.fb, 'fb')
