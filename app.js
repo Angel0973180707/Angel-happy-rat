@@ -1221,6 +1221,18 @@ function bindNav(){
 function bindThemeVideos(){
   Array.prototype.forEach.call(document.querySelectorAll('.theme-video'),function(v){
     v.addEventListener('play',function(){logEvent('PLAY_THEME_SONG',{character:v.dataset.event});},{once:true});
+    var errBox=v.parentNode&&v.parentNode.querySelector('.video-err-box');
+    if(!errBox) return;
+    v.addEventListener('error',function(){
+      v.style.display='none';
+      errBox.hidden=false;
+      var retryBtn=errBox.querySelector('.btn-video-retry');
+      if(retryBtn) retryBtn.addEventListener('click',function(){
+        errBox.hidden=true;
+        v.style.display='';
+        v.load();
+      },{once:true});
+    });
   });
 }
 

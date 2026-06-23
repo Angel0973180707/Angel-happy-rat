@@ -169,6 +169,16 @@ a{color:inherit;}
   width:100%; border-radius:var(--radius-md); display:block; background:var(--coffee);
   max-height:50vh;
 }
+.video-err-box{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 12px; margin-top:6px;
+  background:rgba(140,74,51,.08); border-radius:var(--radius-md);
+  font-size:14px; color:var(--maroon);
+}
+.btn-video-retry{
+  padding:4px 14px; border:1.5px solid var(--maroon); border-radius:20px;
+  background:none; color:var(--maroon); font-size:13px; font-weight:700; cursor:pointer;
+}
 
 /* ---------- Mode grid ---------- */
 .mode-grid{
