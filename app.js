@@ -26,10 +26,10 @@ var USER_ID = getUserId();
 var SESSION_ID = getSessionId();
 
 /* 角色圖像（取代 🐭🐯 emoji，用真實角色插畫） */
-var RAT_ICON = '<img src="icons/rat-avatar.png" class="char-icon char-icon-sm" alt="小天鼠">';
-var TIGER_ICON = '<img src="icons/tiger-avatar.png" class="char-icon char-icon-sm" alt="唬爛虎">';
-var RAT_ICON_MD = '<img src="icons/rat-avatar.png" class="char-icon char-icon-mc" alt="小天鼠">';
-var TIGER_ICON_MD = '<img src="icons/tiger-avatar.png" class="char-icon char-icon-mc" alt="唬爛虎">';
+var RAT_ICON = '<img src="rat.webp" class="char-icon char-icon-sm" alt="小天鼠">';
+var TIGER_ICON = '<img src="tiger.webp" class="char-icon char-icon-sm" alt="唬爛虎">';
+var RAT_ICON_MD = '<img src="rat.webp" class="char-icon char-icon-mc" alt="小天鼠">';
+var TIGER_ICON_MD = '<img src="tiger.webp" class="char-icon char-icon-mc" alt="唬爛虎">';
 
 function toast(msg){
   var t = document.getElementById('toast');
