@@ -1289,7 +1289,7 @@ function renderNextStepsGuide(){
         +'<div class="step-label">🎬 用 CapCut 做影片（兩種方法）</div>'
         +'<div class="step-desc">'
           +'<strong>方法 A（最快）：</strong>複製「MV 分鏡」→ 開啟 CapCut → 點「AI 文字生成影片」→ 貼上分鏡文字 → 自動生成畫面，再匯入你的 Suno 歌曲<br><br>'
-          +'<strong>方法 B（手動）：</strong>分鏡每一行 = 一個畫面。對照分鏡找自己的照片或短片，在 CapCut 按順序排好，加上你的 Suno 歌曲當背景音樂'
+          +'<strong>方法 B（手動）：</strong>分鏡每一行 = 一張圖的指令。把每一行複製給 ChatGPT 或 Midjourney 生成圖片，再把圖片放進 CapCut 按順序排好，加上 Suno 歌曲當背景音樂'
         +'</div>'
         +'<a href="https://www.capcut.com/zh-tw/" target="_blank" rel="noopener" class="btn-tool-link">開啟 CapCut →</a>'
       +'</div>'
