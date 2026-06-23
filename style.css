@@ -4,11 +4,11 @@
             深咖啡 #3A2417 / 紅棕 #8C4A33
    Cinema (自導自演): 黑 #1C1410 / 金 #E8C76B
    Type: Noto Serif TC (display, used sparingly) +
-         Noto Sans TC (body/UI) + Zhi Mang Xing (brush accent,
+         Noto Sans TC (body/UI) + Ma Shan Zheng (brush accent,
          used only for mascot "金句" callouts — the one signature flourish)
    ===================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Zhi+Mang+Xing&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Ma+Shan+Zheng&display=swap');
 
 :root{
   --cream:#F4EBD9;
@@ -53,7 +53,7 @@ h1,h2,h3{
 }
 
 .brush{
-  font-family:'Zhi Mang Xing','Noto Serif TC',serif;
+  font-family:'Ma Shan Zheng','Noto Serif TC',serif;
   font-weight:400;
 }
 
@@ -294,7 +294,7 @@ textarea.input-error{
 }
 .result-card .body-text{font-size:15.5px; white-space:pre-line;}
 .result-card .quote{
-  margin-top:10px; font-family:'Zhi Mang Xing','Noto Serif TC',serif;
+  margin-top:10px; font-family:'Ma Shan Zheng','Noto Serif TC',serif;
   font-size:19px; color:var(--maroon); border-top:1px dashed #D8C7A0;
   padding-top:8px;
 }
@@ -332,7 +332,7 @@ textarea.input-error{
 .cinema-ticket .act .label{font-size:12px; font-weight:900; color:var(--cinema-gold);}
 .cinema-ticket .act .content{font-size:14.5px; color:#F1E6CC; margin-top:2px;}
 .cinema-ticket .ending{
-  margin-top:14px; font-family:'Zhi Mang Xing',serif; font-size:18px; color:#fff;
+  margin-top:14px; font-family:'Ma Shan Zheng',serif; font-size:18px; color:#fff;
   border-top:1px solid rgba(232,199,107,0.4); padding-top:10px;
 }
 
