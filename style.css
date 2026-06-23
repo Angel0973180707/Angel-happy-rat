@@ -556,3 +556,33 @@ textarea.input-error{
 }
 .redeem-details summary{cursor:pointer; font-weight:500; list-style:none; user-select:none;}
 .redeem-details summary::-webkit-details-marker{display:none;}
+
+/* ---------- 接下來這樣做 ---------- */
+.next-steps-card{
+  background:var(--cream-soft); border:2px solid var(--gold);
+  border-radius:var(--radius-md); padding:16px;
+  margin:18px 0 6px;
+}
+.next-steps-title{
+  font-size:15px; font-weight:900; color:var(--coffee);
+  margin-bottom:14px; letter-spacing:.3px;
+}
+.next-step-item{
+  display:flex; gap:10px; align-items:flex-start;
+  margin-bottom:14px;
+}
+.next-step-item:last-child{margin-bottom:0;}
+.step-badge{
+  background:var(--orange); color:#fff;
+  font-size:11px; font-weight:700; border-radius:20px;
+  padding:3px 9px; white-space:nowrap; margin-top:2px; flex-shrink:0;
+}
+.step-body{flex:1;}
+.step-label{font-size:14px; font-weight:700; color:var(--coffee); margin-bottom:4px;}
+.step-desc{font-size:12px; color:var(--coffee-soft); line-height:1.6; margin-bottom:6px;}
+.btn-tool-link{
+  display:inline-block; background:var(--gold); color:#fff;
+  font-size:13px; font-weight:700; border-radius:var(--radius-sm);
+  padding:5px 14px; text-decoration:none;
+}
+.btn-tool-link:active{opacity:.8;}

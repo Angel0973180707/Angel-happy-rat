@@ -1272,6 +1272,36 @@ function bindWorkshopSelect(){
   });
 }
 
+function renderNextStepsGuide(){
+  return '<div class="next-steps-card">'
+    +'<div class="next-steps-title">🚀 接下來這樣做</div>'
+    +'<div class="next-step-item">'
+      +'<div class="step-badge">第一步</div>'
+      +'<div class="step-body">'
+        +'<div class="step-label">🎵 把歌詞貼進 Suno 做歌</div>'
+        +'<div class="step-desc">複製上面的「AI 音樂生成 Prompt」→ 開啟 Suno → 貼進 Create 欄位 → 點 Create 生成你的歌</div>'
+        +'<a href="https://suno.com" target="_blank" rel="noopener" class="btn-tool-link">開啟 Suno →</a>'
+      +'</div>'
+    +'</div>'
+    +'<div class="next-step-item">'
+      +'<div class="step-badge">第二步</div>'
+      +'<div class="step-body">'
+        +'<div class="step-label">🎬 用剪映 / CapCut 做影片</div>'
+        +'<div class="step-desc">下載 Suno 生成的歌 → 開啟剪映或 CapCut → 把上面「MV 分鏡」當腳本，配上你的歌和照片</div>'
+        +'<a href="https://www.capcut.com/zh-tw/" target="_blank" rel="noopener" class="btn-tool-link">開啟 CapCut →</a>'
+      +'</div>'
+    +'</div>'
+    +'<div class="next-step-item">'
+      +'<div class="step-badge">第三步</div>'
+      +'<div class="step-body">'
+        +'<div class="step-label">🖼 用 ChatGPT 生成封面插圖</div>'
+        +'<div class="step-desc">複製上面的「繪圖提示」→ 貼給 ChatGPT（或 Midjourney）→ 生成你的專屬封面圖</div>'
+        +'<a href="https://chat.openai.com" target="_blank" rel="noopener" class="btn-tool-link">開啟 ChatGPT →</a>'
+      +'</div>'
+    +'</div>'
+  +'</div>';
+}
+
 /* MV + 圖像指令（Fix 2: 用固定 mv-area 容器覆蓋，不追加） */
 function renderMVAndImageArea(songVer){
   var prompts=genImageAndMVPrompts(songVer,flow.context);
@@ -1282,6 +1312,7 @@ function renderMVAndImageArea(songVer){
     html+='<div class="creative-card"><div class="prompt-box">'+escapeHtml(prompts[key])+'</div>'
       +'<button class="btn-copy mv-copy-btn" style="margin-top:6px;width:100%;" data-copy="'+escapeAttr(prompts[key])+'">📋 複製</button></div>';
   });
+  html+=renderNextStepsGuide();
   if(flow.routeB){
     html+='<button class="btn-primary" style="margin-top:12px;" id="btn-go-share">➡ 繼續：製作分享圖卡 📣</button>';
   }
