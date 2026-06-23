@@ -222,6 +222,31 @@ function detectEmotion(input){
   for(var i=0;i<keys.length;i++) if(LOST_SYNONYMS[keys[i]].some(function(s){return input.indexOf(s)!==-1;})) return keys[i];
   return null;
 }
+var NEED_TO_WISH_MAP={
+  '被尊重':'我想清楚表達界線，也希望自己的感受被尊重',
+  '有界線':'我想清楚表達界線，也希望自己的感受被尊重',
+  '安全感':'我想知道下一步怎麼走，讓事情變得比較可掌握',
+  '可預測性':'我想知道下一步怎麼走，讓事情變得比較可掌握',
+  '被看見':'我想做出看得見的成果，讓努力被認可',
+  '有成果':'我想做出看得見的成果，讓努力被認可',
+  '被理解':'我想讓身邊的人知道我真正的感受，而不只是猜測',
+  '被重視':'我想讓身邊的人知道我真正的感受，而不只是猜測',
+  '有選擇權':'我想在這件事上有更多主動權，不再只能被動接受',
+  '被肯定':'我想做出讓自己也認可的事，不只是等別人來肯定我',
+  '被接納的失敗空間':'我想允許自己先做出來，不完美也沒關係',
+  '小一點的第一步':'我想找到一個五分鐘就能開始的小動作，先動起來再說',
+  '休息':'我想先充個電，然後帶著更清醒的頭腦繼續',
+  '支持':'我想找到至少一個人，讓我說說看這段時間有多不容易'
+};
+function needToWish(needStr){
+  if(!needStr) return '';
+  var parts=needStr.split('、');
+  for(var i=0;i<parts.length;i++){
+    var n=parts[i].trim();
+    if(NEED_TO_WISH_MAP[n]) return NEED_TO_WISH_MAP[n];
+  }
+  return '我想讓「'+needStr+'」這件事，慢慢變成可能的。';
+}
 
 var QUOTE_BANK={
   roast:{weight:30,lines:['「再小改一下」＝重做。','他講得輕鬆，因為做的人不是他。','同一句話打三次，誰受得了。','他不是在溝通，他是在甩鍋。','你不是反應大，是真的被惹到了。','說隨口說說的，通常最不隨口。','崩潰不是失敗，是人生在做效果。']},
@@ -265,14 +290,14 @@ var MODES=[
 var QUICK_MODES=['roast','selfmock','bigdream','lost'];
 var ADVANCED_MODES=['strength','director','workshop','share'];
 var ROUTE_B_ORDER=['lost','bigdream','strength','director','workshop','share'];
-var STEP_NAMES=['發生什麼事','情緒翻譯','找出願望','整理亮點','自導自演','創作工坊'];
+var STEP_NAMES=['情緒翻譯','找出願望','整理亮點','自導自演','創作工坊','分享作品'];
 var STEP_QUESTIONS=[
-  '最近哪件事讓你最有感？用一句話說說看。',
-  '這件事最像哪種感覺？',
-  '如果事情可以改變，你希望它變成怎樣？',
-  '你已經為這件事做過什麼？說說你的行動或想法。',
-  '主角（也就是你）最後想得到什麼？',
-  '想做成什麼風格的作品？（搞笑 / 溫暖 / 熱血）'
+  '最近哪件事讓你最有感？',
+  '這份情緒背後，你最希望改變什麼？',
+  '為了這件事，你做過、撐過或學會了什麼？',
+  '如果這是電影，你希望主角最後做到什麼？',
+  '想把故事做成搞笑、溫暖還是熱血作品？',
+  '選一個最想讓朋友看見的版本。'
 ];
 
 /* ---------------------------------------------------
@@ -342,11 +367,26 @@ function genStrength(input){
 }
 function genDirector(input,context){
   var tpl=pickVaried('director',DIRECTOR_TEMPLATES);
-  var subject=shortInput(context&&context.topic?context.topic:input,16);
-  var traitHint=context&&context.traits&&context.traits.length?context.traits[0]:'';
+  var event=shortInput(context.event||input,20);
+  var emotion=context.emotion||'';
+  var wish=shortInput(context.wish||context.topic||input,16);
+  var traits=context.traits&&context.traits.length?context.traits:[];
+  var traitStr=traits.join('、');
+  var ending=input||context.wish||wish;
+  flow.context.ending=ending;
+  var emotionSuffix=emotion?'，感到'+emotion:'';
+  var act1=event
+    ?'「'+event+'」'+emotionSuffix+'——主角站在原地，懷疑自己是不是走錯了。'
+    :fill(tpl.act1,{subject:wish});
+  var act2=traitStr
+    ?'主角沒有放棄，因為他發現自己有：'+traitStr+'，只是還沒打燈。'
+    :fill(tpl.act2,{subject:wish});
+  var act3=ending
+    ?'主角最後決定去做「'+ending+'」——不是因為準備好了，是因為不做更後悔。'
+    :fill(tpl.act3,{subject:wish});
   return {role:'director',cinema:true,title:tpl.titlePattern,genre:tpl.genre,
-    antagonist:traitHint?'不是別人，是心裡那個說「'+traitHint+'根本不算什麼」的聲音。':tpl.antagonist,
-    act1:fill(tpl.act1,{subject:subject}),act2:fill(tpl.act2,{subject:subject}),act3:fill(tpl.act3,{subject:subject}),ending:tpl.ending};
+    antagonist:'不是別人，是心裡那個說「'+(emotion||wish)+'根本不算什麼」的聲音。',
+    act1:act1,act2:act2,act3:act3,ending:tpl.ending};
 }
 function genSong(context,length){
   length=length||'standard';
@@ -385,25 +425,83 @@ function genShareCopy(context){
   var topic=shortInput(context&&context.topic?context.topic:'',14);
   var filmTitle=context&&context.filmTitle?context.filmTitle:'';
   var lastQuote=context&&context.lastQuote?context.lastQuote:'';
-  var vA=context&&context.songVersions&&context.songVersions[0];
+  /* Fix 9: 優先使用使用者選定的版本 hook */
+  var selectedSong=null;
+  if(context.songVersions&&context.selectedSongVersion){
+    selectedSong=context.songVersions.filter(function(v){return v.version===context.selectedSongVersion;})[0]||null;
+  }
+  if(!selectedSong&&context.songVersions&&context.songVersions.length) selectedSong=context.songVersions[0];
   return {
     line:event?'今天「'+event+'」讓我有點崩潰，結果小天鼠幫我翻譯完，我笑出來了。原來不是我有問題，是人生正在做效果。':SHARE_TEMPLATES.line,
     fb:topic?'本來只是想搞清楚「'+topic+'」這件事，結果AI幫我把它寫成了一段人生劇本。#笑鼠人了':SHARE_TEMPLATES.fb,
     ig:filmTitle?'我的人生微電影：'+filmTitle+'。把崩潰交給小天鼠，把夢想交給唬爛虎。#笑鼠人了':SHARE_TEMPLATES.ig,
     threads:lastQuote?'「'+lastQuote+'」——小天鼠說的，我覺得說得有點對。 #笑鼠人了':SHARE_TEMPLATES.threads,
-    hook:vA?vA.hook:''
+    hook:selectedSong?selectedSong.hook:''
   };
 }
 
 /* ---------------------------------------------------
-   7b. 工坊：雙版歌曲生成
+   7b. 工坊：雙版歌曲生成（含輪替模板）
 --------------------------------------------------- */
+var SONG_A_HOOKS=[
+  '笑掉煩惱，吹大夢想，人生是微電影，我來當主角',
+  '我不是沒在努力，只是還沒到點燃那一刻',
+  '先笑一下，再說下一步，有時候順序就是這樣',
+  '崩潰不可恥，可恥的是崩潰完連笑都忘了'
+];
+var SONG_A_VERSE2_POOL=[
+  '有人說我想太多，好，那我繼續想\n反正「{trait}」這件事，別人學不來',
+  '我不是不想行動，只是剛剛才確定方向\n「{trait}」是我的事，不是你說了算',
+  '今天輸給宵夜，明天輸給計畫\n但「{trait}」這條路，我沒打算改',
+  '說我太理想，我說謝謝\n因為「{trait}」這件事，我本來就不打算只做一半'
+];
+var SONG_A_BRIDGE_POOL=[
+  '不要把成長做得像上課\n不要把覺察做得像考試\n不要把情緒做得像病歷',
+  '笑完了還是要面對\n但現在輕一點了\n這樣就夠了',
+  '說不清楚的那些事\n先讓它變成一句歌詞\n比解釋省力多了',
+  '有時候沒有答案\n只要下一步還能走\n就先走再說'
+];
+var SONG_A_STYLES=[
+  {genre:'輕快 Pop / Lo-fi HipHop',bpmVal:'92',mood:'自嘲、輕鬆、有點酸又溫暖',instruments:'鋼琴 loop、口哨、輕鼓、低音吉他',vocal:'對話感、不刻意賣力、偶爾笑著唱',key:'C major'},
+  {genre:'Indie Pop / 電音底',bpmVal:'95',mood:'療癒、有點搞怪、偶爾自言自語',instruments:'木吉他、電子鼓、合成器、鈴鐺',vocal:'隨興、有氣音、像在哼給自己聽',key:'G major'},
+  {genre:'Acoustic Folk / 自彈自唱風',bpmVal:'88',mood:'溫暖、自省、有點無奈但笑著',instruments:'木吉他、輕拍掌聲、口風琴',vocal:'自然呼吸感、不修音的真實感',key:'D major'},
+  {genre:'Neo-Soul / City Pop 混搭',bpmVal:'96',mood:'都市感、略帶苦澀但結尾甜',instruments:'Rhodes 電鋼琴、Bass、爵士鼓刷',vocal:'有感情但克制、副歌才放開',key:'F major'}
+];
+var SONG_B_HOOKS=[
+  '這不是結局，是第一幕，把「{wish}」說出來，讓夢想先動起來',
+  '我還沒輸，只是劇情還沒到那一段，等我',
+  '第一幕卡關，第二幕轉場，第三幕是「{wish}」，我來了',
+  '不完美就不完美，至少這個故事是我的，不是別人演的'
+];
+var SONG_B_VERSE2_POOL=[
+  '有人說太慢了，我說我在看清楚\n「{trait}」這件事，我只做一次，所以做真的',
+  '旁邊的人都比我快，沒關係\n我不是慢，我是在等那個剛好的時機',
+  '昨天的我以為沒有下一步\n今天的我知道「{trait}」就是入場券',
+  '說夢想太大的人，從來不知道\n最荒謬的那些夢，往往走得最遠'
+];
+var SONG_B_BRIDGE_POOL=[
+  '不要等到完美才開始\n不要等到準備好才說出來\n先吹出你的大餅\n宇宙會決定哪塊先烤熟',
+  '第一幕最黑暗的地方\n正是轉場光出現前的最後一秒\n撐過去就是第二幕',
+  '有些路第一步最難\n不是因為路太難走\n是因為你太在意會不會走歪',
+  '如果這是電影\n你現在在第幾分鐘\n大概就是主角剛決定不放棄的那幕'
+];
+var SONG_B_STYLES=[
+  {genre:'Cinematic Pop / 電影主題曲',bpmVal:'80',mood:'熱血、希望、有點悲壯但最後昂揚',instruments:'弦樂、鋼琴、電吉他、大鼓',vocal:'情感飽滿、有戲劇性、副歌要撐開',key:'E minor → G major'},
+  {genre:'Epic Ballad / 史詩流行',bpmVal:'76',mood:'厚重、有分量、像是蓄積多年的一句話',instruments:'管弦樂、大鼓、鋼琴、人聲和聲',vocal:'深沉有力、高音留到橋段後才爆發',key:'A minor'},
+  {genre:'Alternative Rock / 另類搖滾',bpmVal:'84',mood:'能量強、衝突感、但結尾有光',instruments:'電吉他、失真底音、爆炸鼓組',vocal:'嘶啞但有情緒、不賣弄技巧',key:'D minor'},
+  {genre:'K-Drama OST 風 / 溫柔史詩',bpmVal:'78',mood:'溫柔但有份量、會讓人眼眶紅的那種',instruments:'弦樂四重奏、小提琴主奏、鋼琴伴奏',vocal:'細膩、有氣息、情緒從克制到開放',key:'B minor → D major'}
+];
+
 function genSongVersionA(context){
   var event=shortInput(context.event||'這件事',16);
   var wish=shortInput(context.wish||context.topic||'吹大夢想',14);
   var trait=context.traits&&context.traits[0]?context.traits[0]:'笑著往前走';
-  var title='《'+wish+'，不如說出來》';
-  var hook='笑掉煩惱，吹大夢想，人生是微電影，我來當主角';
+  var title='《'+wish+'，先說出來再說》';
+  var hookTpl=pickVaried('song_a_hook',SONG_A_HOOKS);
+  var hook=fill(hookTpl,{wish:wish,trait:trait});
+  var verse2Tpl=pickVaried('song_a_v2',SONG_A_VERSE2_POOL);
+  var bridge=pickVaried('song_a_bridge',SONG_A_BRIDGE_POOL);
+  var style=pickVaried('song_a_style',SONG_A_STYLES);
   var lyrics=[
     '【Verse 1】',
     '今天關於'+event+'的事打到我了',
@@ -420,26 +518,28 @@ function genSongVersionA(context){
     '先把「'+wish+'」說出口，再說行不行',
     '',
     '【Verse 2】',
-    '有人說我想太多，好，那我繼續想',
-    '反正「'+trait+'」這件事，別人學不來',
+    fill(verse2Tpl,{trait:trait,wish:wish}),
     '',
     '【Bridge】',
-    '不要把成長做得像上課',
-    '不要把覺察做得像考試',
-    '不要把情緒做得像病歷',
+    bridge,
     '',
     '【Outro】',
     '笑鼠人了，先笑一下就好'
   ].join('\n');
-  return {version:'A',label:'小天鼠版',icon:'🐭',style:'幽默・自嘲・短影音風',title:title,concept:'用自嘲的方式把這件事翻成一個讓人笑著點頭的故事——不是說教，是讓聽的人覺得「欸，我也這樣！」',lyrics:lyrics,hook:hook,genre:'輕快 Pop / Lo-fi HipHop',bpm:'88–96',mood:'自嘲、輕鬆、有點酸又溫暖',instruments:'鋼琴loop、口哨、輕鼓、低音吉他',vocal:'對話感、不刻意賣力、偶爾笑著唱',aiPrompt:'cheerful lo-fi pop, conversational vocals, light piano loop, whistle, self-deprecating humor, warm ending, BPM 92, '+event+' theme, C major'};
+  return {version:'A',label:'小天鼠版',icon:'🐭',style:'幽默・自嘲・短影音風',title:title,concept:'用自嘲的方式把這件事翻成一個讓人笑著點頭的故事——不是說教，是讓聽的人覺得「欸，我也這樣！」',lyrics:lyrics,hook:hook,genre:style.genre,bpm:style.bpmVal+' BPM',mood:style.mood,instruments:style.instruments,vocal:style.vocal,aiPrompt:style.genre.toLowerCase().replace(/\//g,',')+', conversational vocals, self-deprecating humor, warm ending, BPM '+style.bpmVal+', '+event+' theme, '+style.key};
 }
+
 function genSongVersionB(context){
   var event=shortInput(context.event||'這件事',16);
   var wish=shortInput(context.wish||context.topic||'吹大夢想',14);
   var trait=context.traits&&context.traits[0]?context.traits[0]:'向前走的力量';
   var filmTitle=context.filmTitle?context.filmTitle.replace(/[《》]/g,''):'人生主題曲';
   var title='《'+filmTitle+'》';
-  var hook='這不是結局，是第一幕，把「'+wish+'」說出來，讓夢想先動起來';
+  var hookTpl=pickVaried('song_b_hook',SONG_B_HOOKS);
+  var hook=fill(hookTpl,{wish:wish,trait:trait});
+  var verse2Tpl=pickVaried('song_b_v2',SONG_B_VERSE2_POOL);
+  var bridge=pickVaried('song_b_bridge',SONG_B_BRIDGE_POOL);
+  var style=pickVaried('song_b_style',SONG_B_STYLES);
   var lyrics=[
     '【Intro】（電影感鋼琴引子）',
     '',
@@ -457,11 +557,11 @@ function genSongVersionB(context){
     '就算還沒到，但我已經在路上',
     '笑鼠人了，這就是我的微電影',
     '',
+    '【Verse 2】',
+    fill(verse2Tpl,{trait:trait,wish:wish}),
+    '',
     '【Bridge】',
-    '不要等到完美才開始',
-    '不要等到準備好才說出來',
-    '先吹出你的大餅',
-    '宇宙會決定哪塊先烤熟',
+    bridge,
     '',
     '【Final Chorus】',
     '這不是結局，是我的起點',
@@ -471,7 +571,7 @@ function genSongVersionB(context){
     '【Outro】',
     '笑掉煩惱，吹大夢想，把人生做成作品'
   ].join('\n');
-  return {version:'B',label:'唬爛虎版',icon:'🐯',style:'熱血・電影感・人生主題曲',title:title,concept:'把這段人生故事拍成電影感主題曲——有衝突、有反轉、有那個讓人想站起來的副歌。',lyrics:lyrics,hook:hook,genre:'Cinematic Pop / 電影主題曲',bpm:'76–84',mood:'熱血、希望、電影感、有點悲壯但最後昂揚',instruments:'弦樂、鋼琴、電吉他、大鼓',vocal:'情感飽滿、有戲劇性、副歌要撐開',aiPrompt:'cinematic pop ballad, orchestral strings, emotional piano, powerful chorus, '+event+' life story, hopeful ending, BPM 80, '+wish+' theme'};
+  return {version:'B',label:'唬爛虎版',icon:'🐯',style:'熱血・電影感・人生主題曲',title:title,concept:'把這段人生故事拍成電影感主題曲——有衝突、有反轉、有那個讓人想站起來的副歌。',lyrics:lyrics,hook:hook,genre:style.genre,bpm:style.bpmVal+' BPM',mood:style.mood,instruments:style.instruments,vocal:style.vocal,aiPrompt:style.genre.toLowerCase().replace(/\//g,',')+', orchestral, emotional, powerful chorus, BPM '+style.bpmVal+', '+event+' life story, hopeful ending, '+wish+' theme, '+style.key};
 }
 
 /* ---------------------------------------------------
@@ -712,9 +812,18 @@ function openMode(id,opts){
   if(id==='share') renderShareArea();
 }
 
+function getStepPrefill(id){
+  if(id==='lost') return flow.context.event||'';
+  if(id==='bigdream') return needToWish(flow.context.need)||flow.context.wish||'';
+  if(id==='strength') return flow.context.action||'';
+  if(id==='director') return flow.context.ending||flow.context.wish||'';
+  if(id==='workshop') return flow.context.wish||flow.context.topic||'';
+  return '';
+}
 function renderInputArea(id,opts){
   var placeholder=flow.routeB&&STEP_QUESTIONS[flow.stepIndex]?STEP_QUESTIONS[flow.stepIndex]:'例如：客戶今天又改稿第18次…';
-  var sharedInput='<div class="field-block"><label for="main-input">'+placeholder+'</label><textarea id="main-input" placeholder="'+placeholder+'">'+(flow.input||'')+'</textarea></div>';
+  var prefill=flow.routeB?getStepPrefill(id):(flow.input||'');
+  var sharedInput='<div class="field-block"><label for="main-input">'+placeholder+'</label><textarea id="main-input" placeholder="'+placeholder+'">'+escapeHtml(prefill)+'</textarea></div>';
   if(id==='roast'){
     els.inputArea.innerHTML=sharedInput+chipBlock('target-chip','對象',['老闆','客戶','同事','家人','自己','陌生人']);
   } else if(id==='bigdream'){
@@ -784,10 +893,10 @@ function renderOutputFor(id,input){
     flow.context.event=flow.context.event||input;
     html=renderTextBlocks(data);
   } else if(id==='bigdream'){
-    /* 優先使用 lost 給的 need 轉成 wish */
-    var wish=flow.context.need?'想要'+flow.context.need:input;
+    /* 使用者在輸入框確認或修改的願望草稿 */
+    var wish=input||needToWish(flow.context.need)||flow.context.wish||flow.context.topic||'';
     data=genBigDream(wish,getChipValue('topic-chip'));
-    flow.context.topic=getChipValue('topic-chip')||shortInput(input,14);
+    flow.context.topic=getChipValue('topic-chip')||shortInput(wish,14);
     flow.context.wish=wish;
     html=renderTextBlocks(data);
   } else if(id==='lost'){
@@ -799,7 +908,8 @@ function renderOutputFor(id,input){
     flow.context.event=flow.context.event||input;
     html=renderTextBlocks(data);
   } else if(id==='strength'){
-    var sInput=input||flow.context.event||flow.context.wish||'';
+    flow.context.action=input;
+    var sInput=[flow.context.event,flow.context.wish,input].filter(Boolean).join(' ');
     data=genStrength(sInput);
     flow.context.traits=data.traits||[];
     html=renderTextBlocks(data);
@@ -900,19 +1010,13 @@ function runWorkshop(){
 
   var html=renderSongVersionCard(vA)+renderSongVersionCard(vB);
   html+='<div class="workshop-actions"><button class="btn-regen btn-workshop-regen" id="btn-workshop-regen">🔄 免費再生成兩版</button></div>';
-  html+=routeBNextHtml('workshop');
+  /* Fix 8: 不在此處顯示 next step，選定版本後才顯示 */
 
   els.results.innerHTML=html;
 
-  document.getElementById('btn-workshop-regen').addEventListener('click',function(){
-    var vA2=genSongVersionA(flow.context); var vB2=genSongVersionB(flow.context);
-    flow.context.songVersions=[vA2,vB2]; saveDraft();
-    document.querySelectorAll('.song-card')[0].outerHTML; // trigger regen
-    runWorkshop();
-  });
+  document.getElementById('btn-workshop-regen').addEventListener('click',runWorkshop);
 
   bindWorkshopSelect();
-  bindResultNextWorkshop();
   logEvent('GENERATE_SONG',{});
   saveDraft();
 }
@@ -923,10 +1027,13 @@ function renderSongVersionCard(v){
     +'<div class="song-title">'+escapeHtml(v.title)+'</div>'
     +'<div class="song-concept">'+escapeHtml(v.concept)+'</div>'
     +'<pre class="song-lyrics">'+escapeHtml(v.lyrics)+'</pre>'
-    +'<div class="song-meta"><span>🎵 '+escapeHtml(v.genre)+'</span><span>⏱ BPM '+escapeHtml(v.bpm)+'</span></div>'
+    +'<div class="song-meta"><span>🎵 '+escapeHtml(v.genre)+'</span><span>⏱ '+escapeHtml(v.bpm)+'</span></div>'
+    +'<div class="song-meta-ext">🎭 情緒：'+escapeHtml(v.mood)+'</div>'
+    +'<div class="song-meta-ext">🎸 編曲：'+escapeHtml(v.instruments)+'</div>'
+    +'<div class="song-meta-ext">🎤 演唱方式：'+escapeHtml(v.vocal)+'</div>'
     +'<div class="song-ai-prompt"><strong>AI 音樂生成 Prompt：</strong><div class="prompt-box">'+escapeHtml(v.aiPrompt)+'</div></div>'
     +'<div class="song-card-actions">'
-    +'<button class="btn-copy btn-copy-song" data-copy="'+escapeHtml(v.lyrics+'\n\nAI Prompt: '+v.aiPrompt)+'">📋 複製'+v.icon+'指令</button>'
+    +'<button class="btn-copy btn-copy-song" data-copy="'+escapeHtml(v.title+'\n'+v.lyrics+'\n\n情緒：'+v.mood+'\n編曲：'+v.instruments+'\n演唱：'+v.vocal+'\n\nAI Prompt: '+v.aiPrompt)+'">📋 複製'+v.icon+'指令</button>'
     +'<button class="btn-primary btn-select-song" data-version="'+v.version+'" style="flex:1;">✅ 選擇此版本製作 MV</button>'
     +'</div></div>';
 }
@@ -947,22 +1054,22 @@ function bindWorkshopSelect(){
   });
 }
 
-function bindResultNextWorkshop(){
-  var nextBtn=document.getElementById('btn-route-next');
-  if(nextBtn) nextBtn.addEventListener('click',function(){flow.stepIndex=ROUTE_B_ORDER.indexOf('workshop')+1;openMode(ROUTE_B_ORDER[flow.stepIndex],{routeB:true});saveDraft();});
-}
-
-/* MV + 圖像指令 */
+/* MV + 圖像指令（Fix 8: 選定版本後才顯示 next step + 圖卡區塊） */
 function renderMVAndImageArea(songVer){
   var prompts=genImageAndMVPrompts(songVer,flow.context);
-  var html='<div class="result-card"><div class="who">🎬 選定：'+escapeHtml(songVer.title)+' '+songVer.icon+'</div></div>';
+  var html='<hr style="margin:18px 0; border-color:#E5D6B8;">'
+    +'<div class="result-card"><div class="who">🎬 已選定：'+songVer.icon+' '+escapeHtml(songVer.title)+'</div>'
+    +'<div class="body-text">副歌 Hook：「'+escapeHtml(songVer.hook)+'」</div></div>';
   ['ratCover','tigerPoster','mvStoryboard','videoPrompt'].forEach(function(key){
     html+='<div class="creative-card"><div class="prompt-box">'+escapeHtml(prompts[key])+'</div>'
-      +'<button class="btn-copy" style="margin-top:6px;width:100%;" data-copy="'+escapeHtml(prompts[key])+'">📋 複製</button></div>';
+      +'<button class="btn-copy mv-copy-btn" style="margin-top:6px;width:100%;" data-copy="'+escapeHtml(prompts[key])+'">📋 複製</button></div>';
   });
-  html+='<button class="btn-primary" style="margin-top:12px;" id="btn-go-share">➡ 繼續：製作分享圖卡</button>';
+  /* 選定版本後才顯示進入分享頁的按鈕 */
+  if(flow.routeB){
+    html+='<button class="btn-primary" style="margin-top:12px;" id="btn-go-share">➡ 繼續：製作分享圖卡 📣</button>';
+  }
   els.results.innerHTML+=html;
-  Array.prototype.forEach.call(document.querySelectorAll('[data-copy]'),function(btn){
+  Array.prototype.forEach.call(document.querySelectorAll('.mv-copy-btn'),function(btn){
     btn.addEventListener('click',function(){copyToClipboard(btn.dataset.copy);});
   });
   var goShare=document.getElementById('btn-go-share');
