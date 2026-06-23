@@ -49,6 +49,10 @@
 | bonusBalance | 贈送工坊剩餘次數（整數） |
 | lastSeenAt | 最後活躍時間 |
 | createdAt | 首次建立時間 |
+| lastUsageDate | 上次使用日期（台灣時間 YYYY-MM-DD），用於判斷是否需要歸零每日用量 |
+| dailyQuickUsed | 當日快速模式已用次數 |
+| dailyJourneyUsed | 當日完整旅程已用次數 |
+| dailyWorkshopUsed | 當日工坊已用次數 |
 
 ### 22_贈送額度碼
 
