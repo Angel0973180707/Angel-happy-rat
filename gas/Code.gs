@@ -10,7 +10,7 @@ var SHEET_NAMES = [
   '05_迷航翻譯庫','06_亮點庫','07_自導自演劇本庫','08_歌曲模板庫',
   '09_繪圖提示庫','10_影片分鏡庫','11_分享文案庫','12_禁用詞',
   '13_近期使用紀錄','14_合作夥伴設定','15_合作導流紀錄','16_流量事件',
-  '19_每日統計'
+  '17_每日統計'
 ];
 
 var RECORD_HEADERS = [
@@ -101,7 +101,7 @@ function getHeadersForSheet(name) {
   if (name === '14_合作夥伴設定') return ['partnerId','name','url','apiEndpoint','referralCode','revenueShare','whiteLabelUrl','enabled'];
   if (name === '15_合作導流紀錄') return ['timestamp','partnerId','userId','sessionId','referralCode','targetUrl','action'];
   if (name === '16_流量事件')     return ['時間','userId','eventType','mode','subMode','source','device','sessionId'];
-  if (name === '19_每日統計')     return ['date','appOpen','generate','copy','share','partnerClick'];
+  if (name === '17_每日統計')     return ['日期','快速生成','工坊生成','複製','分享','合作點擊'];
   return RECORD_HEADERS;
 }
 
@@ -251,9 +251,24 @@ function generateStoryboard(data) {
 // ----------------------------------------------
 function saveRecentRecord(clean, ss) {
   var sheet = ss.getSheetByName('13_近期使用紀錄') || ss.insertSheet('13_近期使用紀錄');
-  if (sheet.getLastRow() === 0) sheet.appendRow(RECORD_HEADERS);
+  // Gate3A schema: 8 欄，與 16_流量事件 相同
+  var headers = ['時間','userId','eventType','mode','subMode','source','device','sessionId'];
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(headers);
+    sheet.getRange(1,1,1,headers.length).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+  }
   sheet.insertRowAfter(1);
-  sheet.getRange(2,1,1,RECORD_HEADERS.length).setValues([RECORD_HEADERS.map(function(k){return clean[k]||'';})]);
+  sheet.getRange(2,1,1,headers.length).setValues([[
+    clean.timestamp || new Date().toISOString(),
+    clean.userId    || '',
+    clean.action    || '',
+    clean.mode      || '',
+    '',
+    '',
+    clean.userAgent || '',
+    clean.sessionId || ''
+  ]]);
   if (sheet.getLastRow() > 101) sheet.deleteRows(102, sheet.getLastRow() - 101);
 }
 
@@ -265,14 +280,23 @@ function trackPartnerClick(data, ss) {
 }
 
 function updateDailyStats(clean, ss) {
-  var sheet = ss.getSheetByName('19_每日統計') || ss.insertSheet('19_每日統計');
-  if (sheet.getLastRow() === 0) sheet.appendRow(getHeadersForSheet('19_每日統計'));
-  var date   = new Date().toISOString().slice(0,10);
+  var sheet = ss.getSheetByName('17_每日統計') || ss.insertSheet('17_每日統計');
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(getHeadersForSheet('17_每日統計'));
+    sheet.getRange(1,1,1,6).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+  }
+  var today  = Utilities.formatDate(new Date(), 'Asia/Taipei', 'yyyy-MM-dd');
   var values = sheet.getDataRange().getValues();
   var rowIdx = -1;
-  for (var i = 1; i < values.length; i++) { if (values[i][0] === date) rowIdx = i + 1; }
-  if (rowIdx === -1) { sheet.appendRow([date,0,0,0,0,0]); rowIdx = sheet.getLastRow(); }
-  var colMap = { APP_OPEN:2, GENERATE:3, REGENERATE:3, COPY:4, SHARE:5, PARTNER_CLICK:6 };
+  for (var i = 1; i < values.length; i++) {
+    var d = values[i][0];
+    var ds = (d instanceof Date) ? Utilities.formatDate(d, 'Asia/Taipei', 'yyyy-MM-dd') : String(d);
+    if (ds === today) { rowIdx = i + 1; break; }
+  }
+  if (rowIdx === -1) { sheet.appendRow([today,0,0,0,0,0]); rowIdx = sheet.getLastRow(); }
+  // 快速生成:2, 工坊生成:3, 複製:4, 分享:5, 合作點擊:6
+  var colMap = { GENERATE:2, REGENERATE:2, GENERATE_SONG:3, ENTER_WORKSHOP:3, COPY:4, SHARE:5, PARTNER_CLICK:6 };
   var col = colMap[clean.action];
   if (col) sheet.getRange(rowIdx,col).setValue(Number(sheet.getRange(rowIdx,col).getValue()||0)+1);
 }

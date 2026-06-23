@@ -43,6 +43,16 @@ self.addEventListener('fetch', function(event){
     return; // 交給瀏覽器原生網路請求 + HTTP cache 處理
   }
 
+  // SPA navigation fallback：讓重新整理 / 直接輸入 URL 都能拿到 index.html
+  if(req.mode === 'navigate'){
+    event.respondWith(
+      caches.match('./index.html').then(function(cached){
+        return cached || fetch(req).catch(function(){ return cached; });
+      })
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(req).then(function(cached){
       var network = fetch(req).then(function(res){
