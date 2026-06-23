@@ -121,6 +121,7 @@
     <div id="draft-banner" style="display:none"></div>
 
     <div class="section-label">⏰ 你現在最需要什麼？</div>
+    <div id="quota-quick-info" class="quota-info-row"></div>
     <div class="mode-grid" id="mode-grid"><!-- rendered by app.js --></div>
 
     <!-- 進階工具箱 -->
@@ -133,6 +134,24 @@
     </div>
 
     <button class="btn-ghost" id="btn-gate" style="margin-top:14px;">🧭 智慧之門（敬請期待）</button>
+
+    <!-- 額度升級提示（平時隱藏，額度用盡時短暫出現） -->
+    <div id="quota-upgrade-hint" class="upgrade-hint-box" hidden>
+      <p>🎁 有方案碼可以獲得更多次數！</p>
+      <div class="redeem-row">
+        <input id="redeem-input" class="redeem-input" type="text" placeholder="輸入方案碼（如 HAPPY-X7K9）" autocapitalize="characters">
+        <button class="btn-redeem" onclick="window._redeemCode&&window._redeemCode(document.getElementById('redeem-input').value)">兌換</button>
+      </div>
+    </div>
+
+    <!-- 方案碼兌換區（常駐，收合） -->
+    <details class="redeem-details">
+      <summary>🎟️ 有兌換碼？點此使用</summary>
+      <div class="redeem-row" style="margin-top:8px">
+        <input id="redeem-input-2" class="redeem-input" type="text" placeholder="輸入方案碼" autocapitalize="characters">
+        <button class="btn-redeem" onclick="window._redeemCode&&window._redeemCode(document.getElementById('redeem-input-2').value)">兌換</button>
+      </div>
+    </details>
 
     <footer class="foot-note">
       這是娛樂與創作輔助工具，不是醫療、心理治療、命理或法律建議。<br>

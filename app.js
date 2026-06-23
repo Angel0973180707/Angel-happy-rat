@@ -38,6 +38,112 @@ function saveRecordToGAS(record){
 logEvent('APP_OPEN',{});
 
 /* ---------------------------------------------------
+   1b. 額度系統（localStorage 柔性限制）
+--------------------------------------------------- */
+var QUOTA_LIMITS={
+  free:    {quick:20,journey:2,workshop:3},
+  student: {quick:50,journey:10,workshop:10},
+  basic:   {quick:50,journey:10,workshop:10},
+  pro:     {quick:999,journey:99,workshop:99}
+};
+function getTwDateStr(){
+  try{return new Date().toLocaleDateString('zh-TW',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-');}
+  catch(e){return new Date().toISOString().slice(0,10);}
+}
+function initQuota(){
+  var today=getTwDateStr();
+  if(localStorage.getItem('quota_date')!==today){
+    localStorage.setItem('quota_date',today);
+    localStorage.setItem('quota_quick','0');
+    localStorage.setItem('quota_journey','0');
+    localStorage.setItem('quota_workshop','0');
+  }
+}
+function getQuotaState(){
+  initQuota();
+  var plan=localStorage.getItem('quota_plan')||'free';
+  var lim=QUOTA_LIMITS[plan]||QUOTA_LIMITS.free;
+  return {
+    plan:plan,
+    quick:   Math.max(0,lim.quick   -parseInt(localStorage.getItem('quota_quick')   ||'0',10)),
+    journey: Math.max(0,lim.journey -parseInt(localStorage.getItem('quota_journey') ||'0',10)),
+    workshop:Math.max(0,lim.workshop-parseInt(localStorage.getItem('quota_workshop')||'0',10)),
+    bonus:   parseInt(localStorage.getItem('quota_bonus')||'0',10)
+  };
+}
+function quotaTypeForMode(id){return id==='workshop'?'workshop':'quick';}
+function tryConsumeQuota(type){
+  initQuota();
+  var state=getQuotaState();
+  if(type==='workshop'&&state.workshop<=0&&state.bonus>0){
+    localStorage.setItem('quota_bonus',String(state.bonus-1));
+    renderQuotaBadges();
+    callGASQuota('consumeQuota',{userId:USER_ID,quotaType:type});
+    return {ok:true,source:'bonus',remaining:state.bonus-1};
+  }
+  if(state[type]<=0) return {ok:false,type:type};
+  var key='quota_'+type;
+  localStorage.setItem(key,String(parseInt(localStorage.getItem(key)||'0',10)+1));
+  renderQuotaBadges();
+  callGASQuota('consumeQuota',{userId:USER_ID,quotaType:type});
+  return {ok:true,source:'daily',remaining:state[type]-1};
+}
+function callGASQuota(action,data){
+  if(!window.GAS_API_URL) return;
+  fetch(window.GAS_API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action:action},data))})
+    .then(function(r){return r.json();}).then(function(res){
+      if(res&&typeof res.bonus==='number') localStorage.setItem('quota_bonus',String(res.bonus));
+      if(res&&res.bonusBalance!=null) localStorage.setItem('quota_bonus',String(res.bonusBalance));
+      if(res&&res.planType) localStorage.setItem('quota_plan',res.planType);
+      renderQuotaBadges();
+    }).catch(function(){});
+}
+function showQuotaExhausted(type){
+  toast(type==='workshop'?'今日工坊次數已用完，有兌換碼可以獲得更多！':'今日快速生成次數已用完，明天重置');
+  var hint=document.getElementById('quota-upgrade-hint');
+  if(hint){hint.hidden=false;setTimeout(function(){hint.hidden=true;},6000);}
+}
+function renderQuotaBadges(){
+  var state=getQuotaState();
+  var qb=document.getElementById('quota-quick-badge');
+  if(qb){qb.textContent='剩 '+state.quick+' 次';qb.className='quota-badge'+(state.quick===0?' quota-empty':'');}
+  var wb=document.getElementById('quota-workshop-badge');
+  if(wb){
+    var wTotal=state.workshop+state.bonus;
+    wb.textContent='工坊剩 '+state.workshop+(state.bonus>0?' ＋贈送'+state.bonus:'')+(wTotal===0?' 已用完':'');
+    wb.className='quota-badge'+(wTotal===0?' quota-empty':'');
+  }
+}
+function redeemGiftCode(code){
+  if(!code){toast('請輸入兌換碼');return;}
+  if(!window.GAS_API_URL){toast('系統未就緒，請稍後再試');return;}
+  toast('兌換中…');
+  fetch(window.GAS_API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({action:'redeemCode',code:code.trim().toUpperCase(),userId:USER_ID})})
+    .then(function(r){return r.json();}).then(function(res){
+      if(res&&res.ok){
+        toast(res.message||'兌換成功！');
+        if(typeof res.bonusBalance==='number') localStorage.setItem('quota_bonus',String(res.bonusBalance));
+        if(res.planType) localStorage.setItem('quota_plan',res.planType);
+        renderQuotaBadges();
+        var box=document.getElementById('redeem-input');
+        if(box) box.value='';
+      } else {
+        toast(res&&res.message?res.message:'兌換失敗，請確認方案碼');
+      }
+    }).catch(function(){toast('網路錯誤，請稍後再試');});
+}
+function renderQuotaUI(){
+  initQuota();
+  var state=getQuotaState();
+  var infoRow=document.getElementById('quota-quick-info');
+  if(infoRow){
+    infoRow.innerHTML='🎯 快速模式今日 <span id="quota-quick-badge" class="quota-badge'+(state.quick===0?' quota-empty':'')+'">剩 '+state.quick+' 次</span>';
+  }
+  renderQuotaBadges();
+}
+
+/* ---------------------------------------------------
    2. 安全防護
 --------------------------------------------------- */
 var SELF_HARM_WORDS=['想死','自殺','不想活','活不下去','傷害自己','自殘','結束生命'];
@@ -970,6 +1076,13 @@ function runGenerate(id){
     toast('先打幾個字告訴小天鼠發生什麼事 🐭'); return;
   }
 
+  /* 額度檢查（safety guard 通過後才扣） */
+  var qType=quotaTypeForMode(id);
+  var qResult=tryConsumeQuota(qType);
+  if(!qResult.ok){showQuotaExhausted(qType);return;}
+  /* 工坊最後一次提示 */
+  if(qType==='workshop'&&qResult.remaining===0) toast('已使用今日最後一次免費工坊額度 🎨');
+
   var safety=checkSafety(input);
   if(safety.level==='crisis'){els.results.innerHTML=renderCrisisCard();logEvent('GENERATE',{mode:id,safety:'crisis'});return;}
   if(safety.level==='violence'){els.results.innerHTML=renderViolenceRedirectCard();logEvent('GENERATE',{mode:id,safety:'violence'});return;}
@@ -1279,6 +1392,8 @@ function bindNav(){
     }
   });
   document.getElementById('btn-route-b').addEventListener('click',function(){
+    var jq=tryConsumeQuota('journey');
+    if(!jq.ok){showQuotaExhausted('journey');return;}
     logEvent('MODE_SELECT',{mode:'route_b'});
     flow.routeB=true; flow.stepIndex=0;
     openMode(ROUTE_B_ORDER[0],{routeB:true});
@@ -1321,10 +1436,12 @@ document.addEventListener('DOMContentLoaded',function(){
   cacheEls();
   renderModeGrid();
   renderAdvancedTools();
+  renderQuotaUI();
   checkDraftBanner();
   bindNav();
   bindThemeVideos();
   preloadImages(function(){});
+  window._redeemCode=redeemGiftCode;
 });
 
 })();
