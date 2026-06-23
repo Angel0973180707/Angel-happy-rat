@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="笑鼠人了">
+  <rect width="128" height="128" rx="24" fill="#ffcc3d"/>
+  <circle cx="45" cy="46" r="24" fill="#f2f2f2"/>
+  <circle cx="83" cy="46" r="24" fill="#f2f2f2"/>
+  <circle cx="37" cy="29" r="12" fill="#ff8f7c"/>
+  <circle cx="91" cy="29" r="12" fill="#ff8f7c"/>
+  <circle cx="64" cy="65" r="42" fill="#fffdf7"/>
+  <circle cx="50" cy="58" r="5" fill="#211a13"/>
+  <circle cx="78" cy="58" r="5" fill="#211a13"/>
+  <path d="M58 70h12l-6 7z" fill="#ff6b57"/>
+  <path d="M44 82c11 12 29 12 40 0" fill="none" stroke="#211a13" stroke-width="7" stroke-linecap="round"/>
+  <path d="M92 82c14 1 24 9 27 21" fill="none" stroke="#211a13" stroke-width="7" stroke-linecap="round"/>
+</svg>

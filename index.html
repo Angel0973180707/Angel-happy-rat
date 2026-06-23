@@ -1,174 +1,108 @@
-<!DOCTYPE html>
-<html lang="zh-Hant-TW">
+<!doctype html>
+<html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>笑鼠人了！－ 笑掉煩惱，吹大夢想，把人生活成作品</title>
-<meta name="description" content="歡樂版人生導航系統：把情緒變笑氣，把妄想變願景，把人生變作品。不是心理諮商、不是命理、不是嚴肅人生教練。">
-<meta name="theme-color" content="#C97B2E">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="rat-safe.jpg">
-<link rel="icon" href="rat-safe.jpg">
-<link rel="stylesheet" href="style.css">
-
-<!-- ============================================================
-  Analytics placeholders (GA4 / Microsoft Clarity)
-  Free, optional. Replace the IDs below to enable. Leaving them
-  as-is means analytics simply does not load — app still works.
-============================================================= -->
-<script>
-  window.GA4_ID = "G-XXXXXXXXXX";      // ← 換成你的 GA4 評估 ID
-  window.CLARITY_ID = "xxxxxxxxxx";    // ← 換成你的 Clarity Project ID
-  window.GAS_API_URL = "https://script.google.com/macros/s/AKfycbzFkewVnwkmxQfHQACgjbrm0c6b4pj-tnhjEApqHDGZkanwAmQkqObV0bAMxFBNAV-E/exec";
-</script>
-<script>
-  if (window.GA4_ID && window.GA4_ID.indexOf('XXXX') === -1) {
-    var s = document.createElement('script');
-    s.async = true; s.src = "https://www.googletagmanager.com/gtag/js?id=" + window.GA4_ID;
-    document.head.appendChild(s);
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){window.dataLayer.push(arguments);}
-    window.gtag = gtag;
-    gtag('js', new Date());
-    gtag('config', window.GA4_ID);
-  }
-  if (window.CLARITY_ID && window.CLARITY_ID.indexOf('xxxx') === -1) {
-    (function(c,l,a,r,i,t,y){
-      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", window.CLARITY_ID);
-  }
-</script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffcc3d">
+  <meta name="description" content="《笑鼠人了！》歡樂版人生導航系統，情緒轉化遊樂場，AI 人生創作工廠。">
+  <title>笑鼠人了！</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
 </head>
 <body>
-
-<div class="app-shell" id="app-shell">
-
-  <div class="topbar">
-    <button class="back-btn" id="btn-back" style="display:none" aria-label="返回首頁">←</button>
-    <span class="brand"><img src="rat.webp" class="char-icon char-icon-tiny" alt="小天鼠"><img src="tiger.webp" class="char-icon char-icon-tiny" alt="唬爛虎"> 笑鼠人了！</span>
-    <span style="width:44px"></span>
-  </div>
-
-  <!-- ============================ HOME ============================ -->
-  <section class="screen active" id="screen-home">
-
-    <div class="hero">
-      <div class="emoji-row">
-        <img src="rat.webp" class="char-icon char-icon-hero" alt="小天鼠">
-        <img src="tiger.webp" class="char-icon char-icon-hero" alt="唬爛虎">
-        <span>🎬</span>
-      </div>
+  <a class="skip-link" href="#main">跳到主要內容</a>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">情緒轉化遊樂場</p>
       <h1>笑鼠人了！</h1>
       <p class="subtitle">笑掉煩惱，吹大夢想，把人生活成作品。</p>
-      <div class="tagline">人生難免有煩惱，有委屈，有氣到想揍人的時候。
-也難免會羨慕，會嫉妒，會偷偷想著：「如果我也可以那樣就好了。」
-
-沒關係。
-先讓小天鼠陪你笑一笑。
-再讓唬爛虎陪你吹大夢想。
-最後讓自導自演，幫你把這段人生寫成作品。
-
-說不定會發現：真是笑「鼠」人了！🐭🤣</div>
     </div>
+    <button class="ghost-button" id="installBtn" type="button" hidden>安裝</button>
+  </header>
 
-    <button class="origin-toggle" id="btn-origin"><img src="rat.webp" class="char-icon char-icon-tiny" alt="小天鼠"> 小天鼠的由來（點我看故事）</button>
-    <div class="origin-card" id="origin-card">媽媽急著找我幫忙，拉開嗓門大喊：
-
-「小～～天～～鼠～～～！」
-
-旁邊的孩子聽了偷偷在笑。
-笑著糾正阿嬤：
-「阿嬤，是小天使啦，不是小天鼠！」🤣
-
-接著還學了一遍：
-「小～～天～～鼠～～～！」
-
-把我也逗樂了。
-
-於是，「小天鼠」就這樣誕生了。✨</div>
-
-    <div class="section-label">🎵 主題曲</div>
-    <div class="video-grid">
-      <div class="video-card">
-        <div class="video-card-head"><img src="rat.webp" class="char-icon char-icon-tiny" alt="小天鼠"> 小天鼠笑了</div>
-        <video class="theme-video" preload="none" controls playsinline poster="rat.webp" data-event="rat">
-          <source src="videos/rat-laughed.mp4" type="video/mp4">
-          您的瀏覽器不支援影片播放。
-        </video>
+  <main id="main" class="app-shell">
+    <section class="intro-panel" aria-labelledby="flowTitle">
+      <div>
+        <h2 id="flowTitle">情緒 → 翻譯 → 願望 → 亮點 → 故事 → 創作 → 分享 → 笑出來</h2>
+        <p>不是諮商，不算命，不上成功學。你丟一句生活碎念，我們把它翻成可以笑、可以用、可以分享的作品種子。</p>
       </div>
-      <div class="video-card">
-        <div class="video-card-head"><img src="tiger.webp" class="char-icon char-icon-tiny" alt="唬爛虎"> 吹一下會怎樣</div>
-        <video class="theme-video" preload="none" controls playsinline poster="tiger.webp" data-event="tiger">
-          <source src="videos/tiger-blow.mp4" type="video/mp4">
-          您的瀏覽器不支援影片播放。
-        </video>
+      <div class="route-switch" role="tablist" aria-label="使用路線">
+        <button class="route active" type="button" data-route="easy" role="tab" aria-selected="true">輕鬆玩</button>
+        <button class="route" type="button" data-route="full" role="tab" aria-selected="false">完整創作</button>
       </div>
-    </div>
+    </section>
 
-    <div class="section-label">⏰ 你現在最需要什麼？</div>
-    <div class="mode-grid" id="mode-grid"><!-- rendered by app.js --></div>
+    <section class="input-zone" aria-labelledby="inputTitle">
+      <div class="field-head">
+        <h2 id="inputTitle">先丟一句話</h2>
+        <span id="routeHint">選模式 → 輸入一句話 → 產生 → 複製分享</span>
+      </div>
+      <textarea id="userInput" rows="4" maxlength="280" placeholder="例：我今天又拖延到懷疑人生，但我還是想變厲害。"></textarea>
+      <div class="input-actions">
+        <button class="primary-button" id="generateBtn" type="button">產生笑果</button>
+        <button class="secondary-button" id="regenBtn" type="button" disabled>再來一版</button>
+      </div>
+    </section>
 
-    <div class="route-b-banner">
-      <h3>🎬 想玩完整版？</h3>
-      <p>從一句話開始，走完情緒→願望→亮點→故事→創作的完整路線，最後產生你的人生創作包。</p>
-      <button class="btn-primary" id="btn-route-b">開始完整創作之旅</button>
-    </div>
+    <section class="mode-grid" aria-label="八大模式">
+      <button class="mode-card active" type="button" data-mode="roast" aria-pressed="true"><span>😤</span><strong>嗆聲模式</strong><small>把火氣變笑氣</small></button>
+      <button class="mode-card" type="button" data-mode="selfMock" aria-pressed="false"><span>🤣</span><strong>自嘲模式</strong><small>先笑自己就贏一半</small></button>
+      <button class="mode-card" type="button" data-mode="bigDream" aria-pressed="false"><span>🐯</span><strong>畫大餅模式</strong><small>妄想升級成願景</small></button>
+      <button class="mode-card" type="button" data-mode="lost" aria-pressed="false"><span>🧭</span><strong>迷航模式</strong><small>大腦導航重算中</small></button>
+      <button class="mode-card" type="button" data-mode="strength" aria-pressed="false"><span>💎</span><strong>我的亮點</strong><small>從亂七八糟挖鑽石</small></button>
+      <button class="mode-card" type="button" data-mode="director" aria-pressed="false"><span>🎬</span><strong>自導自演</strong><small>人生改編三幕劇</small></button>
+      <button class="mode-card" type="button" data-mode="workshop" aria-pressed="false"><span>🎤</span><strong>創作工坊</strong><small>歌詞、圖像、分鏡</small></button>
+      <button class="mode-card" type="button" data-mode="share" aria-pressed="false"><span>📣</span><strong>分享模式</strong><small>一句話變社群文案</small></button>
+    </section>
 
-    <button class="btn-ghost" id="btn-gate" style="margin-top:14px;">🧭 智慧之門（敬請期待）</button>
+    <section class="result-zone" aria-live="polite" aria-labelledby="resultTitle">
+      <div class="result-head">
+        <div>
+          <p id="modeLabel" class="eyebrow">小天鼠上線</p>
+          <h2 id="resultTitle">產生結果</h2>
+        </div>
+        <span class="status-pill" id="saveStatus">尚未產生</span>
+      </div>
+      <article id="resultText" class="result-text">你的笑果會出現在這裡。先選一個模式，再丟一句人生現場。</article>
+      <div class="result-actions">
+        <button class="secondary-button" id="copyBtn" type="button" disabled>複製</button>
+        <button class="secondary-button" id="shareBtn" type="button" disabled>分享</button>
+        <button class="ghost-button" id="workshopBtn" type="button" disabled>進入創作工坊</button>
+      </div>
+    </section>
 
-    <footer class="foot-note">
-      這是娛樂與創作輔助工具，不是醫療、心理治療、命理或法律建議。<br>
-      若情緒持續困擾你，建議找信任的人聊聊，或諮詢專業人員。
-    </footer>
-  </section>
+    <section class="workshop-panel" id="workshopPanel" aria-labelledby="workshopTitle">
+      <div class="section-title">
+        <p class="eyebrow">🎬 自導自演宇宙</p>
+        <h2 id="workshopTitle">創作工坊</h2>
+      </div>
+      <div class="workshop-grid">
+        <button type="button" data-tool="song">生成歌曲草稿</button>
+        <button type="button" data-tool="image">生成 AI 繪圖提示</button>
+        <button type="button" data-tool="video">生成 MV 分鏡</button>
+      </div>
+      <pre id="workshopOutput" class="workshop-output">歌曲、繪圖、MV 是最後自然形成的成果，不是第一秒就硬唱。</pre>
+    </section>
 
-  <!-- ===================== GENERIC MODE SCREEN ===================== -->
-  <section class="screen" id="screen-mode">
-    <div class="progress-strip" id="progress-strip" style="display:none"></div>
-    <div class="mode-header">
-      <div class="icon" id="mode-icon">😤</div>
-      <h2 id="mode-title">嗆聲模式</h2>
-      <p class="sub" id="mode-sub">我現在很想罵，但我想罵得有才華。</p>
-    </div>
+    <section class="partner-panel" aria-labelledby="partnerTitle">
+      <div>
+        <p class="eyebrow">智慧之門 Coming Soon</p>
+        <h2 id="partnerTitle">只預留合作接口</h2>
+        <p>目前不做易經、不算命、不解卦。未來可接合作方系統、推薦碼、分潤、API、白標頁與等待名單。</p>
+      </div>
+      <div class="partner-actions">
+        <button class="secondary-button" id="waitlistBtn" type="button">加入等待名單</button>
+        <button class="ghost-button" id="partnerBtn" type="button">合作方接口測試</button>
+      </div>
+    </section>
+  </main>
 
-    <div id="mode-input-area"><!-- rendered by app.js --></div>
+  <footer class="app-footer">
+    <span>小天鼠負責嗆，唬爛虎負責夢，自導自演負責讓人生有片尾曲。</span>
+  </footer>
 
-    <button class="btn-primary" id="btn-generate">產生內容 🎲</button>
-
-    <div id="mode-results" style="margin-top:18px;"></div>
-  </section>
-
-  <!-- ===================== 智慧之門 / waitlist ===================== -->
-  <section class="screen" id="screen-gate">
-    <div class="mode-header">
-      <div class="icon">🧭</div>
-      <h2>智慧之門</h2>
-      <p class="sub">Coming Soon</p>
-    </div>
-    <div class="gate-card">
-      <span class="brush">有些答案，<br>不是算出來的，<br>是看見的。</span>
-      <p style="color:#F1E6CC; font-size:14px;">未來這裡會連結專業合作系統，提供更深的解讀體驗。目前僅開放候補名單，不提供算命或解卦。</p>
-      <span class="coming">COMING SOON</span>
-    </div>
-    <div class="field-block" style="margin-top:18px;">
-      <label for="waitlist-contact">留下 LINE ID 或 Email，開放時優先通知你</label>
-      <textarea id="waitlist-contact" rows="2" placeholder="例如：line_id 或 you@example.com"></textarea>
-    </div>
-    <button class="btn-primary" id="btn-waitlist-join">加入候補名單</button>
-  </section>
-
-  <div class="toast" id="toast"></div>
-</div>
-
-<script src="app.js"></script>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-      navigator.serviceWorker.register('service-worker.js').catch(function(){ /* offline-first is best-effort */ });
-    });
-  }
-</script>
+  <script src="app.js" defer></script>
 </body>
 </html>
