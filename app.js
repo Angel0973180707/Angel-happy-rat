@@ -38,7 +38,7 @@ function saveRecordToGAS(record){
 logEvent('APP_OPEN',{});
 
 /* ---------------------------------------------------
-   1b. 額度系統（localStorage 柔性限制）
+   1b. 額度系統（伺服器為準，localStorage 作顯示快取）
 --------------------------------------------------- */
 var QUOTA_LIMITS={
   free:    {quick:20,journey:2,workshop:3},
@@ -71,34 +71,63 @@ function getQuotaState(){
     bonus:   parseInt(localStorage.getItem('quota_bonus')||'0',10)
   };
 }
-function quotaTypeForMode(id){return id==='workshop'?'workshop':'quick';}
-function tryConsumeQuota(type){
-  initQuota();
-  var state=getQuotaState();
-  if(type==='workshop'&&state.workshop<=0&&state.bonus>0){
-    localStorage.setItem('quota_bonus',String(state.bonus-1));
-    renderQuotaBadges();
-    callGASQuota('consumeQuota',{userId:USER_ID,quotaType:type});
-    return {ok:true,source:'bonus',remaining:state.bonus-1};
-  }
-  if(state[type]<=0) return {ok:false,type:type};
-  var key='quota_'+type;
-  localStorage.setItem(key,String(parseInt(localStorage.getItem(key)||'0',10)+1));
-  renderQuotaBadges();
-  callGASQuota('consumeQuota',{userId:USER_ID,quotaType:type});
-  return {ok:true,source:'daily',remaining:state[type]-1};
+/* 以伺服器回傳的 remaining 值更新 localStorage 快取 */
+function syncQuotaFromServer(res){
+  if(!res) return;
+  var plan=res.planType||localStorage.getItem('quota_plan')||'free';
+  var lim=QUOTA_LIMITS[plan]||QUOTA_LIMITS.free;
+  localStorage.setItem('quota_plan',plan);
+  localStorage.setItem('quota_date',getTwDateStr());
+  if(typeof res.quick    ==='number') localStorage.setItem('quota_quick',   String(Math.max(0,lim.quick   -res.quick)));
+  if(typeof res.journey  ==='number') localStorage.setItem('quota_journey', String(Math.max(0,lim.journey -res.journey)));
+  if(typeof res.workshop ==='number') localStorage.setItem('quota_workshop',String(Math.max(0,lim.workshop-res.workshop)));
+  if(typeof res.bonus    ==='number') localStorage.setItem('quota_bonus',   String(res.bonus));
 }
-function callGASQuota(action,data){
+/* 頁面載入時從 GAS 取得正確餘額 */
+function fetchQuotaFromServer(){
   if(!window.GAS_API_URL) return;
-  fetch(window.GAS_API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action:action},data))})
+  fetch(window.GAS_API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({action:'getQuota',userId:USER_ID})})
     .then(function(r){return r.json();}).then(function(res){
-      if(res&&typeof res.bonus==='number') localStorage.setItem('quota_bonus',String(res.bonus));
-      if(res&&res.bonusBalance!=null) localStorage.setItem('quota_bonus',String(res.bonusBalance));
-      if(res&&res.planType) localStorage.setItem('quota_plan',res.planType);
-      renderQuotaBadges();
+      if(res&&res.ok){syncQuotaFromServer(res);renderQuotaBadges();}
     }).catch(function(){});
 }
-function showQuotaExhausted(type){
+function quotaTypeForMode(id){return id==='workshop'?'workshop':'quick';}
+/* tryConsumeQuota：呼叫 GAS，回傳 Promise<{ok,remaining,reason,...}> */
+function tryConsumeQuota(type){
+  if(!window.GAS_API_URL){
+    /* 無 GAS 環境：純 localStorage 柔性模式 */
+    initQuota();
+    var st=getQuotaState();
+    if(type==='workshop'&&st.workshop<=0&&st.bonus>0){
+      localStorage.setItem('quota_bonus',String(st.bonus-1));
+      renderQuotaBadges();
+      return Promise.resolve({ok:true,source:'bonus',remaining:st.bonus-1,quick:st.quick,journey:st.journey,workshop:0,bonus:st.bonus-1});
+    }
+    if(st[type]<=0) return Promise.resolve({ok:false,type:type,reason:'quota_exhausted'});
+    var key='quota_'+type;
+    localStorage.setItem(key,String(parseInt(localStorage.getItem(key)||'0',10)+1));
+    renderQuotaBadges();
+    return Promise.resolve({ok:true,source:'local',remaining:st[type]-1});
+  }
+  return fetch(window.GAS_API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({action:'consumeQuota',userId:USER_ID,quotaType:type})})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(res&&res.ok){
+        syncQuotaFromServer(res);
+        renderQuotaBadges();
+        return res;
+      }
+      if(res){syncQuotaFromServer(res);renderQuotaBadges();}
+      return {ok:false,type:type,reason:(res&&res.reason)||'quota_exhausted'};
+    })
+    .catch(function(){
+      return {ok:false,type:type,reason:'network_error'};
+    });
+}
+function showQuotaExhausted(type,reason){
+  if(reason==='network_error'){toast('無法確認額度，請檢查網路後再試');return;}
   toast(type==='workshop'?'今日工坊次數已用完，有兌換碼可以獲得更多！':'今日快速生成次數已用完，明天重置');
   var hint=document.getElementById('quota-upgrade-hint');
   if(hint){hint.hidden=false;setTimeout(function(){hint.hidden=true;},6000);}
@@ -123,11 +152,12 @@ function redeemGiftCode(code){
     .then(function(r){return r.json();}).then(function(res){
       if(res&&res.ok){
         toast(res.message||'兌換成功！');
-        if(typeof res.bonusBalance==='number') localStorage.setItem('quota_bonus',String(res.bonusBalance));
-        if(res.planType) localStorage.setItem('quota_plan',res.planType);
+        syncQuotaFromServer(res);
         renderQuotaBadges();
         var box=document.getElementById('redeem-input');
         if(box) box.value='';
+        var box2=document.getElementById('redeem-input-2');
+        if(box2) box2.value='';
       } else {
         toast(res&&res.message?res.message:'兌換失敗，請確認方案碼');
       }
@@ -141,6 +171,11 @@ function renderQuotaUI(){
     infoRow.innerHTML='🎯 快速模式今日 <span id="quota-quick-badge" class="quota-badge'+(state.quick===0?' quota-empty':'')+'">剩 '+state.quick+' 次</span>';
   }
   renderQuotaBadges();
+}
+/* 合作夥伴點擊追蹤（供外部呼叫） */
+function logPartnerClick(partnerId,url){
+  logEvent('PARTNER_CLICK',{partnerId:partnerId,url:url});
+  saveRecordToGAS({action:'PARTNER_CLICK',partnerId:partnerId,targetUrl:url});
 }
 
 /* ---------------------------------------------------
@@ -1014,7 +1049,7 @@ function openMode(id,opts){
   els.generateBtn.style.display=(id==='workshop'||id==='share')?'none':'block';
   els.generateBtn.onclick=function(){runGenerate(id);};
   showScreen('mode');
-  if(id==='workshop') renderWorkshopArea();
+  if(id==='workshop'){logEvent('ENTER_WORKSHOP',{});renderWorkshopArea();}
   if(id==='share') renderShareArea();
 }
 
@@ -1076,23 +1111,34 @@ function runGenerate(id){
     toast('先打幾個字告訴小天鼠發生什麼事 🐭'); return;
   }
 
-  /* 額度檢查（safety guard 通過後才扣） */
-  var qType=quotaTypeForMode(id);
-  var qResult=tryConsumeQuota(qType);
-  if(!qResult.ok){showQuotaExhausted(qType);return;}
-  /* 工坊最後一次提示 */
-  if(qType==='workshop'&&qResult.remaining===0) toast('已使用今日最後一次免費工坊額度 🎨');
-
+  /* 安全防護優先：危機/暴力不扣額度 */
   var safety=checkSafety(input);
   if(safety.level==='crisis'){els.results.innerHTML=renderCrisisCard();logEvent('GENERATE',{mode:id,safety:'crisis'});return;}
   if(safety.level==='violence'){els.results.innerHTML=renderViolenceRedirectCard();logEvent('GENERATE',{mode:id,safety:'violence'});return;}
-  if(safety.level==='mild'){els.results.innerHTML=renderMildAngerCard(id)+renderOutputFor(id,input);bindResultActions(id);return;}
 
-  els.results.innerHTML=renderOutputFor(id,input);
-  bindResultActions(id);
-  logEvent('GENERATE',{mode:id});
-  saveRecordToGAS({mode:id,input:input,summary:JSON.stringify(flow.context).slice(0,300)});
-  saveDraft();
+  /* Route B 步驟不扣 quick（旅程費已在起點扣除） */
+  var qType=quotaTypeForMode(id);
+  if(flow.routeB){
+    if(safety.level==='mild'){els.results.innerHTML=renderMildAngerCard(id)+renderOutputFor(id,input);bindResultActions(id);return;}
+    els.results.innerHTML=renderOutputFor(id,input);
+    bindResultActions(id);
+    logEvent('GENERATE',{mode:id});
+    saveRecordToGAS({mode:id,input:input,summary:JSON.stringify(flow.context).slice(0,300)});
+    saveDraft();
+    return;
+  }
+
+  /* 非 Route B：需向伺服器確認額度 */
+  tryConsumeQuota(qType).then(function(qResult){
+    if(!qResult.ok){showQuotaExhausted(qType,qResult.reason);return;}
+    if(qResult.remaining===0) toast('已使用今日最後一次'+(qType==='workshop'?'工坊':'快速')+'額度 🎨');
+    if(safety.level==='mild'){els.results.innerHTML=renderMildAngerCard(id)+renderOutputFor(id,input);bindResultActions(id);return;}
+    els.results.innerHTML=renderOutputFor(id,input);
+    bindResultActions(id);
+    logEvent('GENERATE',{mode:id});
+    saveRecordToGAS({mode:id,input:input,summary:JSON.stringify(flow.context).slice(0,300)});
+    saveDraft();
+  });
 }
 
 function renderOutputFor(id,input){
@@ -1161,7 +1207,14 @@ function bindResultActions(id){
   }
   /* 再來一版 */
   var regenBtn=document.getElementById('btn-regen-result');
-  if(regenBtn){ regenBtn.addEventListener('click',function(){logEvent('REGENERATE',{mode:id}); els.results.innerHTML=renderOutputFor(id,flow.input); bindResultActions(id); saveDraft();}); }
+  if(regenBtn){ regenBtn.addEventListener('click',function(){
+    if(flow.routeB){logEvent('REGENERATE',{mode:id});els.results.innerHTML=renderOutputFor(id,flow.input);bindResultActions(id);saveDraft();return;}
+    var qType2=quotaTypeForMode(id);
+    tryConsumeQuota(qType2).then(function(qResult){
+      if(!qResult.ok){showQuotaExhausted(qType2,qResult.reason);return;}
+      logEvent('REGENERATE',{mode:id});els.results.innerHTML=renderOutputFor(id,flow.input);bindResultActions(id);saveDraft();
+    });
+  }); }
   /* 下一步 */
   var nextBtn=document.getElementById('btn-route-next');
   if(nextBtn){ nextBtn.addEventListener('click',function(){flow.stepIndex=ROUTE_B_ORDER.indexOf(id)+1; openMode(ROUTE_B_ORDER[flow.stepIndex],{routeB:true}); saveDraft();}); }
@@ -1213,30 +1266,34 @@ function renderWorkshopArea(){
 }
 
 function runWorkshop(){
-  var inputEl=document.getElementById('main-input');
-  var extra=inputEl?inputEl.value.trim():'';
-  if(extra) flow.context.topic=flow.context.topic||extra;
-  flow.context.wish=flow.context.wish||flow.context.topic||extra;
-  /* Fix 1：讀取作品風格 chip，存入 context 供生成器使用 */
-  var styleHint=getChipValue('style-chip')||'';
-  flow.context.styleHint=styleHint;
+  tryConsumeQuota('workshop').then(function(qResult){
+    if(!qResult.ok){showQuotaExhausted('workshop',qResult.reason);return;}
+    var inputEl=document.getElementById('main-input');
+    var extra=inputEl?inputEl.value.trim():'';
+    if(extra) flow.context.topic=flow.context.topic||extra;
+    flow.context.wish=flow.context.wish||flow.context.topic||extra;
+    /* Fix 1：讀取作品風格 chip，存入 context 供生成器使用 */
+    var styleHint=getChipValue('style-chip')||'';
+    flow.context.styleHint=styleHint;
 
-  var vA=genSongVersionA(flow.context);
-  var vB=genSongVersionB(flow.context);
-  flow.context.songVersions=[vA,vB];
+    var vA=genSongVersionA(flow.context);
+    var vB=genSongVersionB(flow.context);
+    flow.context.songVersions=[vA,vB];
 
-  /* Fix 2：加固定 mv-area 容器，重複選歌只覆蓋不追加 */
-  var html=renderSongVersionCard(vA)+renderSongVersionCard(vB);
-  html+='<div class="workshop-actions"><button class="btn-regen btn-workshop-regen" id="btn-workshop-regen">🔄 免費再生成兩版</button></div>';
-  html+='<div id="mv-area"></div>';
+    /* Fix 2：加固定 mv-area 容器，重複選歌只覆蓋不追加 */
+    var html=renderSongVersionCard(vA)+renderSongVersionCard(vB);
+    html+='<div class="workshop-actions"><button class="btn-regen btn-workshop-regen" id="btn-workshop-regen">🔄 免費再生成兩版</button></div>';
+    html+='<div id="mv-area"></div>';
 
-  els.results.innerHTML=html;
+    els.results.innerHTML=html;
 
-  document.getElementById('btn-workshop-regen').addEventListener('click',runWorkshop);
+    document.getElementById('btn-workshop-regen').addEventListener('click',runWorkshop);
 
-  bindWorkshopSelect();
-  logEvent('GENERATE_SONG',{styleHint:styleHint});
-  saveDraft();
+    bindWorkshopSelect();
+    logEvent('GENERATE_SONG',{styleHint:styleHint});
+    saveDraft();
+    if(qResult.remaining===0) toast('已使用今日最後一次工坊額度 🎨');
+  });
 }
 
 function renderSongVersionCard(v){
@@ -1311,6 +1368,8 @@ function renderNextStepsGuide(){
 
 /* MV + 圖像指令（Fix 2: 用固定 mv-area 容器覆蓋，不追加） */
 function renderMVAndImageArea(songVer){
+  logEvent('GENERATE_IMAGE',{title:songVer.title});
+  logEvent('GENERATE_VIDEO',{title:songVer.title});
   var prompts=genImageAndMVPrompts(songVer,flow.context);
   var html='<hr style="margin:18px 0; border-color:#E5D6B8;">'
     +'<div class="result-card"><div class="who">🎬 已選定：'+songVer.icon+' '+escapeHtml(songVer.title)+'</div>'
@@ -1475,6 +1534,7 @@ document.addEventListener('DOMContentLoaded',function(){
   renderModeGrid();
   renderAdvancedTools();
   renderQuotaUI();
+  fetchQuotaFromServer();
   checkDraftBanner();
   bindNav();
   bindThemeVideos();
