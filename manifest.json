@@ -1,26 +1,25 @@
 {
-  "name": "笑鼠人了！",
+  "name": "笑鼠人了！－ 笑掉煩惱，吹大夢想，把人生變成微電影",
   "short_name": "笑鼠人了",
-  "description": "歡樂版人生導航系統、AI人生創作工廠、情緒轉化遊樂場。",
-  "id": "./",
+  "description": "歡樂版人生導航系統：把情緒變笑氣，把妄想變願景，把人生變作品。",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#fff7df",
-  "theme_color": "#ffcc3d",
-  "lang": "zh-Hant",
+  "orientation": "portrait-primary",
+  "background_color": "#F4EBD9",
+  "theme_color": "#C97B2E",
+  "lang": "zh-Hant-TW",
   "icons": [
     {
-      "src": "icons/icon-192.png",
+      "src": "rat-safe.jpg",
       "sizes": "192x192",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "any maskable"
     },
     {
-      "src": "icons/icon-512.png",
+      "src": "rat-safe.jpg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "any maskable"
     }
   ]

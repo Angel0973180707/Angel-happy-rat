@@ -1,61 +1,58 @@
-'use strict';
-
-const CACHE_NAME = 'laugh-mouse-pwa-v2';
-const APP_SHELL = [
+/* 笑鼠人了！ service worker
+   目標：離線可開首頁與所有模式（純前端生成，不需要網路）。
+   策略：app shell cache-first，其餘走 network-first 並回退快取。
+*/
+var CACHE_NAME = 'Angel-happy-rat-shell-v1';
+var SHELL_FILES = [
   './',
   './index.html',
   './style.css',
   './app.js',
   './manifest.json',
-  './icons/icon.svg',
-  './icons/icon-192.svg',
-  './icons/icon-512.svg',
-  './icons/icon-192.png',
-  './icons/icon-512.png'
+  './rat.webp',
+  './rat-safe.jpg',
+  './tiger.webp'
 ];
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', function(event){
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(APP_SHELL))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then(function(cache){
+      return cache.addAll(SHELL_FILES);
+    })
   );
+  self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
+self.addEventListener('activate', function(event){
   event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
-      .then(() => self.clients.claim())
+    caches.keys().then(function(keys){
+      return Promise.all(keys.filter(function(k){ return k !== CACHE_NAME; }).map(function(k){ return caches.delete(k); }));
+    })
   );
+  self.clients.claim();
 });
 
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
+self.addEventListener('fetch', function(event){
+  var req = event.request;
+  if(req.method !== 'GET') return; // 不快取 POST（分析事件 / GAS 儲存）
 
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', copy));
-          return response;
-        })
-        .catch(() => caches.match('./index.html'))
-    );
-    return;
+  // 影片檔案（主題曲 MV）完全不經過 Service Worker：
+  // 1) 避免 Range request 被快取機制破壞播放（拖拉進度條會壞掉）
+  // 2) 避免 30MB+ 檔案塞爆離線快取，違反「離線只開首頁」的初衷
+  if(req.destination === 'video' || /\.mp4($|\?)/i.test(req.url)){
+    return; // 交給瀏覽器原生網路請求 + HTTP cache 處理
   }
 
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          return response;
-        })
-        .catch(() => cached || Response.error());
+    caches.match(req).then(function(cached){
+      var network = fetch(req).then(function(res){
+        if(res && res.status === 200 && req.url.indexOf(self.location.origin) === 0){
+          var resClone = res.clone();
+          caches.open(CACHE_NAME).then(function(cache){ cache.put(req, resClone); });
+        }
+        return res;
+      }).catch(function(){ return cached; });
+      return cached || network;
     })
   );
 });
