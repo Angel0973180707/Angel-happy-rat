@@ -1,0 +1,26 @@
+{
+  "name": "笑鼠人了！－ 笑掉煩惱，吹大夢想，把人生活成作品",
+  "short_name": "笑鼠人了",
+  "description": "歡樂版人生導航系統：把情緒變笑氣，把妄想變願景，把人生變作品。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F4EBD9",
+  "theme_color": "#C97B2E",
+  "lang": "zh-Hant-TW",
+  "icons": [
+    {
+      "src": "rat-safe.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "rat-safe.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    }
+  ]
+}
