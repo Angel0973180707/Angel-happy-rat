@@ -108,7 +108,7 @@ a{color:inherit;}
   box-shadow:var(--shadow); text-align:left;
 }
 .position-badges{
-  display:flex; flex-wrap:wrap; gap:8px;
+  display:flex; flex-wrap:wrap; gap:8px; justify-content:center;
 }
 .position-badge{
   display:inline-flex; align-items:center; gap:4px;
