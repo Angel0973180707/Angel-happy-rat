@@ -389,6 +389,111 @@ textarea.input-error{
   border:1px solid var(--cinema-gold); font-size:12px; letter-spacing:2px;
 }
 
+/* ---------- Draft banner ---------- */
+.draft-inner{
+  background:var(--coffee); color:var(--cream-soft);
+  border-radius:var(--radius-md); padding:12px 14px;
+  display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+  font-size:13.5px; font-weight:700; margin-bottom:14px;
+}
+.draft-inner span{flex:1; min-width:120px;}
+.btn-draft-resume{
+  background:var(--gold); color:#fff; border:none;
+  border-radius:50px; padding:8px 16px; font-weight:900; font-size:13px;
+  min-height:40px;
+}
+.btn-draft-clear{
+  background:transparent; color:rgba(244,235,217,0.7);
+  border:1px solid rgba(244,235,217,0.4); border-radius:50px;
+  padding:8px 12px; font-size:12px; min-height:40px;
+}
+
+/* ---------- Advanced toolbox ---------- */
+.advanced-toggle{
+  width:100%; background:transparent;
+  border:2px dashed var(--gold-deep);
+  border-radius:var(--radius-md); padding:12px 16px;
+  font-size:14px; font-weight:800; color:var(--coffee);
+  display:flex; justify-content:space-between; align-items:center;
+  min-height:var(--tap-min);
+}
+.toggle-arrow{font-size:12px;}
+.advanced-grid{
+  display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;
+}
+.mode-card-sm{
+  background:var(--cream-soft);
+  border:none; border-radius:var(--radius-md);
+  padding:12px 10px 10px;
+  box-shadow:var(--shadow);
+  text-align:left;
+  display:flex; flex-direction:column; gap:4px;
+  min-height:90px;
+}
+.mode-card-sm .icon{font-size:22px;}
+.mode-card-sm .title{font-weight:900; font-size:14px;}
+.mode-card-sm .desc{font-size:11.5px; color:var(--coffee-soft); line-height:1.35;}
+
+/* ---------- Progress strip (with step name) ---------- */
+.progress-strip{margin:6px 0 16px;}
+.progress-dots{display:flex; gap:5px; margin-bottom:6px;}
+.progress-dots span{
+  flex:1; height:5px; border-radius:4px; background:#E5D6B8;
+}
+.progress-dots span.done{background:var(--orange);}
+.progress-dots span.current{background:var(--coffee);}
+.progress-label{
+  font-size:12px; font-weight:700; color:var(--coffee-soft); text-align:center;
+}
+
+/* ---------- Workshop song cards ---------- */
+.song-card{
+  background:var(--cream-soft); border-radius:var(--radius-lg);
+  padding:18px; margin-bottom:16px; box-shadow:var(--shadow);
+  border-left:6px solid var(--orange);
+}
+.song-card-head{
+  display:flex; align-items:center; gap:10px; margin-bottom:10px;
+}
+.song-icon{font-size:26px;}
+.song-label{font-weight:900; font-size:15px; color:var(--maroon);}
+.song-style{font-size:12px; color:var(--coffee-soft); border:1px solid #E5D6B8; border-radius:20px; padding:3px 10px;}
+.song-title{font-family:'Noto Serif TC',serif; font-weight:900; font-size:18px; margin-bottom:6px;}
+.song-concept{font-size:13.5px; color:var(--coffee-soft); margin-bottom:12px; line-height:1.5;}
+.song-lyrics{
+  white-space:pre-wrap; font-size:14px; font-family:inherit;
+  background:var(--coffee); color:var(--cream-soft);
+  border-radius:var(--radius-sm); padding:14px; margin:0 0 12px;
+  line-height:1.7; word-break:break-all;
+}
+.song-meta{display:flex; gap:12px; font-size:13px; color:var(--coffee-soft); margin-bottom:10px;}
+.song-ai-prompt{font-size:13px;}
+.song-ai-prompt strong{color:var(--maroon);}
+.song-card-actions{display:flex; gap:10px; margin-top:12px;}
+.song-card-actions button{flex:1; min-height:var(--tap-min);}
+
+/* workshop re-gen */
+.workshop-actions{margin:6px 0 14px;}
+.btn-workshop-regen{width:100%; min-height:var(--tap-min);}
+
+/* ---------- Canvas card area ---------- */
+.card-section{
+  background:var(--cream-soft); border-radius:var(--radius-lg);
+  padding:18px; margin-top:16px; box-shadow:var(--shadow);
+}
+.card-section h4{margin:0 0 12px; font-size:16px; color:var(--maroon);}
+.card-type-row,.card-size-row{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;}
+.card-dl-row{display:flex; gap:10px; margin-top:12px;}
+.card-dl-row button{flex:1; min-height:var(--tap-min);}
+
+/* ---------- Share cards full-width ---------- */
+.share-grid{display:grid; grid-template-columns:1fr; gap:10px; margin-top:10px;}
+.share-card{
+  background:var(--cream-soft); border-radius:var(--radius-md); padding:14px;
+  box-shadow:var(--shadow); font-size:14px;
+}
+.share-card h5{margin:0 0 6px; font-size:12px; color:var(--maroon); font-weight:900; letter-spacing:.5px;}
+
 :focus-visible{outline:3px solid var(--maroon); outline-offset:2px;}
 @media (prefers-reduced-motion: reduce){
   *{animation:none !important; transition:none !important;}
@@ -396,4 +501,5 @@ textarea.input-error{
 
 @media (min-width:520px){
   body{font-size:18px;}
+  .share-grid{grid-template-columns:1fr 1fr;}
 }
