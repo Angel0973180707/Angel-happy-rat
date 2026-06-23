@@ -7,10 +7,15 @@
 <meta name="description" content="歡樂版人生導航系統：把情緒變笑氣，把妄想變願景，把人生變作品。不是心理諮商、不是命理、不是嚴肅人生教練。">
 <meta name="theme-color" content="#C97B2E">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="rat-safe.jpg">
+<link rel="icon" href="rat-safe.jpg">
 <link rel="stylesheet" href="style.css">
 
+<!-- ============================================================
+  Analytics placeholders (GA4 / Microsoft Clarity)
+  Free, optional. Replace the IDs below to enable. Leaving them
+  as-is means analytics simply does not load — app still works.
+============================================================= -->
 <script>
   window.GA4_ID = "G-XXXXXXXXXX";      // ← 換成你的 GA4 評估 ID
   window.CLARITY_ID = "xxxxxxxxxx";    // ← 換成你的 Clarity Project ID
@@ -42,7 +47,7 @@
 
   <div class="topbar">
     <button class="back-btn" id="btn-back" style="display:none" aria-label="返回首頁">←</button>
-    <span class="brand"><img src="icons/rat-avatar.png" class="char-icon char-icon-tiny" alt="小天鼠"><img src="icons/tiger-avatar.png" class="char-icon char-icon-tiny" alt="唬爛虎"> 笑鼠人了！</span>
+    <span class="brand"><img src="rat.webp" class="char-icon char-icon-tiny" alt="小天鼠"><img src="tiger.webp" class="char-icon char-icon-tiny" alt="唬爛虎"> 笑鼠人了！</span>
     <span style="width:44px"></span>
   </div>
 
@@ -51,8 +56,8 @@
 
     <div class="hero">
       <div class="emoji-row">
-        <img src="icons/rat-avatar.png" class="char-icon char-icon-hero" alt="小天鼠">
-        <img src="icons/tiger-avatar.png" class="char-icon char-icon-hero" alt="唬爛虎">
+        <img src="rat.webp" class="char-icon char-icon-hero" alt="小天鼠">
+        <img src="tiger.webp" class="char-icon char-icon-hero" alt="唬爛虎">
         <span>🎬</span>
       </div>
       <h1>笑鼠人了！</h1>
@@ -68,7 +73,7 @@
 說不定會發現：真是笑「鼠」人了！🐭🤣</div>
     </div>
 
-    <button class="origin-toggle" id="btn-origin"><img src="icons/rat-avatar.png" class="char-icon char-icon-tiny" alt="小天鼠"> 小天鼠的由來（點我看故事）</button>
+    <button class="origin-toggle" id="btn-origin"><img src="rat.webp" class="char-icon char-icon-tiny" alt="小天鼠"> 小天鼠的由來（點我看故事）</button>
     <div class="origin-card" id="origin-card">媽媽急著找我幫忙，拉開嗓門大喊：
 
 「小～～天～～鼠～～～！」
@@ -87,15 +92,15 @@
     <div class="section-label">🎵 主題曲</div>
     <div class="video-grid">
       <div class="video-card">
-        <div class="video-card-head"><img src="icons/rat-avatar.png" class="char-icon char-icon-tiny" alt="小天鼠"> 小天鼠笑了</div>
-        <video class="theme-video" preload="none" controls playsinline poster="icons/rat-poster.jpg" data-event="rat">
+        <div class="video-card-head"><img src="rat.webp" class="char-icon char-icon-tiny" alt="小天鼠"> 小天鼠笑了</div>
+        <video class="theme-video" preload="none" controls playsinline poster="rat.webp" data-event="rat">
           <source src="videos/rat-laughed.mp4" type="video/mp4">
           您的瀏覽器不支援影片播放。
         </video>
       </div>
       <div class="video-card">
-        <div class="video-card-head"><img src="icons/tiger-avatar.png" class="char-icon char-icon-tiny" alt="唬爛虎"> 吹一下會怎樣</div>
-        <video class="theme-video" preload="none" controls playsinline poster="icons/tiger-poster.jpg" data-event="tiger">
+        <div class="video-card-head"><img src="tiger.webp" class="char-icon char-icon-tiny" alt="唬爛虎"> 吹一下會怎樣</div>
+        <video class="theme-video" preload="none" controls playsinline poster="tiger.webp" data-event="tiger">
           <source src="videos/tiger-blow.mp4" type="video/mp4">
           您的瀏覽器不支援影片播放。
         </video>
