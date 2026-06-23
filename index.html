@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>笑鼠人了！－ 笑掉煩惱，吹大夢想，把人生活成作品</title>
+<meta name="description" content="歡樂版人生導航系統：把情緒變笑氣，把妄想變願景，把人生變作品。不是心理諮商、不是命理、不是嚴肅人生教練。">
+<meta name="theme-color" content="#C97B2E">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+
+<script>
+  window.GA4_ID = "G-XXXXXXXXXX";      // ← 換成你的 GA4 評估 ID
+  window.CLARITY_ID = "xxxxxxxxxx";    // ← 換成你的 Clarity Project ID
+  window.GAS_API_URL = "https://script.google.com/macros/s/AKfycbzFkewVnwkmxQfHQACgjbrm0c6b4pj-tnhjEApqHDGZkanwAmQkqObV0bAMxFBNAV-E/exec";
+</script>
+<script>
+  if (window.GA4_ID && window.GA4_ID.indexOf('XXXX') === -1) {
+    var s = document.createElement('script');
+    s.async = true; s.src = "https://www.googletagmanager.com/gtag/js?id=" + window.GA4_ID;
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){window.dataLayer.push(arguments);}
+    window.gtag = gtag;
+    gtag('js', new Date());
+    gtag('config', window.GA4_ID);
+  }
+  if (window.CLARITY_ID && window.CLARITY_ID.indexOf('xxxx') === -1) {
+    (function(c,l,a,r,i,t,y){
+      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", window.CLARITY_ID);
+  }
+</script>
+</head>
+<body>
+
+<div class="app-shell" id="app-shell">
+
+  <div class="topbar">
+    <button class="back-btn" id="btn-back" style="display:none" aria-label="返回首頁">←</button>
+    <span class="brand"><img src="icons/rat-avatar.png" class="char-icon char-icon-tiny" alt="小天鼠"><img src="icons/tiger-avatar.png" class="char-icon char-icon-tiny" alt="唬爛虎"> 笑鼠人了！</span>
+    <span style="width:44px"></span>
+  </div>
+
+  <!-- ============================ HOME ============================ -->
+  <section class="screen active" id="screen-home">
+
+    <div class="hero">
+      <div class="emoji-row">
+        <img src="icons/rat-avatar.png" class="char-icon char-icon-hero" alt="小天鼠">
+        <img src="icons/tiger-avatar.png" class="char-icon char-icon-hero" alt="唬爛虎">
+        <span>🎬</span>
+      </div>
+      <h1>笑鼠人了！</h1>
+      <p class="subtitle">笑掉煩惱，吹大夢想，把人生活成作品。</p>
+      <div class="tagline">人生難免有煩惱，有委屈，有氣到想揍人的時候。
+也難免會羨慕，會嫉妒，會偷偷想著：「如果我也可以那樣就好了。」
+
+沒關係。
+先讓小天鼠陪你笑一笑。
+再讓唬爛虎陪你吹大夢想。
+最後讓自導自演，幫你把這段人生寫成作品。
+
+說不定會發現：真是笑「鼠」人了！🐭🤣</div>
+    </div>
+
+    <button class="origin-toggle" id="btn-origin"><img src="icons/rat-avatar.png" class="char-icon char-icon-tiny" alt="小天鼠"> 小天鼠的由來（點我看故事）</button>
+    <div class="origin-card" id="origin-card">媽媽急著找我幫忙，拉開嗓門大喊：
+
+「小～～天～～鼠～～～！」
+
+旁邊的孩子聽了偷偷在笑。
+笑著糾正阿嬤：
+「阿嬤，是小天使啦，不是小天鼠！」🤣
+
+接著還學了一遍：
+「小～～天～～鼠～～～！」
+
+把我也逗樂了。
+
+於是，「小天鼠」就這樣誕生了。✨</div>
+
+    <div class="section-label">🎵 主題曲</div>
+    <div class="video-grid">
+      <div class="video-card">
+        <div class="video-card-head"><img src="icons/rat-avatar.png" class="char-icon char-icon-tiny" alt="小天鼠"> 小天鼠笑了</div>
+        <video class="theme-video" preload="none" controls playsinline poster="icons/rat-poster.jpg" data-event="rat">
+          <source src="videos/rat-laughed.mp4" type="video/mp4">
+          您的瀏覽器不支援影片播放。
+        </video>
+      </div>
+      <div class="video-card">
+        <div class="video-card-head"><img src="icons/tiger-avatar.png" class="char-icon char-icon-tiny" alt="唬爛虎"> 吹一下會怎樣</div>
+        <video class="theme-video" preload="none" controls playsinline poster="icons/tiger-poster.jpg" data-event="tiger">
+          <source src="videos/tiger-blow.mp4" type="video/mp4">
+          您的瀏覽器不支援影片播放。
+        </video>
+      </div>
+    </div>
+
+    <div class="section-label">⏰ 你現在最需要什麼？</div>
+    <div class="mode-grid" id="mode-grid"><!-- rendered by app.js --></div>
+
+    <div class="route-b-banner">
+      <h3>🎬 想玩完整版？</h3>
+      <p>從一句話開始，走完情緒→願望→亮點→故事→創作的完整路線，最後產生你的人生創作包。</p>
+      <button class="btn-primary" id="btn-route-b">開始完整創作之旅</button>
+    </div>
+
+    <button class="btn-ghost" id="btn-gate" style="margin-top:14px;">🧭 智慧之門（敬請期待）</button>
+
+    <footer class="foot-note">
+      這是娛樂與創作輔助工具，不是醫療、心理治療、命理或法律建議。<br>
+      若情緒持續困擾你，建議找信任的人聊聊，或諮詢專業人員。
+    </footer>
+  </section>
+
+  <!-- ===================== GENERIC MODE SCREEN ===================== -->
+  <section class="screen" id="screen-mode">
+    <div class="progress-strip" id="progress-strip" style="display:none"></div>
+    <div class="mode-header">
+      <div class="icon" id="mode-icon">😤</div>
+      <h2 id="mode-title">嗆聲模式</h2>
+      <p class="sub" id="mode-sub">我現在很想罵，但我想罵得有才華。</p>
+    </div>
+
+    <div id="mode-input-area"><!-- rendered by app.js --></div>
+
+    <button class="btn-primary" id="btn-generate">產生內容 🎲</button>
+
+    <div id="mode-results" style="margin-top:18px;"></div>
+  </section>
+
+  <!-- ===================== 智慧之門 / waitlist ===================== -->
+  <section class="screen" id="screen-gate">
+    <div class="mode-header">
+      <div class="icon">🧭</div>
+      <h2>智慧之門</h2>
+      <p class="sub">Coming Soon</p>
+    </div>
+    <div class="gate-card">
+      <span class="brush">有些答案，<br>不是算出來的，<br>是看見的。</span>
+      <p style="color:#F1E6CC; font-size:14px;">未來這裡會連結專業合作系統，提供更深的解讀體驗。目前僅開放候補名單，不提供算命或解卦。</p>
+      <span class="coming">COMING SOON</span>
+    </div>
+    <div class="field-block" style="margin-top:18px;">
+      <label for="waitlist-contact">留下 LINE ID 或 Email，開放時優先通知你</label>
+      <textarea id="waitlist-contact" rows="2" placeholder="例如：line_id 或 you@example.com"></textarea>
+    </div>
+    <button class="btn-primary" id="btn-waitlist-join">加入候補名單</button>
+  </section>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('service-worker.js').catch(function(){ /* offline-first is best-effort */ });
+    });
+  }
+</script>
+</body>
+</html>
