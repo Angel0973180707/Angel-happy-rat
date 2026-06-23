@@ -92,11 +92,16 @@ function fetchQuotaFromServer(){
       if(res&&res.ok){syncQuotaFromServer(res);renderQuotaBadges();}
     }).catch(function(){});
 }
-function quotaTypeForMode(id){return id==='workshop'?'workshop':'quick';}
+function quotaTypeForMode(id){
+  if(id==='workshop') return 'workshop';
+  if(QUICK_MODES.indexOf(id)!==-1) return 'quick';
+  return 'journey'; // strength / director 獨立存取視為完整旅程
+}
 /* tryConsumeQuota：呼叫 GAS，回傳 Promise<{ok,remaining,reason,...}> */
 function tryConsumeQuota(type){
   if(!window.GAS_API_URL){
-    /* 無 GAS 環境：純 localStorage 柔性模式 */
+    /* 無 GAS_API_URL：開發 / 離線模式，使用 localStorage 柔性限制 */
+    console.warn('[quota] GAS_API_URL not set, using dev-mode localStorage only');
     initQuota();
     var st=getQuotaState();
     if(type==='workshop'&&st.workshop<=0&&st.bonus>0){
@@ -1221,9 +1226,15 @@ function bindResultActions(id){
   /* 完成 */
   var finishBtn=document.getElementById('btn-route-finish');
   if(finishBtn){ finishBtn.addEventListener('click',function(){ toast('創作之旅完成！記得分享出去讓朋友笑一下 🎉'); showScreen('home'); checkDraftBanner(); }); }
-  /* 把這件事變成作品 */
+  /* 把這件事變成作品 → 也要扣一次 journey */
   var makeWorkBtn=document.getElementById('btn-make-work');
-  if(makeWorkBtn){ makeWorkBtn.addEventListener('click',function(){ flow.routeB=true; flow.stepIndex=0; openMode(ROUTE_B_ORDER[0],{routeB:true}); }); }
+  if(makeWorkBtn){ makeWorkBtn.addEventListener('click',function(){
+    tryConsumeQuota('journey').then(function(jq){
+      if(!jq.ok){showQuotaExhausted('journey',jq.reason);return;}
+      logEvent('MODE_SELECT',{mode:'route_b_from_result'});
+      flow.routeB=true; flow.stepIndex=0; openMode(ROUTE_B_ORDER[0],{routeB:true});
+    });
+  }); }
 }
 
 function renderTextBlocks(data){
@@ -1337,7 +1348,7 @@ function renderNextStepsGuide(){
       +'<div class="step-body">'
         +'<div class="step-label">🎵 把歌詞貼進 Suno 做歌</div>'
         +'<div class="step-desc">複製上面的「AI 音樂生成 Prompt」→ 開啟 Suno → 貼進 Create 欄位 → 點 Create 生成你的歌</div>'
-        +'<a href="https://suno.com" target="_blank" rel="noopener" class="btn-tool-link">開啟 Suno →</a>'
+        +'<a href="https://suno.com" target="_blank" rel="noopener" class="btn-tool-link" onclick="window.logPartnerClick&&window.logPartnerClick(\'suno\',\'https://suno.com\')">開啟 Suno →</a>'
       +'</div>'
     +'</div>'
     +'<div class="next-step-item">'
@@ -1348,7 +1359,7 @@ function renderNextStepsGuide(){
           +'<strong>方法 A（最快）：</strong>複製「MV 分鏡」→ 開啟 CapCut → 點「AI 文字生成影片」→ 貼上分鏡文字 → 自動生成畫面，再匯入你的 Suno 歌曲<br><br>'
           +'<strong>方法 B（手動）：</strong>分鏡每一行 = 一張圖的指令。把每一行複製給 ChatGPT 或 Midjourney 生成圖片，再把圖片放進 CapCut 按順序排好，加上 Suno 歌曲當背景音樂'
         +'</div>'
-        +'<a href="https://www.capcut.com/zh-tw/" target="_blank" rel="noopener" class="btn-tool-link">開啟 CapCut →</a>'
+        +'<a href="https://www.capcut.com/zh-tw/" target="_blank" rel="noopener" class="btn-tool-link" onclick="window.logPartnerClick&&window.logPartnerClick(\'capcut\',\'https://www.capcut.com/zh-tw/\')">開啟 CapCut →</a>'
       +'</div>'
     +'</div>'
     +'<div class="next-step-item">'
@@ -1357,9 +1368,9 @@ function renderNextStepsGuide(){
         +'<div class="step-label">🖼 用 AI 生成封面插圖</div>'
         +'<div class="step-desc">複製上面的「繪圖提示」→ 貼給以下任一工具 → 生成你的專屬封面圖</div>'
         +'<div class="tool-link-row">'
-          +'<a href="https://gemini.google.com" target="_blank" rel="noopener" class="btn-tool-link">Gemini →</a>'
-          +'<a href="https://chat.openai.com" target="_blank" rel="noopener" class="btn-tool-link">ChatGPT →</a>'
-          +'<a href="https://www.midjourney.com" target="_blank" rel="noopener" class="btn-tool-link">Midjourney →</a>'
+          +'<a href="https://gemini.google.com" target="_blank" rel="noopener" class="btn-tool-link" onclick="window.logPartnerClick&&window.logPartnerClick(\'gemini\',\'https://gemini.google.com\')">Gemini →</a>'
+          +'<a href="https://chat.openai.com" target="_blank" rel="noopener" class="btn-tool-link" onclick="window.logPartnerClick&&window.logPartnerClick(\'chatgpt\',\'https://chat.openai.com\')">ChatGPT →</a>'
+          +'<a href="https://www.midjourney.com" target="_blank" rel="noopener" class="btn-tool-link" onclick="window.logPartnerClick&&window.logPartnerClick(\'midjourney\',\'https://www.midjourney.com\')">Midjourney →</a>'
         +'</div>'
       +'</div>'
     +'</div>'
@@ -1489,16 +1500,20 @@ function bindNav(){
     }
   });
   document.getElementById('btn-route-b').addEventListener('click',function(){
-    var jq=tryConsumeQuota('journey');
-    if(!jq.ok){showQuotaExhausted('journey');return;}
-    logEvent('MODE_SELECT',{mode:'route_b'});
-    flow.routeB=true; flow.stepIndex=0;
-    openMode(ROUTE_B_ORDER[0],{routeB:true});
+    tryConsumeQuota('journey').then(function(jq){
+      if(!jq.ok){showQuotaExhausted('journey',jq.reason);return;}
+      logEvent('MODE_SELECT',{mode:'route_b'});
+      flow.routeB=true; flow.stepIndex=0;
+      openMode(ROUTE_B_ORDER[0],{routeB:true});
+    });
   });
   document.getElementById('btn-origin').addEventListener('click',function(){
     document.getElementById('origin-card').classList.toggle('show');
   });
-  document.getElementById('btn-gate').addEventListener('click',function(){showScreen('gate');});
+  document.getElementById('btn-gate').addEventListener('click',function(){
+    logPartnerClick('wisdom-gate','');
+    showScreen('gate');
+  });
   document.getElementById('btn-waitlist-join').addEventListener('click',function(){
     var contact=document.getElementById('waitlist-contact').value.trim();
     logEvent('JOIN_WAITLIST',{contact:contact?'provided':'empty'});
@@ -1540,6 +1555,7 @@ document.addEventListener('DOMContentLoaded',function(){
   bindThemeVideos();
   preloadImages(function(){});
   window._redeemCode=redeemGiftCode;
+  window.logPartnerClick=logPartnerClick;
 });
 
 })();
