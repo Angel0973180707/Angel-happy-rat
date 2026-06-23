@@ -10,7 +10,7 @@ var SHEET_NAMES = [
   '05_迷航翻譯庫','06_亮點庫','07_自導自演劇本庫','08_歌曲模板庫',
   '09_繪圖提示庫','10_影片分鏡庫','11_分享文案庫','12_禁用詞',
   '13_近期使用紀錄','14_合作夥伴設定','15_合作導流紀錄','16_流量事件',
-  '17_創作紀錄','18_分享紀錄','19_每日統計','20_內容排行榜'
+  '19_每日統計'
 ];
 
 var RECORD_HEADERS = [
@@ -102,7 +102,6 @@ function getHeadersForSheet(name) {
   if (name === '15_合作導流紀錄') return ['timestamp','partnerId','userId','sessionId','referralCode','targetUrl','action'];
   if (name === '16_流量事件')     return ['時間','userId','eventType','mode','subMode','source','device','sessionId'];
   if (name === '19_每日統計')     return ['date','appOpen','generate','copy','share','partnerClick'];
-  if (name === '20_內容排行榜')   return ['contentHash','mode','output','copyCount','shareCount','lastUsedAt'];
   return RECORD_HEADERS;
 }
 
@@ -138,11 +137,8 @@ function saveRecord(data) {
     var clean = normalizeRecord(data);
     sheet.appendRow(RECORD_HEADERS.map(function(key) { return clean[key] || ''; }));
     saveRecentRecord(clean, ss);
-    saveCreationRecord(clean, ss);
-    if (clean.action === 'SHARE') saveShareRecord(clean, ss);
     if (clean.action === 'PARTNER_CLICK') trackPartnerClick(clean, ss);
     updateDailyStats(clean, ss);
-    updateContentRanking(clean, ss);
     return true;
   } finally {
     lock.releaseLock();
@@ -261,19 +257,6 @@ function saveRecentRecord(clean, ss) {
   if (sheet.getLastRow() > 101) sheet.deleteRows(102, sheet.getLastRow() - 101);
 }
 
-function saveCreationRecord(clean, ss) {
-  if (['GENERATE_SONG','GENERATE_IMAGE','GENERATE_VIDEO'].indexOf(clean.action) === -1) return;
-  var sheet = ss.getSheetByName('17_創作紀錄') || ss.insertSheet('17_創作紀錄');
-  if (sheet.getLastRow() === 0) sheet.appendRow(RECORD_HEADERS);
-  sheet.appendRow(RECORD_HEADERS.map(function(k){return clean[k]||'';}));
-}
-
-function saveShareRecord(clean, ss) {
-  var sheet = ss.getSheetByName('18_分享紀錄') || ss.insertSheet('18_分享紀錄');
-  if (sheet.getLastRow() === 0) sheet.appendRow(RECORD_HEADERS);
-  sheet.appendRow(RECORD_HEADERS.map(function(k){return clean[k]||'';}));
-}
-
 function trackPartnerClick(data, ss) {
   var sheet = ss.getSheetByName('15_合作導流紀錄') || ss.insertSheet('15_合作導流紀錄');
   if (sheet.getLastRow() === 0) sheet.appendRow(getHeadersForSheet('15_合作導流紀錄'));
@@ -292,21 +275,6 @@ function updateDailyStats(clean, ss) {
   var colMap = { APP_OPEN:2, GENERATE:3, REGENERATE:3, COPY:4, SHARE:5, PARTNER_CLICK:6 };
   var col = colMap[clean.action];
   if (col) sheet.getRange(rowIdx,col).setValue(Number(sheet.getRange(rowIdx,col).getValue()||0)+1);
-}
-
-function updateContentRanking(clean, ss) {
-  if (['COPY','SHARE'].indexOf(clean.action) === -1 || !clean.output) return;
-  var sheet = ss.getSheetByName('20_內容排行榜') || ss.insertSheet('20_內容排行榜');
-  if (sheet.getLastRow() === 0) sheet.appendRow(getHeadersForSheet('20_內容排行榜'));
-  var hash = Utilities.base64EncodeWebSafe(
-    Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, clean.output)).slice(0,24);
-  var values = sheet.getDataRange().getValues();
-  var row = -1;
-  for (var i = 1; i < values.length; i++) { if (values[i][0] === hash) row = i + 1; }
-  if (row === -1) { sheet.appendRow([hash,clean.mode,clean.output,0,0,new Date().toISOString()]); row=sheet.getLastRow(); }
-  var cc = clean.action === 'COPY' ? 4 : 5;
-  sheet.getRange(row,cc).setValue(Number(sheet.getRange(row,cc).getValue()||0)+1);
-  sheet.getRange(row,6).setValue(new Date().toISOString());
 }
 
 // ----------------------------------------------
