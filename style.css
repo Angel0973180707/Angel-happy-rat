@@ -129,9 +129,9 @@ a{color:inherit;}
   font-family:'Noto Serif TC', serif;
   font-weight:500; display:block; line-height:1.7;
 }
-.spirit-line:nth-child(1){ font-size:13px; color:rgba(255,255,255,0.6); }
+.spirit-line:nth-child(1){ font-size:13px; color:rgba(255,255,255,0.6); font-weight:700; }
 .spirit-line:nth-child(2){ font-size:17px; color:#fff; font-weight:900; margin:2px 0; }
-.spirit-line:nth-child(3){ font-size:13px; color:rgba(255,255,255,0.6); }
+.spirit-line:nth-child(3){ font-size:13px; color:rgba(255,255,255,0.6); font-weight:700; }
 
 /* ---------- Origin story card ---------- */
 .origin-toggle{
