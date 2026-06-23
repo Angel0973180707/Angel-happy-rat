@@ -384,8 +384,14 @@ function genDirector(input,context){
   var act3=ending
     ?'主角最後決定去做「'+ending+'」——不是因為準備好了，是因為不做更後悔。'
     :fill(tpl.act3,{subject:wish});
+  var ANTAGONIST_POOL=[
+    '心裡那個說「'+wish+'這件事你做不到」的聲音',
+    '心裡那個說「這個願望太誇張了，算了吧」的聲音',
+    '心裡那個問「你真的準備好了嗎」的聲音，一直在那邊響',
+    '那個說「先等等，再說啦」的習慣——其實是恐懼穿著拖延的外衣'
+  ];
   return {role:'director',cinema:true,title:tpl.titlePattern,genre:tpl.genre,
-    antagonist:'不是別人，是心裡那個說「'+(emotion||wish)+'根本不算什麼」的聲音。',
+    antagonist:'不是別人，是'+pickVaried('antagonist',ANTAGONIST_POOL)+'。',
     act1:act1,act2:act2,act3:act3,ending:tpl.ending};
 }
 function genSong(context,length){
@@ -431,12 +437,21 @@ function genShareCopy(context){
     selectedSong=context.songVersions.filter(function(v){return v.version===context.selectedSongVersion;})[0]||null;
   }
   if(!selectedSong&&context.songVersions&&context.songVersions.length) selectedSong=context.songVersions[0];
+  var hookText=selectedSong?selectedSong.hook:'';
   return {
-    line:event?'今天「'+event+'」讓我有點崩潰，結果小天鼠幫我翻譯完，我笑出來了。原來不是我有問題，是人生正在做效果。':SHARE_TEMPLATES.line,
-    fb:topic?'本來只是想搞清楚「'+topic+'」這件事，結果AI幫我把它寫成了一段人生劇本。#笑鼠人了':SHARE_TEMPLATES.fb,
-    ig:filmTitle?'我的人生微電影：'+filmTitle+'。把崩潰交給小天鼠，把夢想交給唬爛虎。#笑鼠人了':SHARE_TEMPLATES.ig,
-    threads:lastQuote?'「'+lastQuote+'」——小天鼠說的，我覺得說得有點對。 #笑鼠人了':SHARE_TEMPLATES.threads,
-    hook:selectedSong?selectedSong.hook:''
+    line:event
+      ?'今天「'+event+'」讓我有點崩潰，結果小天鼠幫我翻譯完，我笑出來了。原來不是我有問題，是人生正在做效果。'+(hookText?'\n\n「'+hookText+'」':'')
+      :SHARE_TEMPLATES.line,
+    fb:topic
+      ?'本來只是想搞清楚「'+topic+'」這件事，結果AI幫我把它寫成了一段人生劇本。'+(hookText?'\n「'+hookText+'」':'')+'\n#笑鼠人了'
+      :SHARE_TEMPLATES.fb,
+    ig:filmTitle
+      ?'我的人生微電影：'+filmTitle+'。'+(hookText?'\n「'+hookText+'」\n':'')+'把崩潰交給小天鼠，把夢想交給唬爛虎。#笑鼠人了'
+      :SHARE_TEMPLATES.ig,
+    threads:hookText
+      ?'「'+hookText+'」 #笑鼠人了'
+      :(lastQuote?'「'+lastQuote+'」——小天鼠說的，我覺得說得有點對。 #笑鼠人了':SHARE_TEMPLATES.threads),
+    hook:hookText
   };
 }
 
@@ -501,7 +516,10 @@ function genSongVersionA(context){
   var hook=fill(hookTpl,{wish:wish,trait:trait});
   var verse2Tpl=pickVaried('song_a_v2',SONG_A_VERSE2_POOL);
   var bridge=pickVaried('song_a_bridge',SONG_A_BRIDGE_POOL);
-  var style=pickVaried('song_a_style',SONG_A_STYLES);
+  /* Fix 1：style-chip 影響曲風選取 */
+  var sh=context.styleHint||'';
+  var stylePool=sh==='溫暖療癒'?[SONG_A_STYLES[2]]:sh==='熱血電影感'?[SONG_A_STYLES[1]]:SONG_A_STYLES;
+  var style=pickVaried('song_a_style_'+sh,stylePool);
   var lyrics=[
     '【Verse 1】',
     '今天關於'+event+'的事打到我了',
@@ -539,12 +557,15 @@ function genSongVersionB(context){
   var hook=fill(hookTpl,{wish:wish,trait:trait});
   var verse2Tpl=pickVaried('song_b_v2',SONG_B_VERSE2_POOL);
   var bridge=pickVaried('song_b_bridge',SONG_B_BRIDGE_POOL);
-  var style=pickVaried('song_b_style',SONG_B_STYLES);
+  /* Fix 1：style-chip 影響 B 版曲風 */
+  var sh=context.styleHint||'';
+  var styleBPool=sh==='搞笑自嘲'?[SONG_B_STYLES[3]]:sh==='溫暖療癒'?[SONG_B_STYLES[3]]:sh==='熱血電影感'?[SONG_B_STYLES[0]]:SONG_B_STYLES;
+  var style=pickVaried('song_b_style_'+sh,styleBPool);
   var lyrics=[
     '【Intro】（電影感鋼琴引子）',
     '',
     '【Verse 1】',
-    '那一天關於'+event,
+    '那一天，「'+event+'」再次發生',
     '我站在原地，不知道往哪邊',
     '唬爛虎說：先吹出來，方向之後再說',
     '',
@@ -970,6 +991,7 @@ function renderCinemaTicket(d){
   return '<div class="cinema-wrap"><div class="cinema-ticket"><div class="film-genre">'+escapeHtml(d.genre)+'</div><div class="film-title">'+escapeHtml(d.title)+'</div><div class="act"><div class="label">最大反派</div><div class="content">'+escapeHtml(d.antagonist)+'</div></div><div class="act"><div class="label">第一幕</div><div class="content">'+escapeHtml(d.act1)+'</div></div><div class="act"><div class="label">第二幕</div><div class="content">'+escapeHtml(d.act2)+'</div></div><div class="act"><div class="label">第三幕</div><div class="content">'+escapeHtml(d.act3)+'</div></div><div class="ending">「'+escapeHtml(d.ending)+'」</div></div></div>';
 }
 function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escapeAttr(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function actionRowHtml(){
   return '<div class="action-row"><button class="btn-copy" id="btn-copy-result">📋 複製</button><button class="btn-regen" id="btn-regen-result">🎲 再來一版</button></div>';
 }
@@ -1003,21 +1025,25 @@ function runWorkshop(){
   var extra=inputEl?inputEl.value.trim():'';
   if(extra) flow.context.topic=flow.context.topic||extra;
   flow.context.wish=flow.context.wish||flow.context.topic||extra;
+  /* Fix 1：讀取作品風格 chip，存入 context 供生成器使用 */
+  var styleHint=getChipValue('style-chip')||'';
+  flow.context.styleHint=styleHint;
 
   var vA=genSongVersionA(flow.context);
   var vB=genSongVersionB(flow.context);
   flow.context.songVersions=[vA,vB];
 
+  /* Fix 2：加固定 mv-area 容器，重複選歌只覆蓋不追加 */
   var html=renderSongVersionCard(vA)+renderSongVersionCard(vB);
   html+='<div class="workshop-actions"><button class="btn-regen btn-workshop-regen" id="btn-workshop-regen">🔄 免費再生成兩版</button></div>';
-  /* Fix 8: 不在此處顯示 next step，選定版本後才顯示 */
+  html+='<div id="mv-area"></div>';
 
   els.results.innerHTML=html;
 
   document.getElementById('btn-workshop-regen').addEventListener('click',runWorkshop);
 
   bindWorkshopSelect();
-  logEvent('GENERATE_SONG',{});
+  logEvent('GENERATE_SONG',{styleHint:styleHint});
   saveDraft();
 }
 
@@ -1033,7 +1059,7 @@ function renderSongVersionCard(v){
     +'<div class="song-meta-ext">🎤 演唱方式：'+escapeHtml(v.vocal)+'</div>'
     +'<div class="song-ai-prompt"><strong>AI 音樂生成 Prompt：</strong><div class="prompt-box">'+escapeHtml(v.aiPrompt)+'</div></div>'
     +'<div class="song-card-actions">'
-    +'<button class="btn-copy btn-copy-song" data-copy="'+escapeHtml(v.title+'\n'+v.lyrics+'\n\n情緒：'+v.mood+'\n編曲：'+v.instruments+'\n演唱：'+v.vocal+'\n\nAI Prompt: '+v.aiPrompt)+'">📋 複製'+v.icon+'指令</button>'
+    +'<button class="btn-copy btn-copy-song" data-copy="'+escapeAttr(v.title+'\n'+v.lyrics+'\n\n情緒：'+v.mood+'\n編曲：'+v.instruments+'\n演唱：'+v.vocal+'\n\nAI Prompt: '+v.aiPrompt)+'">📋 複製'+v.icon+'指令</button>'
     +'<button class="btn-primary btn-select-song" data-version="'+v.version+'" style="flex:1;">✅ 選擇此版本製作 MV</button>'
     +'</div></div>';
 }
@@ -1054,7 +1080,7 @@ function bindWorkshopSelect(){
   });
 }
 
-/* MV + 圖像指令（Fix 8: 選定版本後才顯示 next step + 圖卡區塊） */
+/* MV + 圖像指令（Fix 2: 用固定 mv-area 容器覆蓋，不追加） */
 function renderMVAndImageArea(songVer){
   var prompts=genImageAndMVPrompts(songVer,flow.context);
   var html='<hr style="margin:18px 0; border-color:#E5D6B8;">'
@@ -1062,13 +1088,15 @@ function renderMVAndImageArea(songVer){
     +'<div class="body-text">副歌 Hook：「'+escapeHtml(songVer.hook)+'」</div></div>';
   ['ratCover','tigerPoster','mvStoryboard','videoPrompt'].forEach(function(key){
     html+='<div class="creative-card"><div class="prompt-box">'+escapeHtml(prompts[key])+'</div>'
-      +'<button class="btn-copy mv-copy-btn" style="margin-top:6px;width:100%;" data-copy="'+escapeHtml(prompts[key])+'">📋 複製</button></div>';
+      +'<button class="btn-copy mv-copy-btn" style="margin-top:6px;width:100%;" data-copy="'+escapeAttr(prompts[key])+'">📋 複製</button></div>';
   });
-  /* 選定版本後才顯示進入分享頁的按鈕 */
   if(flow.routeB){
     html+='<button class="btn-primary" style="margin-top:12px;" id="btn-go-share">➡ 繼續：製作分享圖卡 📣</button>';
   }
-  els.results.innerHTML+=html;
+  /* Fix 2：覆蓋固定容器，重複選歌不會累加 MV 區塊 */
+  var mvArea=document.getElementById('mv-area');
+  if(mvArea){ mvArea.innerHTML=html; }
+  else { els.results.innerHTML+=html; }
   Array.prototype.forEach.call(document.querySelectorAll('.mv-copy-btn'),function(btn){
     btn.addEventListener('click',function(){copyToClipboard(btn.dataset.copy);});
   });
