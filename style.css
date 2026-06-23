@@ -122,9 +122,21 @@ a{color:inherit;}
   color:var(--coffee-soft); letter-spacing:.2px;
 }
 .spirit-banner{
-  margin-top:14px; padding-top:12px; border-top:1px dashed #D8C7A0;
-  text-align:center; font-size:18px; color:var(--maroon); line-height:1.5;
+  margin-top:14px; padding-top:14px; border-top:1px dashed #D8C7A0;
+  display:flex; flex-direction:column; gap:6px;
 }
+.spirit-line{
+  font-family:'Noto Serif TC', serif;
+  font-weight:500; color:var(--coffee); display:block;
+  position:relative; padding-left:20px;
+}
+.spirit-line::before{
+  content:'—'; position:absolute; left:0;
+  color:var(--gold-deep); font-weight:900;
+}
+.spirit-line:nth-child(1){ font-size:14px; margin-left:0;   opacity:.82; }
+.spirit-line:nth-child(2){ font-size:16px; margin-left:16px; color:var(--maroon); opacity:1; }
+.spirit-line:nth-child(3){ font-size:14px; margin-left:8px;  opacity:.82; }
 
 /* ---------- Origin story card ---------- */
 .origin-toggle{
