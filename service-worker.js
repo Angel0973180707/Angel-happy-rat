@@ -9,12 +9,9 @@ var SHELL_FILES = [
   './style.css',
   './app.js',
   './manifest.json',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/rat-avatar.png',
-  './icons/tiger-avatar.png',
-  './icons/rat-poster.jpg',
-  './icons/tiger-poster.jpg'
+  './rat.webp',
+  './rat-safe.jpg',
+  './tiger.webp'
 ];
 
 self.addEventListener('install', function(event){
