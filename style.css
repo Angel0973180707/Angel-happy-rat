@@ -102,37 +102,28 @@ a{color:inherit;}
   font-size:15px; color:var(--coffee-soft); font-weight:500;
   margin-top:2px;
 }
-.intro-card{
-  margin-top:14px; background:var(--cream-soft);
-  border-radius:var(--radius-md); padding:18px 16px;
+.positioning-card{
+  margin-top:16px; background:var(--cream-soft);
+  border-radius:var(--radius-lg); padding:18px 16px;
   box-shadow:var(--shadow); text-align:left;
 }
-.intro-is-row, .intro-isnot-row{
-  display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;
+.position-badges{
+  display:flex; flex-wrap:wrap; gap:8px; justify-content:center;
 }
-.intro-pill{
-  border-radius:50px; padding:7px 15px;
-  font-size:13px; font-weight:700; line-height:1.3;
+.position-badge{
+  display:inline-flex; align-items:center; gap:4px;
+  background:linear-gradient(135deg,var(--gold),var(--orange));
+  color:#fff; font-size:12.5px; font-weight:800;
+  padding:7px 13px; border-radius:50px;
+  box-shadow:0 3px 0 rgba(0,0,0,0.12);
 }
-.intro-pill.gold{
-  background:var(--gold); color:#fff;
+.not-list{
+  margin:12px 0 0; text-align:center; font-size:12.5px;
+  color:var(--coffee-soft); letter-spacing:.2px;
 }
-.intro-pill.isnot{
-  background:transparent; border:1.5px solid #D8C7A0;
-  color:var(--coffee-soft); text-decoration:line-through; opacity:.75;
-}
-.intro-sep{
-  text-align:center; color:var(--gold-deep);
-  font-size:14px; margin:6px 0 8px; letter-spacing:6px;
-}
-.intro-isnot-label{
-  font-size:12px; font-weight:900; color:var(--maroon);
-  margin-bottom:6px; letter-spacing:1px;
-}
-.intro-spirit{
-  margin:14px 0 0; font-size:14px; color:var(--coffee);
-  border-top:1px dashed #D8C7A0; padding-top:12px;
-  line-height:1.9; font-style:italic;
+.spirit-banner{
+  margin-top:14px; padding-top:12px; border-top:1px dashed #D8C7A0;
+  text-align:center; font-size:18px; color:var(--maroon); line-height:1.5;
 }
 
 /* ---------- Origin story card ---------- */
