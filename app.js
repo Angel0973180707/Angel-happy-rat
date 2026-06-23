@@ -504,7 +504,8 @@ var SONG_B_STYLES=[
   {genre:'Cinematic Pop / 電影主題曲',bpmVal:'80',mood:'熱血、希望、有點悲壯但最後昂揚',instruments:'弦樂、鋼琴、電吉他、大鼓',vocal:'情感飽滿、有戲劇性、副歌要撐開',key:'E minor → G major'},
   {genre:'Epic Ballad / 史詩流行',bpmVal:'76',mood:'厚重、有分量、像是蓄積多年的一句話',instruments:'管弦樂、大鼓、鋼琴、人聲和聲',vocal:'深沉有力、高音留到橋段後才爆發',key:'A minor'},
   {genre:'Alternative Rock / 另類搖滾',bpmVal:'84',mood:'能量強、衝突感、但結尾有光',instruments:'電吉他、失真底音、爆炸鼓組',vocal:'嘶啞但有情緒、不賣弄技巧',key:'D minor'},
-  {genre:'K-Drama OST 風 / 溫柔史詩',bpmVal:'78',mood:'溫柔但有份量、會讓人眼眶紅的那種',instruments:'弦樂四重奏、小提琴主奏、鋼琴伴奏',vocal:'細膩、有氣息、情緒從克制到開放',key:'B minor → D major'}
+  {genre:'K-Drama OST 風 / 溫柔史詩',bpmVal:'78',mood:'溫柔但有份量、會讓人眼眶紅的那種',instruments:'弦樂四重奏、小提琴主奏、鋼琴伴奏',vocal:'細膩、有氣息、情緒從克制到開放',key:'B minor → D major'},
+  {genre:'Comedy Rock / Theatrical Pop',bpmVal:'96',mood:'誇張、自嘲、喜劇感、結尾反轉讓人笑出來',instruments:'銅管、電吉他、拍手聲、誇張和聲',vocal:'帶戲劇感與喜劇停頓、介於說話和唱歌之間',key:'G major'}
 ];
 
 function genSongVersionA(context){
@@ -559,7 +560,7 @@ function genSongVersionB(context){
   var bridge=pickVaried('song_b_bridge',SONG_B_BRIDGE_POOL);
   /* Fix 1：style-chip 影響 B 版曲風 */
   var sh=context.styleHint||'';
-  var styleBPool=sh==='搞笑自嘲'?[SONG_B_STYLES[3]]:sh==='溫暖療癒'?[SONG_B_STYLES[3]]:sh==='熱血電影感'?[SONG_B_STYLES[0]]:SONG_B_STYLES;
+  var styleBPool=sh==='搞笑自嘲'?[SONG_B_STYLES[4]]:sh==='溫暖療癒'?[SONG_B_STYLES[3]]:sh==='熱血電影感'?[SONG_B_STYLES[0]]:SONG_B_STYLES;
   var style=pickVaried('song_b_style_'+sh,styleBPool);
   var lyrics=[
     '【Intro】（電影感鋼琴引子）',
@@ -786,7 +787,7 @@ function checkDraftBanner(){
   var d=loadDraft();
   if(d&&d.context&&d.context.event){
     els.draftBanner.style.display='block';
-    els.draftBanner.innerHTML='<div class="draft-inner"><span>📝 上次創作：「'+shortInput(d.context.event,20)+'」</span><button class="btn-draft-resume" id="btn-draft-resume">繼續創作</button><button class="btn-draft-clear" id="btn-draft-clear">重新開始</button></div>';
+    els.draftBanner.innerHTML='<div class="draft-inner"><span>📝 上次創作：「'+escapeHtml(shortInput(d.context.event,20))+'」</span><button class="btn-draft-resume" id="btn-draft-resume">繼續創作</button><button class="btn-draft-clear" id="btn-draft-clear">重新開始</button></div>';
     document.getElementById('btn-draft-resume').addEventListener('click',function(){
       flow.context=d.context; flow.stepIndex=d.stepIndex||0; flow.routeB=true; flow.input=d.input||'';
       openMode(ROUTE_B_ORDER[flow.stepIndex],{routeB:true});
@@ -1183,7 +1184,7 @@ function renderShareArea(){
 }
 
 function shareCard(label,text,platform){
-  return '<div class="share-card"><h5>'+label+'</h5><div>'+escapeHtml(text)+'</div><button class="btn-copy" style="margin-top:8px;width:100%;" data-share="'+escapeHtml(text)+'" data-platform="'+platform+'">分享 / 複製</button></div>';
+  return '<div class="share-card"><h5>'+label+'</h5><div>'+escapeHtml(text)+'</div><button class="btn-copy" style="margin-top:8px;width:100%;" data-share="'+escapeAttr(text)+'" data-platform="'+platform+'">分享 / 複製</button></div>';
 }
 
 /* ---------------------------------------------------
