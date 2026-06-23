@@ -444,6 +444,12 @@ function genRoast(input, target){
   var summary = '你不是單純生氣，你是被「' + shortInput(input) + '」打到靈魂出竅。';
   var brain = pickVaried('rat_brain', RAT_BRAIN_TRANSLATE);
   var roastLine = pickCategoryLine(ROAST_CATEGORIES, input, RAT_ROAST.map(function(t){ return fill(t, { target:target, action: shortInput(input,12) }); }), 'rat_roast');
+  var snapPool = RAT_ROAST.map(function(t){ return fill(t, { target:target, action: shortInput(input,12) }); });
+  var snapLine = pickVaried('rat_snap', snapPool);
+  if(snapLine === roastLine){
+    var others = snapPool.filter(function(v){ return v !== roastLine; });
+    if(others.length) snapLine = others[Math.floor(Math.random() * others.length)];
+  }
   var bitter = pickVaried('rat_bitter', RAT_BITTER_SOUP);
   var selfmock = fill(pickVaried('rat_selfmock', RAT_SELFMOCK), { target:target });
   var quote = pickGoldenQuote();
@@ -453,7 +459,7 @@ function genRoast(input, target){
       ['🧠 情緒摘要', summary],
       [RAT_ICON + ' 大腦翻譯', brain],
       [RAT_ICON + ' 小天鼠吐槽', roastLine],
-      ['😤 嗆聲版', roastLine],
+      ['😤 嗆聲版', snapLine],
       ['🍵 毒雞湯版', bitter],
       ['🤣 自嘲補刀版', selfmock]
     ],
