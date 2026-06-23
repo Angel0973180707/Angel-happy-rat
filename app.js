@@ -92,6 +92,43 @@ var RAT_ROAST=[
   '你不是脾氣差，你只是把今天的份額提前花光了。',
   '{target}大概覺得自己很合理，但宇宙不是這樣運作的。'
 ];
+/* 嗆聲專屬詞庫（對對方說話，不混入自嘲） */
+var ROAST_TRUTH=[
+  '你做了沒被看見，還被說沒做到。',
+  '你的時間和努力被當作理所當然。',
+  '你被用力說話，但從來沒有被好好聽。',
+  '對方用音量代替了道理。',
+  '你的界線被踩了，對方完全沒意識到。',
+  '被要求完美，但從沒被感謝過。',
+  '事情沒做好，情緒卻全加在你身上。'
+];
+var ROAST_SPEAK_TO=[
+  '{target}，你可以指出問題，但不需要用羞辱的方式說。',
+  '{target}，音量大不代表道理比較大，這一點我先說清楚。',
+  '{target}，事情我願意配合，但這個說話方式我需要你調整。',
+  '{target}，你要結果，我要尊重，這是基本的等價交換。',
+  '{target}，改沒問題，但請告訴我方向，不只是說「不對」。',
+  '我在認真做，我也需要你認真跟我溝通，而不是對我發洩。',
+  '{target}，事情可以討論，最基本的尊重我需要你給我。'
+];
+var ROAST_SNAP=[
+  '音量大不代表道理大，這個先講清楚。',
+  '{target}的口氣，比任何要求本身更需要修改。',
+  '你要結果，我要尊重，這是等價交換。',
+  '「就這樣而已」是你的嘴，是我的整個下午。',
+  '我消化完你的情緒，誰來消化我的？',
+  '你可以不滿意，但不可以不尊重。',
+  '我不是沙包，我是一個有血有肉還在努力的人。'
+];
+var ROAST_BOUNDARY=[
+  '事情我會處理，但請針對問題，不要針對人。',
+  '你可以不滿意結果，但請用可以繼續合作的方式說。',
+  '這件事我接受，但這個說話方式，下次需要調整。',
+  '我現在需要幾分鐘，然後我們再討論解決方法。',
+  '說清楚你要什麼，我就知道怎麼做——情緒對任何人都沒有幫助。',
+  '我願意繼續配合，但需要你告訴我具體要改什麼。',
+  '你有權利說不滿意，我也有權利要求基本尊重。'
+];
 var RAT_BITTER_SOUP=[
   '別難過。你不是沒效率，你只是被需求變更練成了仙。',
   '你不是沒用，你只是今天被生活打到當機，重開機就好。',
@@ -99,12 +136,13 @@ var RAT_BITTER_SOUP=[
   '你不是太敏感，你只是把別人隨口的話聽得太認真，因為你是個認真的人。',
   '今天累，是因為你一直在硬扛，而硬扛這件事，本身就很厲害了。'
 ];
+/* RAT_SELFMOCK 通用情境 fallback：必須帶入 {event}，不可含飲食／體重／購物等特定題材 */
 var RAT_SELFMOCK=[
-  '我不是設計師。我是許願池。{target}丟一句「再調整一下」，我就冒出三個奇蹟。',
-  '我不是胖。我是福氣有實體感，只是這個福氣最近有點膨脹。',
-  '減肥不是失敗，只是我的嘴巴先獲勝，宵夜0：1毅力。',
-  '我不是拖延，我是在等一個「最後一刻才會出現」的神秘靈感，他通常半夜三點到。',
-  '我不是沒計畫，我是計畫太多，多到自己都記不住第一條是什麼。'
+  '關於「{event}」，我的表面很平靜，腦內已經重剪了五個版本。',
+  '「{event}」發生的時候，我表面點頭，靈魂已經坐電梯去透氣了。',
+  '我不是把「{event}」看得太嚴重，我只是把每個細節都拍成了腦內紀錄片。',
+  '我不是沒出力，只是力氣花在「{event}」上，別人通常注意不到那個地方。',
+  '不是我太敏感，是「{event}」這件事剛好戳到我一個藏很深的地方。'
 ];
 var RAT_BRAIN_TRANSLATE=[
   '你的大腦不是玻璃心，是它發現事情一直失控，所以開始拉警報。',
@@ -201,9 +239,29 @@ var ROAST_CATEGORIES={
   money:{keywords:['錢','薪水','帳單','房租','貸款','存款','花費','收入','負債'],lines:['錢包扁的時候，連呼吸都覺得在花成本。','不是你不會理財，是支出每次都比計畫早到一步。','存錢這件事，你的決心很強，意外開銷的決心更強。']}
 };
 var SELFMOCK_CATEGORIES={
-  diet:{keywords:['減肥','宵夜','運動','吃','胖','體重','健身'],lines:['我不是胖，我是把福氣存得比較均勻。','運動計畫排得很滿，滿到都沒時間真的去運動。','減肥輸給宵夜，不是意志力問題，是宵夜真的太香。']},
-  procrastinate:{keywords:['拖延','deadline','截止','還沒做','來不及','明天再說','懶得'],lines:['不是拖延，是在等十一點五十九分那股爆發力。','我的待辦清單很長，長到連「開始」都還排在後面。','我不是沒計畫，我是計畫太多，多到忘記第一條是什麼。']},
-  money_self:{keywords:['亂花錢','又買了','購物','刷卡'],lines:['錢包瘦得很均勻，跟我的決心一樣。','我不是亂花錢，我是在做「未來會後悔」的市場調查。']}
+  work:{keywords:['老闆','主管','客戶','同事','被罵','挨罵','破口大罵','工作','開會','改稿','上班','報告','廠商'],lines:[
+    '老闆罵完，我表面點頭，腦內已經開了三場離職記者會。',
+    '我不是沒反應，是靈魂先去樓下避難，身體留下來說「好的」。',
+    '客戶改第N次，我已經默默在腦內蓋了一棟廢稿博物館。',
+    '開完這個會，我需要三杯水、兩塊餅乾，和一個隔音艙。',
+    '我沒有崩潰，靈魂只是去停車場透個氣，身體繼續上班。'
+  ]},
+  diet:{keywords:['減肥','宵夜','吃','胖','體重','健身','卡路里','節食'],lines:[
+    '我不是胖，我是把福氣存得比較均勻。',
+    '運動計畫排得很滿，滿到都沒時間真的去運動。',
+    '減肥輸給宵夜，不是意志力問題，是宵夜真的太香。',
+    '我不是沒毅力，只是遇到了非常強勁的對手。'
+  ]},
+  procrastinate:{keywords:['拖延','deadline','截止','還沒做','來不及','明天再說','懶得'],lines:[
+    '不是拖延，是在等十一點五十九分那股爆發力。',
+    '我的待辦清單很長，長到連「開始」都還排在後面。',
+    '我不是沒計畫，是計畫太多，多到忘記第一條是什麼。',
+    '截止日前一小時，我的效率是平常的七倍，這是天賦。'
+  ]},
+  money_self:{keywords:['亂花錢','又買了','購物','刷卡'],lines:[
+    '錢包瘦得很均勻，跟我的決心一樣。',
+    '我不是亂花錢，我是在做「未來會後悔」的市場調查。'
+  ]}
 };
 
 function pickCategoryLine(categories,input,fallbackArr,bankKey){
@@ -250,13 +308,13 @@ function needToWish(needStr){
 
 var QUOTE_BANK={
   roast:{weight:30,lines:['「再小改一下」＝重做。','他講得輕鬆，因為做的人不是他。','同一句話打三次，誰受得了。','他不是在溝通，他是在甩鍋。','你不是反應大，是真的被惹到了。','說隨口說說的，通常最不隨口。','崩潰不是失敗，是人生在做效果。']},
-  selfmock:{weight:30,lines:['不是拖延，是在等十一點五十九分那股爆發力。','減肥輸給宵夜，不是意志力，是真的香。','計畫超多，多到忘記第一條，超有實力。','我不是廢，我是把廢發揮到很有效率。','我不是沒用，只是今天當機了而已。','我不是亂，我是素材太多，需要一個鍋子。']},
+  selfmock:{weight:30,lines:['計畫超多，多到忘記第一條，超有實力。','我不是廢，我是把廢發揮到很有效率。','我不是沒用，只是今天當機了而已。','我不是亂，我是素材太多，需要一個鍋子。','我的理智在現場，情緒在繞圈圈，兩個還沒碰到面。','我不是沒出力，是力氣花在別人注意不到的地方。']},
   bigdream:{weight:20,lines:['先吹再說，做出來再讓他們驚訝。','餅先畫大，路自己會冒出來。','夢想不夠唬爛，通常也不夠大。','今天吹牛，明天努力，後天說不定就成真。','先讓自己敢講，再讓自己敢做。']},
   nonsense:{weight:10,lines:['魚不知道自己在水裡，你大概也不知道自己很拚了。','太陽明天還是會升起，跟你今天有沒有報告沒關係。','人生跟夜市一樣，重點不是攤位，是順路。']},
   warm:{weight:10,lines:['輕一點就好，不用馬上變好。','撐過來這件事，本身就值得鼓掌。','笑完了，該面對的事還在，但你現在輕一點了。','你不需要全部都想清楚，先往前一步就好。']}
 };
 var MODE_QUOTE_WEIGHTS={
-  roast:{roast:60,selfmock:20,bigdream:5,nonsense:10,warm:5},
+  roast:{roast:80,selfmock:0,bigdream:5,nonsense:10,warm:5},
   selfmock:{roast:10,selfmock:60,bigdream:5,nonsense:10,warm:15},
   bigdream:{roast:5,selfmock:10,bigdream:60,nonsense:5,warm:20},
   lost:{roast:5,selfmock:15,bigdream:20,nonsense:10,warm:50},
@@ -329,19 +387,39 @@ function resetFlow(){ flow={routeB:false,stepIndex:0,input:'',context:emptyConte
 function genRoast(input,target){
   target=target||'對方';
   var summary='你不是單純生氣，你是被「'+shortInput(input)+'」打到靈魂出竅。';
-  var brain=pickVaried('rat_brain',RAT_BRAIN_TRANSLATE);
-  var roastLine=pickCategoryLine(ROAST_CATEGORIES,input,RAT_ROAST.map(function(t){return fill(t,{target:target,action:shortInput(input,12)});}), 'rat_roast');
-  var snapPool=RAT_ROAST.map(function(t){return fill(t,{target:target,action:shortInput(input,12)});});
-  var snapLine=pickVaried('rat_snap',snapPool);
-  if(snapLine===roastLine){var others=snapPool.filter(function(v){return v!==roastLine;});if(others.length)snapLine=others[Math.floor(Math.random()*others.length)];}
-  var bitter=pickVaried('rat_bitter',RAT_BITTER_SOUP);
-  var selfmock=fill(pickVaried('rat_selfmock',RAT_SELFMOCK),{target:target});
-  return {role:'rat',tagClass:'vent tag-rat',blocks:[['🧠 情緒摘要',summary],[RAT_ICON+' 大腦翻譯',brain],[RAT_ICON+' 小天鼠吐槽',roastLine],['😤 嗆聲版',snapLine],['🍵 毒雞湯版',bitter],['🤣 自嘲補刀版',selfmock]],quote:pickGoldenQuote('roast')};
+  var truth=pickVaried('roast_truth',ROAST_TRUTH);
+  var speakTo=fill(pickVaried('roast_speak',ROAST_SPEAK_TO),{target:target});
+  var snap=fill(pickVaried('roast_snap',ROAST_SNAP),{target:target});
+  var boundary=pickVaried('roast_boundary',ROAST_BOUNDARY);
+  return {role:'rat',tagClass:'vent tag-rat',blocks:[
+    ['🧠 情緒摘要',summary],
+    ['🔥 你真正氣的是',truth],
+    [RAT_ICON+' 小天鼠替你講',speakTo],
+    ['😤 有梗放話版',snap],
+    ['🧱 有底線版',boundary]
+  ],quote:pickGoldenQuote('roast')};
 }
+var SELFMOCK_SUMMARY_MAP={
+  work:'你沒有輸，靈魂只是先去樓下透氣，身體繼續撐著。',
+  diet:'你不是沒有毅力，只是遇到了真的很強勁的對手。',
+  procrastinate:'你不是懶，你是在等那個神秘的最後一刻爆發力。',
+  money_self:'你不是亂花，你是在做非常即時的市場調研。'
+};
 function genSelfmock(input){
-  var summary='你不是真的很糟，你只是把「'+shortInput(input)+'」這件事看得太認真了。';
+  var catKey=null;
+  var keys=Object.keys(SELFMOCK_CATEGORIES);
+  for(var i=0;i<keys.length;i++){
+    if(SELFMOCK_CATEGORIES[keys[i]].keywords.some(function(k){return input.indexOf(k)!==-1;})){catKey=keys[i];break;}
+  }
+  var summary=catKey&&SELFMOCK_SUMMARY_MAP[catKey]
+    ?SELFMOCK_SUMMARY_MAP[catKey]
+    :'你不是真的很糟，「'+shortInput(input)+'」這件事確實值得被好好面對。';
   var translate=pickVaried('rat_brain',RAT_BRAIN_TRANSLATE);
-  var bit=pickCategoryLine(SELFMOCK_CATEGORIES,input,RAT_SELFMOCK.map(function(t){return fill(t,{target:'生活'});}), 'rat_selfmock');
+  var event=shortInput(input,16);
+  var fallback=RAT_SELFMOCK.map(function(t){return fill(t,{event:event});});
+  var bit=catKey
+    ?pickVaried('rat_selfmock_'+catKey,SELFMOCK_CATEGORIES[catKey].lines)
+    :pickVaried('rat_selfmock',fallback);
   return {role:'rat',tagClass:'vent tag-rat',blocks:[['🧠 自嘲摘要',summary],[RAT_ICON+' 小天鼠翻譯',translate],['🤣 自嘲段子',bit]],quote:pickGoldenQuote('selfmock')};
 }
 function genBigDream(input,topic){
@@ -847,7 +925,7 @@ function renderInputArea(id,opts){
   var prefill=flow.routeB?getStepPrefill(id):(flow.input||'');
   var sharedInput='<div class="field-block"><label for="main-input">'+placeholder+'</label><textarea id="main-input" placeholder="'+placeholder+'">'+escapeHtml(prefill)+'</textarea></div>';
   if(id==='roast'){
-    els.inputArea.innerHTML=sharedInput+chipBlock('target-chip','對象',['老闆','客戶','同事','家人','自己','陌生人']);
+    els.inputArea.innerHTML=sharedInput+chipBlock('target-chip','對象',['老闆','客戶','同事','家人','另一半','陌生人']);
   } else if(id==='bigdream'){
     els.inputArea.innerHTML=sharedInput+chipBlock('topic-chip','主題',['財富','健康','事業','旅行','品牌','影響力']);
   } else if(id==='lost'){
