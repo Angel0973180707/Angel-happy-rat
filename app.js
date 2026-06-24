@@ -35,6 +35,34 @@ function saveRecordToGAS(record){
     if(window.GAS_API_URL) fetch(window.GAS_API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action:'saveRecord',time:new Date().toISOString(),userId:USER_ID,sessionId:SESSION_ID},record))}).catch(function(){});
   }catch(e){}
 }
+// 銜接測試：驗證 comicWorld 從 genRoast 一路到 genSong
+function testComicWorldCoherence(){
+  var results=[];
+  // 強制選 W1 做確定性測試
+  var savedCW=flow.context.comicWorld;
+  var savedSit=flow.context.situationCategory;
+  var savedTgt=flow.context.targetCategory;
+  flow.context.comicWorld='W1';
+  flow.context.situationCategory='homework';
+  flow.context.targetCategory='child';
+  var roast=genRoast('孩子不寫作業','孩子');
+  results.push({test:'genRoast returns comicWorld',pass:!!roast.comicWorld,val:roast.comicWorld});
+  results.push({test:'genRoast returns nextAction',pass:!!roast.nextAction,val:roast.nextAction});
+  flow.context.comicWorld=roast.comicWorld;
+  flow.context.nextAction=roast.nextAction;
+  var tiger=genBigDream('','');
+  var tigerOK=tiger.blocks&&tiger.blocks.length===2&&tiger.blocks[0][1].indexOf('唬爛虎')!==-1;
+  results.push({test:'genBigDream uses world tiger',pass:tigerOK,val:tiger.blocks&&tiger.blocks[0][1]});
+  var sa=genSongVersionA(flow.context);
+  results.push({test:'genSongVersionA uses approved hook',pass:!!sa.hook&&sa.hook.indexOf('作業不會自己寫')!==-1,val:sa.hook});
+  var sb=genSongVersionB(flow.context);
+  results.push({test:'genSongVersionB uses approved hook',pass:!!sb.hook&&sb.hook.indexOf('只差一句話')!==-1,val:sb.hook});
+  // 還原
+  flow.context.comicWorld=savedCW;
+  flow.context.situationCategory=savedSit;
+  flow.context.targetCategory=savedTgt;
+  return results;
+}
 function logGenerateEvent(id,input){
   var payload={mode:id};
   if(id==='roast'&&flow.context.targetCategory){
@@ -445,45 +473,61 @@ var TARGET_ROAST_DB={
           '孩子那份焦慮有沒有到不知道，你這份先到了。這個配送順序，可以改一改。'
         ],
         honest:[
-          '你幾點開始，就幾點開始。不說，我也不替你估算。',
-          '我不問你現在是什麼感覺，只問你幾點說出那個時間。',
           '我陪你，不等於我替你急。',
-          '這不是你能不能的問題，是你還沒說幾點的問題。',
-          '把開始的時間交給孩子說。說出去了，就別替他拿回來。'
+          '今天我說的已經說完了，接下來是你的節奏。',
+          '你有選擇，先做哪一科是你的事，我在這裡。',
+          '這件事還給你——不是因為我不在乎，是因為它本來就是你的。',
+          '我先退出廣播頻道，有問題你可以叫我。'
         ],
         boundary:[
-          '我陪你，不等於我替你急。',
           '這是你的作業，從哪裡開始是你的決定，我在旁邊。',
           '說了就開始，沒說就繼續等——我不催，但我也不代替你說。',
-          '你有選擇，開始的那一刻是你的。說了，我就跟上。'
+          '你有選擇，開始的那一刻是你的，說了我就跟上。',
+          '今天的作業，今天的事，說好的就算。'
         ],
         comicExit:['好，我先把催促鈴關靜音，免得我們兩個都想封鎖我。'],
         availableWorlds:['W1','W2','W3','W4','W5'],
         worlds:{
           W1:{
+            name:'廢話文學',
             analogy:['這份作業像未拆封的健身卡：看起來充滿希望，目前完全沒有運動。','備妥了，在等，等被啟動。'],
             comicExit:['催促委員會今日休會。','我的代寫公司今天沒有營業。'],
-            nextAction:'讓孩子說出幾點開始。'
+            tiger:'唬爛虎宣布：本日解法正式生效。孩子說出幾點，今天的文件即歸檔完成。',
+            nextAction:'讓孩子說出幾點開始。',
+            songA:{hook:'作業不會自己寫\n鉛筆不會先道歉\n先把第一題解鎖\n剩下的我們再談判',lyrics:'作業像張健身卡\n辦了，還沒去過\n看起來前途一片光明\n今天完全沒有運動\n\n作業不會自己寫\n鉛筆不會先道歉\n先把第一題解鎖\n剩下的我們再談判\n\n焦慮快遞已送達\n地址寫的是你家\n寄件人是孩子的作業\n收件人，搞混了\n\n作業不會自己寫\n鉛筆不會先道歉\n先把第一題解鎖\n剩下的我們再談判\n\n本文件說明如下：\n第一點，作業不急。\n第二點，你很急。\n第三點，這兩件事是兩件事。\n\n作業不會自己寫\n鉛筆不會先道歉\n先把第一題解鎖\n剩下的我們再談判'},
+            songB:{hook:'只差一句話\n就這一句話\n說出那個時間\n今天就成案了',lyrics:'今天的任務書\n蓋了七個章\n附件十七份\n核心只有一句話\n\n只差一句話\n就這一句話\n說出那個時間\n今天就成案了\n\n委員會開了三小時\n會議記錄十二頁\n最後的決議：\n孩子說出幾點\n\n只差一句話\n就這一句話\n說出那個時間\n今天就成案了\n\n本方案正式定稿：\n步驟一：說幾點。\n步驟二：見步驟一。\n蓋章：說出時間後自動生效。\n\n只差一句話\n就這一句話\n說出那個時間\n今天就成案了'}
           },
           W2:{
+            name:'棒球',
             analogy:['你在觀眾席，比打者還熱血——但揮棒的輪不到你。','場上最沉得住氣的選手，今天不是你。'],
             comicExit:['我先退回觀眾席，畢竟這一棒真的輪不到我。'],
-            nextAction:'今天第一棒由哪一科上場，孩子自己排棒次。'
+            tiger:'唬爛虎播報：打者站上打擊區。孩子決定先打哪科，第一棒揮出，比賽開始。',
+            nextAction:'今天第一棒由哪一科上場，孩子自己排棒次。',
+            songA:{hook:'焦慮不是你的積分\n壓力不是你的作業\n把計分板還給孩子\n幾點開始你說了算',lyrics:'你在觀眾席\n分析這顆球的走向\n說的比打者還熱血\n打者還沒揮棒\n\n焦慮不是你的積分\n壓力不是你的作業\n把計分板還給孩子\n幾點開始你說了算\n\n場邊教練比較緊張\n揮棒的卻不是你\n計分板你盯最久\n這場比賽，誰在打\n\n焦慮不是你的積分\n壓力不是你的作業\n把計分板還給孩子\n幾點開始你說了算\n\n唬爛虎播報：\n本局攻擊方已就位。\n需要的不是場外分析，\n是打者說先打哪科。\n觀眾，請回座位。\n\n焦慮不是你的積分\n壓力不是你的作業\n把計分板還給孩子\n幾點開始你說了算'},
+            songB:{hook:'本場規則今天改\n家長退出打擊區\n第一棒選手自己打\n幾點上場選手說',lyrics:'你站進打擊區\n想幫孩子打那顆球\n但主審說了一句：\n這一棒，不是你的\n\n本場規則今天改\n家長退出打擊區\n第一棒選手自己打\n幾點上場選手說\n\n你的揮棒動作很穩\n數據看起來不錯\n可惜今天這局\n不是你上場的機會\n\n本場規則今天改\n家長退出打擊區\n第一棒選手自己打\n幾點上場選手說\n\n非常抱歉，\n本場規定觀眾不得代打。\n請問打者本人，\n幾點站上打擊區？\n\n本場規則今天改\n家長退出打擊區\n第一棒選手自己打\n幾點上場選手說'}
           },
           W3:{
-            analogy:['跑道已清空，燃料備妥，天氣許可——現在只等機長說幾點起飛。','塔台就位，登機口開著，唯一的關鍵是機長本人。'],
+            name:'機場塔台',
+            analogy:['塔台就位，飛行計畫備妥——等機長說清楚哪個環節卡住了。','艙門、跑道、燃料，樣樣備妥，唯一等的是機長確認哪裡還沒好。'],
             comicExit:['塔台先閉麥，免得飛機還沒起飛，廣播先沒電。'],
+            tiger:'唬爛虎廣播：塔台收到請求。孩子指出卡住的環節，今日起飛程序即啟動。',
             nextAction:'機長指出哪個環節卡在登機口。'
           },
           W4:{
-            analogy:['食材備妥，刀工就位，廚師候場——只缺孩子說幾點要開那盤菜。','廚師已就位，等用餐者說今天先出哪一道。'],
+            name:'廚師',
+            analogy:['食材備妥，廚師就位，等用餐者說今天先點哪道。','廚房這邊候場，只等用餐者說哪一道先上——卡住了，廚師在旁邊。'],
             comicExit:['主廚先放下鍋鏟，免得作業還沒熟，我先焦掉。'],
+            tiger:'唬爛虎主廚：孩子點了哪道先出哪道——卡住了，叫支援，廚房不打烊。',
             nextAction:'孩子選先出哪一道，卡住可以叫支援。'
           },
           W5:{
-            analogy:['這齣戲就等一句話——主角說出第一幕，今天就開演。','舞台搭好了，燈光就位，只差主角說第一幕從哪裡開場。'],
+            name:'劇場',
+            analogy:['這份作業像博物館裡的展品：非常正式地存在，近期沒有人打算互動。','舞台搭好了，燈光就位，只差主角說第一幕從哪裡開場。'],
             comicExit:['導演先閉麥，不然主角還沒開演，我先演過頭。'],
-            nextAction:'第一幕先演哪一科，由主角自己選。'
+            tiger:'唬爛虎導演：主角已就位，選好第一幕，今日演出正式開演。',
+            nextAction:'第一幕先演哪一科，由主角自己選。',
+            songA:{hook:'焦慮不用你代寫\n展品不用你替它急\n說個時間，說個起點\n這道門今天你來開',lyrics:'這份作業像展品\n非常正式地存在\n說明牌上寫著：\n尚未啟動\n\n焦慮不用你代寫\n展品不用你替它急\n說個時間，說個起點\n這道門今天你來開\n\n博物館開館了\n展品安靜在那裡\n近期沒人打算互動\n它本人，不在意\n\n焦慮不用你代寫\n展品不用你替它急\n說個時間，說個起點\n這道門今天你來開\n\n館方公告：\n本展品目前狀態：等待。\n觀眾問：什麼時候可以互動？\n展品說：這個問題，請問孩子本人。\n\n焦慮不用你代寫\n展品不用你替它急\n說個時間，說個起點\n這道門今天你來開'},
+            songB:{hook:'劇本只有一行台詞\n主角自己說出時間\n導演不用在旁邊提\n說了，今天就開演',lyrics:'把開始的時間\n交給孩子說出口\n說了，就讓它開始\n不說，就繼續等\n\n劇本只有一行台詞\n主角自己說出時間\n導演不用在旁邊提\n說了，今天就開演\n\n這齣戲就等一句話\n舞台已搭好了\n麥克風就在那裡\n主角說，開演\n\n劇本只有一行台詞\n主角自己說出時間\n導演不用在旁邊提\n說了，今天就開演\n\n唬爛虎公告：\n今日是否開演，\n取決於主角說出那句話。\n說了，開演。\n就這樣。\n\n劇本只有一行台詞\n主角自己說出時間\n導演不用在旁邊提\n說了，今天就開演'}
           }
         }
       },
@@ -902,7 +946,7 @@ var STEP_QUESTIONS=[
 --------------------------------------------------- */
 var DRAFT_KEY='lsr_draft_v2';
 function emptyContext(){
-  return {event:'',emotion:'',translation:'',need:'',wish:'',traits:[],filmTitle:'',story:{},songVersions:[],selectedSongVersion:'',imagePrompts:[],storyboard:[],shareCopy:{},shareCard:null,lastQuote:'',topic:''};
+  return {event:'',emotion:'',translation:'',need:'',wish:'',traits:[],filmTitle:'',story:{},songVersions:[],selectedSongVersion:'',imagePrompts:[],storyboard:[],shareCopy:{},shareCard:null,lastQuote:'',topic:'',comicWorld:null,nextAction:'',targetCategory:'',situationCategory:''};
 }
 var flow={routeB:false,stepIndex:0,input:'',context:emptyContext()};
 
@@ -934,9 +978,10 @@ function genRoast(input,target){
   var cacheBase='rv_'+tk+'_'+(sk||'g')+'_';
   var vars={target:target,input:shortInput(input,20)};
   // comicWorld：有定義才啟用，同次生成鎖定同一世界
+  var cw=null;
   var worldData=null;
   if(pool.availableWorlds&&pool.worlds&&pool.availableWorlds.length){
-    var cw=pickVaried(cacheBase+'w',pool.availableWorlds);
+    cw=pickVaried(cacheBase+'w',pool.availableWorlds);
     worldData=pool.worlds[cw]||null;
   }
   var truth=fill(pickVaried(cacheBase+'t',pool.truth),vars);
@@ -951,6 +996,8 @@ function genRoast(input,target){
   return {
     role:'rat',tagClass:'vent tag-rat',
     targetCategory:tk,situationCategory:sk||'general',matchType:mt,
+    comicWorld:cw||null,
+    nextAction:worldData?(worldData.nextAction||''):'',
     blocks:[
       ['🔥 你真正氣的是',truth],
       ['🎭 幽默比喻版',analogy],
@@ -984,6 +1031,15 @@ function genSelfmock(input){
   return {role:'rat',tagClass:'vent tag-rat',blocks:[['🧠 自嘲摘要',summary],[RAT_ICON+' 小天鼠翻譯',translate],['🤣 自嘲段子',bit]],quote:pickGoldenQuote('selfmock')};
 }
 function genBigDream(input,topic){
+  // 嗆聲 homework 情境：用 comicWorld 專屬唬爛虎
+  var cw=flow.context.comicWorld;
+  if(cw&&flow.context.situationCategory==='homework'&&flow.context.targetCategory==='child'){
+    var hwSit=(TARGET_ROAST_DB.child||{}).situations&&TARGET_ROAST_DB.child.situations.homework;
+    var wd=hwSit&&hwSit.worlds&&hwSit.worlds[cw];
+    if(wd&&wd.tiger){
+      return {role:'tiger',tagClass:'tag-tiger',blocks:[[TIGER_ICON+' 唬爛虎接手',wd.tiger],['👣 今天的入口',wd.nextAction||'']],quote:pickGoldenQuote('bigdream')};
+    }
+  }
   topic=topic||shortInput(input,14);
   var wishLine=fill(pickVaried('tiger_wish',TIGER_WISH),{topic:topic});
   var bragLine=fill(pickVaried('tiger_brag',TIGER_BRAG),{topic:topic});
@@ -1148,6 +1204,16 @@ var SONG_B_STYLES=[
 ];
 
 function genSongVersionA(context){
+  // 嗆聲 homework：使用核准歌詞
+  var cw=context.comicWorld;
+  if(cw&&context.situationCategory==='homework'&&context.targetCategory==='child'){
+    var hwSit=(TARGET_ROAST_DB.child||{}).situations&&TARGET_ROAST_DB.child.situations.homework;
+    var wd=hwSit&&hwSit.worlds&&hwSit.worlds[cw];
+    if(wd&&wd.songA){
+      var sa=wd.songA;
+      return {version:'A',label:'小天鼠版',icon:'🐭',style:(wd.name||cw)+' / 嗆聲流行',title:'《作業·'+(wd.name||cw)+'版》',concept:'用'+( wd.name||cw)+'的角度說完，笑著下台，兩邊都有台階。',lyrics:sa.lyrics,hook:sa.hook,genre:'Comedy Pop / 嗆聲流行',bpm:'96 BPM',mood:'幽默、自我解嘲、界線清楚',instruments:'電子節拍、口語感旋律',vocal:'口語感、帶喜劇停頓',aiPrompt:'comedy pop, roast humor, child homework, BPM 96, '+cw};
+    }
+  }
   var event=shortInput(context.event||'這件事',16);
   var wish=shortInput(context.wish||context.topic||'吹大夢想',14);
   var trait=context.traits&&context.traits[0]?context.traits[0]:'笑著往前走';
@@ -1188,6 +1254,16 @@ function genSongVersionA(context){
 }
 
 function genSongVersionB(context){
+  // 嗆聲 homework：使用核准歌詞
+  var cw=context.comicWorld;
+  if(cw&&context.situationCategory==='homework'&&context.targetCategory==='child'){
+    var hwSit=(TARGET_ROAST_DB.child||{}).situations&&TARGET_ROAST_DB.child.situations.homework;
+    var wd=hwSit&&hwSit.worlds&&hwSit.worlds[cw];
+    if(wd&&wd.songB){
+      var sb=wd.songB;
+      return {version:'B',label:'唬爛虎版',icon:'🐯',style:(wd.name||cw)+' / 嗆聲宣言',title:'《作業·'+(wd.name||cw)+'宣言版》',concept:'同一世界 B 面，讓孩子和家長都有台階下。',lyrics:sb.lyrics,hook:sb.hook,genre:'Comedy Rock / 嗆聲宣言',bpm:'100 BPM',mood:'幽默、誇張、自嘲收尾',instruments:'銅管、電吉他、拍手聲',vocal:'帶戲劇感與喜劇停頓',aiPrompt:'comedy rock, roast declaration, child homework, BPM 100, '+cw};
+    }
+  }
   var event=shortInput(context.event||'這件事',16);
   var wish=shortInput(context.wish||context.topic||'吹大夢想',14);
   var trait=context.traits&&context.traits[0]?context.traits[0]:'向前走的力量';
@@ -1580,6 +1656,8 @@ function renderOutputFor(id,input){
     flow.context.targetCategory=data.targetCategory;
     flow.context.situationCategory=data.situationCategory;
     flow.context.matchType=data.matchType;
+    flow.context.comicWorld=data.comicWorld||null;
+    flow.context.nextAction=data.nextAction||'';
     html=renderTextBlocks(data);
   } else if(id==='selfmock'){
     data=genSelfmock(input);
