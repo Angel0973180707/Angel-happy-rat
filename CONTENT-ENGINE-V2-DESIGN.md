@@ -1,0 +1,592 @@
+# 《笑鼠人了！》內容引擎 V2 架構設計
+
+版本：v1.0（2026-06-25）｜狀態：待 Angel-x 審核，尚未寫入程式
+
+---
+
+## 一、分類模型
+
+每次輸入需整理以下欄位，供三層生成使用。
+
+| 欄位 | 值域範例 | 說明 |
+|------|----------|------|
+| `speakerRole` | parent / employee / partner / sibling / friend / self | 說話的人是誰 |
+| `targetRole` | child / boss / partner / grandparent / coworker / self | 被嗆的對象 |
+| `subjectRole` | screen / homework / chores / task / salary / attention | 衝突核心物件 |
+| `domain` | parenting / workplace / relationship / family / self | 場域 |
+| `situationKey` | screen / homework / lateSleep / blame / household / self_procrastinate | 具體情境 |
+| `conflictType` | boundary_unclear / habit_loop / expectation_gap / role_confusion / responsibility_diffuse / power_imbalance | 衝突本質 |
+| `needType` | boundary_setting / acknowledgement / collaboration / rest / choice / dignity | 說話者真正需要什麼 |
+| `outcomeType` | transition / clarify / reset / redistribute / commit | 期望改變的方向 |
+| `intensity` | mild / moderate / high | 情緒強度（影響邊界句力道） |
+| `matchType` | specific / conflict / general | 命中層級 |
+
+### 分類優先順序
+
+```
+1. 嘗試命中 situationKey（關鍵字比對）→ matchType = specific
+2. 無法命中 situationKey，但能識別 conflictType → matchType = conflict
+3. 以上皆否 → matchType = general，帶入原句最多 20 字
+```
+
+### 禁止捏造（所有層級）
+
+不得從使用者輸入中補出：
+- 次數（五次、很多次、N次）
+- 頻率（每天、每次）的斷言
+- 時間（很久、這麼久）
+- 未提及的動作（叫了、催了、搶了）
+- 動機（因為懶、因為不在乎）
+- 身份細節（只要配偶、你媽）
+
+---
+
+## 二、三層生成
+
+### 第一層：Specific（高頻精準情境）
+
+- 觸發條件：關鍵字命中 `situationKey`
+- 詞庫來源：`situations[situationKey]`（analogy、comicExit、callback 皆情境專屬）
+- 世界選擇：從 `availableWorlds` 輪選，不連續重複
+- 適合情境：homework、screen、lateSleep、household 等高頻已知情境
+
+### 第二層：Conflict（依衝突本質生成）
+
+- 觸發條件：未命中 situationKey，但 conflictType 可識別
+- 詞庫來源：`conflicts[conflictType]`（共用衝突類型詞庫）
+- 限制：不捏造細節，truth 使用「這件事裡最常見的狀況是……」格式
+- 適合情境：非標準情境但衝突類型明確（例：「工作被搶功勞」→ responsibility_diffuse）
+
+### 第三層：General（安全 Fallback）
+
+- 觸發條件：無法識別 situationKey 或 conflictType
+- 詞庫來源：`general[targetRole]`
+- 規則：truth 必須帶入使用者原句（`{input}`，最多 20 字），不另行推斷原因
+- 格式範例：「關於{input}這件事，目前還不知道是哪個環節卡住——可以選一個入口：說清楚期待、指出卡點、還是先確認對方怎麼想？」
+
+---
+
+## 三、共用輸出結構
+
+所有層級輸出相同欄位（部分層級允許簡化版）。
+
+| 欄位 | 說明 | 不可省略 |
+|------|------|----------|
+| `truth` | 真正氣的是什麼（共同僵局笑點優先） | ✅ |
+| `analogy` | 情境幽默比喻（依 comicWorld） | ✅ |
+| `honest` | 對對方說的真心話 | ✅ |
+| `boundary` | 可執行的現實界線，不羞辱 | ✅ |
+| `comicExit` | 笑著下台句（依 comicWorld，必出現一條） | ✅ |
+| `nextAction` | 今天一個入口，不診斷原因 | ✅ |
+| `resolutionWish` | 唬爛虎接手的解法願景 | 可簡化 |
+| `callback` | 歌曲與後續可回扣的笑點 | 可簡化 |
+| `comicWorld` | 本次選用的世界（寫入 flow.context） | ✅ |
+
+---
+
+## 四、喜劇與歌曲模組化
+
+### 問題：舊做法
+
+每個情境重寫完整 songA／songB，造成：
+- 重複骨架（只換主詞）
+- comicWorld 段落與情境解耦
+- 維護困難，加新情境成本高
+
+### V2 做法：模板化歌曲引擎
+
+```
+情境專屬 Hook（8行，需高幽默，情境辨識度高）
+＋ comicWorld 段落骨架（verse/bridge 用 {placeholder}，可跨情境重用）
+＋ truth／comicExit／callback 填入對應情境詞
+＋ 語氣套層（小天鼠：快速銳利；唬爛虎：誇大正經）
+```
+
+### 骨架格式（以棒球 W2 為例）
+
+```
+verse_A: "{analogy_short}\n等信號才能開打\n{truth_short}\n{callback_setup}"
+hook:    "{situation_hook_4lines}"  ← 情境專屬，每情境自寫
+bridge:  "本場開放一次暫停\n可以求助，不用代打\n{nextAction_short}\n{supporter_role}"
+verse_B: "{resolutionWish_short}\n{comicExit_song_version}"
+```
+
+情境只需提供：
+1. `hook`（4行，高度情境化）
+2. `analogy_short`（一句）
+3. `truth_short`（一句）
+4. `callback_setup`（一句，供副歌回扣）
+5. `nextAction_short`（一句）
+6. `supporter_role`（本情境的「教練」是誰、做什麼）
+
+### 適用原則
+
+- A／B 版角度必須不同（A = 規則改變視角；B = 等待全場視角 或其他）
+- 歌詞不是摘要換行；需有畫面、升級、punchline
+- 同一笑點骨架在唬爛虎、劇本、歌曲三處各出現一次，不重複說教
+
+---
+
+## 五、五個跨領域黃金案例
+
+> 純文字樣本。不寫入程式。每案提供：分類、5條嗆聲核心句、2組完整流程、fallback、自評分、不捏造檢查。
+
+---
+
+### 案例 A：孩子沉迷 3C
+
+#### 分類結果
+
+| 欄位 | 值 |
+|------|----|
+| speakerRole | parent |
+| targetRole | child |
+| subjectRole | screen |
+| domain | parenting |
+| situationKey | screen |
+| conflictType | boundary_unclear |
+| needType | boundary_setting |
+| outcomeType | transition |
+| intensity | moderate |
+| matchType | specific |
+| 建議 comicWorld | W_播報台（新）/ W2 棒球 / W1 廢話文學 |
+
+#### 5 條嗆聲核心句
+
+1. 孩子和手機今天的默契，比任何一科作業都穩。
+2. 這個螢幕已經連線了很久，問題只有一個：下線的時間表還沒出來。
+3. 手機現在掌握最高發言權，合約只有一方看過——關機條款不在上面。
+4. 孩子找到了一件做起來完全不費力的事——這件事目前叫做「繼續滑」。
+5. 螢幕藍光很忠實，幾點開亮幾點還在，沒有人說幾點收，它就幾點留。
+
+#### 流程 A：W_播報台
+
+- **analogy**：「今天的直播間開播了，觀眾席（你）在場外評論，主播（孩子）目前沒有掛台計畫。」
+- **honest**：「我不是要搶走手機，我是要說清楚幾點到幾點是你的時間。」
+- **boundary**：「說好了時間，我不催；沒說，我們就一起在這裡等。」
+- **comicExit**：「我先退出直播間——等主播宣布今天的下播時間。」
+- **nextAction**：「今天幾點收，你說一個我聽著。」
+- **song hook A（播報台）**：
+  ```
+  直播間今天決定收播時間
+  不是主播決定就是頻道決定
+  說好了幾點下線
+  今天的節目才算完整播出
+  ```
+
+#### 流程 B：W1 廢話文學
+
+- **analogy**：「手機是一份很有吸引力的文件，目前的閱讀進度是：無限捲動中。」
+- **honest**：「你喜歡玩手機，我知道。我要說的是結束時間，不是要說你不對。」
+- **boundary**：「約定時間是一件事，說到做到是另一件事——兩件事都是今天的事。」
+- **comicExit**：「無限捲動委員會今日休會，下次開播時間待本人宣布。」
+- **nextAction**：「今天幾點收，寫在便利貼上我不再說。」
+- **song hook B（廢話文學）**：
+  ```
+  本文件說明如下
+  第一點，手機不催你
+  第二點，時間不等你
+  第三點，幾點收——你說了算
+  ```
+
+#### Fallback 範例
+
+> 輸入：「孩子一直玩手機」（無其他細節）
+
+「關於孩子和手機這件事，目前能確定的是：孩子在玩、你想說點什麼。原因有很多種可能——還沒說好時間、說了但還沒到、說了但沒守、或者根本還沒有約定。可以先選一個比較接近的入口。」
+
+#### 幽默自評（1–5）
+
+| 項目 | 分數 |
+|------|------|
+| 情境相關性 | 4.2 |
+| 好笑程度 | 3.8 |
+| 角色辨識度 | 4.0 |
+| 流程銜接 | 4.0 |
+| 分享記憶點 | 3.5 |
+
+待 Angel-x 與 Angel 驗收後調整。
+
+#### 不捏造檢查
+
+- ✅ 未假設已叫了幾次
+- ✅ 未說「一直玩」（用「連線了」）
+- ✅ 未診斷孩子動機（成癮、逃避等）
+- ✅ boundary 可執行，未說「你就是不聽」
+
+---
+
+### 案例 B：爺奶寵孩子造成教養衝突
+
+#### 分類結果
+
+| 欄位 | 值 |
+|------|----|
+| speakerRole | parent |
+| targetRole | grandparent |
+| subjectRole | child（被寵壞的孩子） |
+| domain | family |
+| situationKey | grandparent_spoil（新，尚未建立） |
+| conflictType | role_confusion（誰說了算）|
+| needType | acknowledgement + boundary_setting |
+| outcomeType | clarify（角色分工） |
+| intensity | moderate–high |
+| matchType | specific（需建立新 situationKey） |
+| 建議 comicWorld | W_聯合國峰會 / W_合夥公司會議 / W1 廢話文學 |
+
+#### 5 條嗆聲核心句
+
+1. 這個家目前有兩套規則同時生效，孩子已經找到了其中比較好用的那一套。
+2. 孩子有辦法在同一件事上拿到兩種結果，這是非常高效率的談判技術。
+3. 爺奶的規則不是壞的，只是和你的規則不在同一個版本——孩子目前跑的是比較新的版本。
+4. 這個「不行」從你說出口到爺奶說「沒關係」之間，只差了三秒鐘。
+5. 孩子很快找到了申訴管道——而且申訴成功率目前是百分之百。
+
+#### 流程 A：W_合夥公司會議
+
+- **analogy**：「這家公司目前有兩位有效率的主管，政策不同步，員工（孩子）已經找到了比較好用的那個窗口。」
+- **honest**：「我不是說你們的方式不好——我是說我們需要先說好哪些事是一致的。」
+- **boundary**：「這件事說好了，你們說什麼，我也會跟上。說不好，孩子會繼續找空間。」
+- **comicExit**：「公司章程修訂版今天提出，等兩位董事確認後生效。」
+- **nextAction**：「先定一件事：這件事由誰說算？說好了，我們三個都省力。」
+- **song hook A（合夥公司）**：
+  ```
+  公司章程有兩個版本
+  員工選了比較方便的那份
+  不是哪份比較對
+  是要先開一次對齊會議
+  ```
+
+#### 流程 B：W1 廢話文學
+
+- **analogy**：「這件事目前有兩份說明書，孩子收到的那份字比較少、執行起來比較容易。」
+- **honest**：「我知道你們是因為愛孩子——我說的不是愛，是說清楚哪些事我需要你們幫我一起守。」
+- **boundary**：「說好了，孩子知道哪裡是邊界；沒說好，孩子會繼續試。」
+- **comicExit**：「申訴管道今天暫時關閉維護——更新後通知。」
+- **nextAction**：「先選一件事說好——就這一件，其他的慢慢來。」
+- **song hook B（廢話文學）**：
+  ```
+  說明書有兩份
+  孩子讀的那份
+  備注欄寫的是：
+  這裡可以再試一次
+  ```
+
+#### Fallback 範例
+
+> 輸入：「爺奶一直寵孩子，我說什麼都沒用」
+
+「關於這件事，可以先確認一下是哪種情況：孩子知道有兩套規則並且在切換、爺奶不知道你的規則、還是大家都知道但沒有說好怎麼統一？不同的入口，方法不一樣。」
+
+#### 幽默自評
+
+| 項目 | 分數 |
+|------|------|
+| 情境相關性 | 4.3 |
+| 好笑程度 | 3.9 |
+| 角色辨識度 | 4.2（三方關係需清楚標示） |
+| 流程銜接 | 3.8 |
+| 分享記憶點 | 3.7 |
+
+#### 不捏造檢查
+
+- ✅ 未說「你媽每次都這樣」
+- ✅ 未假設爺奶動機（溺愛、偏心）
+- ✅ 未說孩子「學壞了」
+- ✅ boundary 是對話提案，不是要求爺奶道歉
+- ⚠️ 注意：此情境攻擊對象是長輩，語氣需給對方面子出口（已設計為「規則不同步」而非「你做錯了」）
+
+---
+
+### 案例 C：被老闆不合理責罵
+
+#### 分類結果
+
+| 欄位 | 值 |
+|------|----|
+| speakerRole | employee |
+| targetRole | boss |
+| subjectRole | work_incident（被罵的那件事） |
+| domain | workplace |
+| situationKey | blame（已存在） |
+| conflictType | power_imbalance + expectation_gap |
+| needType | dignity + acknowledgement |
+| outcomeType | reset（重新建立工作定位） |
+| intensity | high |
+| matchType | specific |
+| 建議 comicWorld | W_新聞記者會 / W_奧運現場 / W_氣象播報 |
+
+#### 5 條嗆聲核心句
+
+1. 這份責罵裡有幾個細節是你沒有做過的事——但當下說出來的氣場，不太適合更正。
+2. 被這樣罵的時候，最快的反應是沉默——不是認同，只是判斷這不是辯論賽。
+3. 你氣的不是被罵，是被說錯了——而且說錯的那些，還沒有機會說清楚。
+4. 主管今天的情緒很確定，結論是什麼，目前比細節更先出來。
+5. 這場責罵有一個共同點：你是當事人，但不是唯一有問題的那個。
+
+#### 流程 A：W_新聞記者會
+
+- **analogy**：「這場記者會比較特別——發言人已先宣布結論，Q&A 環節目前暫停。」
+- **honest**：「我聽到你的不滿。有些部分是我的責任，有些不是——我需要一個機會說清楚。」
+- **boundary**：「我可以接受被提醒，不適合接受被罵出去。這個差別，我今天說清楚了。」
+- **comicExit**：「記者會今天先散場——後續說明稿我會準備，時間由我方安排。」
+- **nextAction**：「找一個不是剛罵完的時間，說清楚那件事的前後。」
+- **song hook A（記者會）**：
+  ```
+  記者會已宣布結論
+  發言人還在台上
+  提問時間還沒開放
+  但我準備好了說明稿
+  ```
+
+#### 流程 B：W_氣象播報
+
+- **analogy**：「今天的職場氣象：局部強烈責罵，能見度低，原因不明，預估明天轉為可說話的天氣。」
+- **honest**：「今天我把話聽完了。我現在說一件事：有些部分你說的，我需要知道你指的是哪個細節。」
+- **boundary**：「工作的問題，我願意改；被誤會的事，我需要說清楚。這兩件事我都在做。」
+- **comicExit**：「氣象局今天預報結束，明天預計有機會看到能見度較高的對話天氣。」
+- **nextAction**：「等情緒過了，提一個時間說明那件事——不是道歉，是還原事實。」
+- **song hook B（氣象播報）**：
+  ```
+  今天天氣局部強烈
+  說明稿備好了
+  等能見度回來
+  那件事可以說清楚了
+  ```
+
+#### Fallback 範例
+
+> 輸入：「老闆罵我罵得很難聽」（無其他細節）
+
+「關於這件事——被罵這樣，很不好受。目前還不知道是什麼讓他那樣說，也不知道有沒有辦法說清楚。可以先選一個入口：想先出一口氣，還是想想看怎麼跟他說那件事？」
+
+#### 幽默自評
+
+| 項目 | 分數 |
+|------|------|
+| 情境相關性 | 4.3 |
+| 好笑程度 | 3.6（高強度情境笑點需更精確） |
+| 角色辨識度 | 4.5（員工視角清楚） |
+| 流程銜接 | 4.0 |
+| 分享記憶點 | 3.8 |
+
+#### 不捏造檢查
+
+- ✅ 未說「老闆一直這樣」
+- ✅ 未假設老闆動機（嫉妒、針對）
+- ✅ boundary 不是「你去告他」而是可說出口的話
+- ⚠️ intensity high 情境：comicExit 力道要夠輕，不能讓使用者帶著怒氣出去
+
+---
+
+### 案例 D：伴侶家事分工不均
+
+#### 分類結果
+
+| 欄位 | 值 |
+|------|----|
+| speakerRole | partner（任一方） |
+| targetRole | partner |
+| subjectRole | household_chores |
+| domain | relationship |
+| situationKey | household（已存在） |
+| conflictType | responsibility_diffuse（誰該做什麼不清楚） |
+| needType | collaboration + acknowledgement |
+| outcomeType | redistribute（重新分工） |
+| intensity | moderate |
+| matchType | specific |
+| 建議 comicWorld | W_合夥公司 / W_雙打球賽 / W_工程驗收 |
+
+#### 5 條嗆聲核心句
+
+1. 家裡有一份看不見的工作清單，目前只有一個人看得見全部。
+2. 家事的神奇之處在於：做了不一定被看見，沒做卻很難被忽略。
+3. 「我只要說一聲我就去做」——這句話已經連說了幾次，執行時間尚未出現。
+4. 有些事情你以為對方知道，對方以為你知道，結果兩個人都在等對方先說。
+5. 這個家目前的分工方式不是「誰做」而是「誰先受不了就做」——這個制度有改善空間。
+
+#### 流程 A：W_合夥公司
+
+- **analogy**：「這家公司有兩個合夥人，但目前只有一份可見的工作表——另一份藏在某人腦子裡。」
+- **honest**：「我不是說你不做，我是說有些事我需要你說你看見了。」
+- **boundary**：「說好誰負責哪些事，不是叫你都做，是讓我們兩個都知道自己負責什麼。」
+- **comicExit**：「合夥人大會今天召開，議題只有一個：把工作表從腦子裡搬出來。」
+- **nextAction**：「今天列出三件各自確認負責的事——不用全部，先三件。」
+- **song hook A（合夥公司）**：
+  ```
+  合夥公司今天開會
+  待辦事項只有一份
+  另一份在某人腦子裡
+  今天要把它搬出來
+  ```
+
+#### 流程 B：W_雙打球賽
+
+- **analogy**：「雙打配對已經上場，但目前球的路線只有一個人在追——另一個在看球往哪裡去。」
+- **honest**：「我知道你有你的方式，我說的是我很累——不是你不好，是我需要你說你看見了。」
+- **boundary**：「這幾件事，我需要你說「我來」——我不是要你完美，我需要知道你在陪我打這場。」
+- **comicExit**：「雙打教練今天宣布：接下來這球，換你去追。」
+- **nextAction**：「這週說好一件你負責跟完的事——不是幫忙，是你的。」
+- **song hook B（雙打）**：
+  ```
+  雙打配對上場了
+  這顆球往左邊去
+  兩個人都往右看
+  球還沒人去追
+  ```
+
+#### Fallback 範例
+
+> 輸入：「另一半都不做家事」
+
+「關於家事分工——目前還不知道是哪種情況：沒有說清楚誰負責什麼，說了但沒有執行，還是說法不同各自認為對方應該主動？不同狀況，說話的方式不一樣。先選一個比較接近的。」
+
+#### 幽默自評
+
+| 項目 | 分數 |
+|------|------|
+| 情境相關性 | 4.3 |
+| 好笑程度 | 4.0 |
+| 角色辨識度 | 4.0（說話者非固定性別，設計正確）|
+| 流程銜接 | 4.2 |
+| 分享記憶點 | 4.0 |
+
+#### 不捏造檢查
+
+- ✅ 未說「你從來不做」
+- ✅ 未假設對方動機（懶、不在乎）
+- ✅ 嗆聲第3條保留「這句話已經連說了幾次」——需使用者提供這個細節才能使用，fallback 不可直接用
+- ✅ boundary 是可以說出口的提案，不是指控
+
+---
+
+### 案例 E：自己拖延
+
+#### 分類結果
+
+| 欄位 | 值 |
+|------|----|
+| speakerRole | self |
+| targetRole | self |
+| subjectRole | task（未指定具體任務） |
+| domain | self |
+| situationKey | self_procrastinate（新，尚未建立） |
+| conflictType | avoidance（回避行為） |
+| needType | rest / choice（區分是累還是卡） |
+| outcomeType | commit（小小的開始） |
+| intensity | mild–moderate |
+| matchType | specific |
+| 建議 comicWorld | W1 廢話文學 / W_太空任務 / W_氣象播報 |
+
+> 特殊說明：自我嗆聲沒有「對方」，小天鼠說的是自己的情況，comicExit 給的是自己一個台階，不是給另一個人。
+
+#### 5 條嗆聲核心句
+
+1. 這件事還沒開始，腦子已經把它做完了很多次——可惜只有其中一個版本會變成真的。
+2. 「等一下就去做」這句話已經連說了幾個「等一下」——具體幾個，目前計次器沒有在走。
+3. 你不是懶，你是把某一個步驟想得太大——卡在那裡，所以還沒開始。
+4. 這件事很重要，這件事等一下再說——這兩件事同時在腦子裡是可以共存的，目前已共存了一段時間。
+5. 待辦清單上有這件事，它還沒動，但它很有自知之明地繼續待著。
+
+#### 流程 A：W1 廢話文學
+
+- **analogy**：「這份任務已經進入『備妥中』狀態很長一段時間——就像未拆封的健身卡，充滿希望，目前沒有進場。」
+- **honest**：「我不想做，或者我不知道從哪裡開始——這兩件事都可以，只是要先弄清楚是哪個。」
+- **boundary**：「今天只需要做一件事，而且只需要開始——就這樣。」
+- **comicExit**：「拖延委員會今日宣布：本次休會時間為接下來的五分鐘，五分鐘後開始第一步。」
+- **nextAction**：「第一步是什麼——就說這一步，不是說整件事。」
+- **song hook A（廢話文學）**：
+  ```
+  任務說明已讀取完成
+  執行中的畫面還沒出現
+  第一步是什麼
+  說出來，今天就成案
+  ```
+
+#### 流程 B：W_氣象播報
+
+- **analogy**：「今天的個人天氣：拖延指數偏高，能見度低，預計在說出第一步後轉晴。」
+- **honest**：「我知道這件事重要，不知道的是為什麼還沒開始——是累？卡在哪裡？還是不知道怎麼開始？」
+- **boundary**：「今天不要求做完，只要求開始——開始這件事，今天就成立了。」
+- **comicExit**：「氣象播報員今天宣布：開始做之後，後面的預報自動更新。」
+- **nextAction**：「第一步說出來——就這一步，後面再說。」
+- **song hook B（氣象播報）**：
+  ```
+  今天天氣拖延指數偏高
+  預計在說出第一步後轉晴
+  不需要全部準備好
+  說一步，風向就換了
+  ```
+
+#### Fallback 範例
+
+> 輸入：「我一直在拖」（無任務細節）
+
+「關於拖延——目前還不知道是哪一種：任務太大不知道從哪裡切入、累了需要先休息一下、還是說好要開始但沒有說第一步是什麼。可以先說說看是哪一種？」
+
+#### 幽默自評
+
+| 項目 | 分數 |
+|------|------|
+| 情境相關性 | 4.5 |
+| 好笑程度 | 4.2（自嘲場景笑點較易命中） |
+| 角色辨識度 | 4.3 |
+| 流程銜接 | 4.0 |
+| 分享記憶點 | 4.0 |
+
+#### 不捏造檢查
+
+- ✅ 嗆聲第2條「已經連說了幾個等一下」只能在使用者提到「一直拖」時使用
+- ✅ 未診斷拖延原因（懶散、不認真）
+- ✅ nextAction 提供選擇入口，不是命令
+- ✅ 案例 E 沒有「對方」——comicExit 給自己台階，不撤回前面說的任何界線
+
+---
+
+## 六、統計欄位規劃
+
+本階段只設計欄位名稱與用途，**不修改 GAS Sheet、不新增欄位、不 commit 程式**。
+
+### GA4 事件擴充（現有 GENERATE 事件加欄位）
+
+| 欄位名 | 值域 | 說明 |
+|--------|------|------|
+| `speakerRole` | parent / employee / partner / self / … | 說話者角色 |
+| `targetRole` | child / boss / partner / grandparent / self / … | 被嗆對象 |
+| `domain` | parenting / workplace / relationship / family / self | 場域 |
+| `conflictType` | boundary_unclear / habit_loop / expectation_gap / … | 衝突本質 |
+| `needType` | boundary_setting / acknowledgement / collaboration / … | 使用者需要什麼 |
+| `outcomeType` | transition / clarify / reset / redistribute / commit | 期望方向 |
+| `matchType` | specific / conflict / general | 命中層級（已有，確認沿用） |
+
+### GAS 記錄表擴充（ops_log 或新表）
+
+| 欄位名 | 說明 |
+|--------|------|
+| `speaker_role` | 記錄每次生成的說話者角色 |
+| `target_role` | 記錄對象角色 |
+| `domain` | 場域 |
+| `conflict_type` | 衝突本質（供人工分析高頻類型） |
+| `match_type` | specific／conflict／general（現有，確認格式） |
+| `fallback_trigger` | 若命中 general，記錄原始關鍵字（最多 20 字，不記完整原句） |
+
+### 使用說明
+
+- 以上欄位供未來分析「哪些衝突類型最常出現」「fallback 比例是否偏高」
+- 不建立個人原句排行榜
+- fallback_trigger 最多 20 字，不記錄可識別個人的敏感內容
+- 本階段只設計，實作時需另行評估 Sheet 結構與 GAS 配合
+
+---
+
+## 七、待確認事項（送審前請 Angel-x 指示）
+
+1. **分類模型欄位**：`conflictType` 值域是否需要在 UI 顯示？或只做後台分類？
+2. **歌曲模板引擎**：V2 設計可減少重複工作，但首次建立需更多 placeholder 測試——是否列入 R3？
+3. **案例 B 爺奶寵孩子**：`grandparent_spoil` 為新 situationKey，需確認是否放 Batch 2（親子與長輩關係）
+4. **案例 E 自己拖延**：`self_procrastinate` 為新 situationKey，沒有「對方」的嗆聲模式——是否要設計獨立的輸出格式？
+5. **幽默評分**：目前自評均在 3.5–4.5，案例 C（老闆責罵）好笑程度 3.6 偏低——高強度情境的幽默策略是否需要另行設計？
+
+---
+
+*本文件完成後等待 Angel-x 審核。核准後才進行程式實作。*
