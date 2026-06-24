@@ -41,7 +41,8 @@ function doPost(e) {
     var action = data.action || '';
 
     // 額度系統路由（轉交 quota.gs 的 handleQuotaAction）
-    if (action === 'getQuota' || action === 'consumeQuota' || action === 'redeemCode') {
+    if (action === 'getQuota' || action === 'consumeQuota' || action === 'redeemCode' ||
+        action.indexOf('admin') === 0) {
       return jsonOutput(handleQuotaAction(action, data));
     }
 
