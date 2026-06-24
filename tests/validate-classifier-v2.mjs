@@ -407,7 +407,8 @@ console.log('── C9 未知情境 domain fallback ──');
   // 無具體 kw → low，但 domain 來自 target
   const r = classifyInput('老闆今天讓我覺得不舒服', '老闆');
   assert('C9-01 不舒服(無命中kw) → workplace', r.domain === 'workplace', r.domain);
-  assert('C9-01 情境 → null 或 disrespect', r.situationKey === null || r.situationKey === 'disrespect', r.situationKey);
+  // 「不舒服」不在 disrespect kw 清單，應為 null
+  assert('C9-01 情境 → null', r.situationKey === null, r.situationKey);
 }
 {
   const r = classifyInput('今天心情很差', '另一半');
@@ -589,12 +590,14 @@ console.log('── C12 v2.2 回歸 ──');
 // ── guidedSelection 合法值驗證 ──
 {
   // 完全非法 situationKey → invalid + source guided_invalid + NOT high
+  // 原始來源（target_chip, inferred）必須保留，不能被替換
   const r = classifyInput('孩子今天很煩', {
     targetLabel: '孩子',
     guidedSelection: { situationKey: 'not_real' }
   });
   assert('C12-08 非法 sk → guidedSelectionValid false', r.guidedSelectionValid === false, r.guidedSelectionValid);
   assert('C12-08 source guided_invalid', has(r.classificationSource, 'guided_invalid'), r.classificationSource);
+  assert('C12-08 原始 source 保留 target_chip', has(r.classificationSource, 'target_chip'), r.classificationSource);
   assert('C12-08 NOT high confidence', r.classificationConfidence !== 'high', r.classificationConfidence);
 }
 {
@@ -608,12 +611,15 @@ console.log('── C12 v2.2 回歸 ──');
 }
 {
   // 合法 situationKey + 非法 subSituationKey → invalid
+  // 文字偵測 homework → 原 high，非法 guided 後上限降 medium
   const r = classifyInput('孩子不寫作業', {
     targetLabel: '孩子',
     guidedSelection: { situationKey: 'homework', subSituationKey: 'screen_time' }
   });
   assert('C12-10 homework+screen_time sub → invalid', r.guidedSelectionValid === false, r.guidedSelectionValid);
   assert('C12-10 source guided_invalid', has(r.classificationSource, 'guided_invalid'), r.classificationSource);
+  assert('C12-10 原始 source 保留 user_input', has(r.classificationSource, 'user_input'), r.classificationSource);
+  assert('C12-10 confidence 上限 medium', r.classificationConfidence === 'medium', r.classificationConfidence);
 }
 {
   // 合法 situationKey + 合法 subSituationKey → valid
@@ -641,6 +647,25 @@ console.log('── C12 v2.2 回歸 ──');
   // 客戶催進度（多字片語）
   const r = classifyInput('客戶說催進度，今天要', '客戶');
   assert('C12-14 催進度 → rush', r.situationKey === 'rush', r.situationKey);
+}
+{
+  // 孩子睡前滑手機 → screen_at_bedtime + 無 stop_resistance evidence → conflict unknown
+  const r = classifyInput('孩子睡前還在滑手機', '孩子');
+  assert('C12-15 睡前滑手機 → screen', r.situationKey === 'screen', r.situationKey);
+  assert('C12-15 screen_at_bedtime', r.subSituationKey === 'screen_at_bedtime', r.subSituationKey);
+  assert('C12-15 無 evidence → conflict unknown', r.primaryConflictType === 'unknown', r.primaryConflictType);
+}
+{
+  // 孩子吃飯滑手機 → screen_at_meals + 無 evidence → conflict unknown
+  const r = classifyInput('孩子吃飯時一直看平板', '孩子');
+  assert('C12-16 吃飯看平板 → screen', r.situationKey === 'screen', r.situationKey);
+  assert('C12-16 screen_at_meals', r.subSituationKey === 'screen_at_meals', r.subSituationKey);
+  assert('C12-16 無 evidence → conflict unknown', r.primaryConflictType === 'unknown', r.primaryConflictType);
+}
+{
+  // 睡前+不肯停 → transition_resistance（有 evidence 時才判）
+  const r = classifyInput('孩子睡前不肯停，不肯關手機', '孩子');
+  assert('C12-17 睡前+不肯停 → transition_resistance', r.primaryConflictType === 'transition_resistance', r.primaryConflictType);
 }
 
 /* ════════════════════════════════════════════════

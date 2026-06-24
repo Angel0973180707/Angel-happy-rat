@@ -18,7 +18,7 @@
  * MIN_SCORE = 2（單字元關鍵詞不單獨觸發情境）
  */
 
-export const VERSION = 'v2.2-phase1';
+export const VERSION = 'v2.2.1-phase1';
 
 const MIN_SCORE = 2;
 
@@ -285,25 +285,28 @@ function deriveHomeworkConflict(evidenceTokens) {
   return 'unknown';
 }
 
-/** 子情境對應的 conflictType（screen_general 不在此表：由 evidence 閘門決定）*/
+/** 子情境對應的 conflictType（screen 類均移至 deriveScreenConflict 統一閘門）*/
 function subSituationConflict(subKey) {
   const m = {
-    screen_time: 'boundary_violation', screen_hidden_use: 'trust',
-    screen_content: 'boundary_violation', screen_at_meals: 'responsibility_gap',
-    screen_at_bedtime: 'transition_resistance',
     grandparent_treat_override: 'expectation_gap', grandparent_rules_general: 'expectation_gap',
   };
   return m[subKey] || null;
 }
 
-/** screen 衝突需要 evidence 才能推論，否則回 unknown */
+/**
+ * screen 衝突全部 evidence 閘門：
+ *   screen_time / screen_content → 靜態（時間/內容已明確界定衝突）
+ *   screen_hidden_use             → 靜態（隱瞞行為 → 信任）
+ *   screen_at_bedtime / screen_at_meals / screen_general
+ *     → 需要 stop_resistance_explicit 才判 transition_resistance，否則 unknown
+ */
 function deriveScreenConflict(subSituationKey, evidenceTokens) {
-  if (subSituationKey && subSituationKey !== 'screen_general') {
-    const sc = subSituationConflict(subSituationKey);
-    if (sc) return sc;
-  }
+  if (subSituationKey === 'screen_time')     return 'boundary_violation';
+  if (subSituationKey === 'screen_content')  return 'boundary_violation';
+  if (subSituationKey === 'screen_hidden_use') return 'trust';
+  // screen_at_bedtime / screen_at_meals / screen_general：需要 evidence
   if (evidenceTokens.indexOf('stop_resistance_explicit') !== -1) return 'transition_resistance';
-  if (evidenceTokens.indexOf('screen_time_explicit') !== -1) return 'boundary_violation';
+  if (evidenceTokens.indexOf('screen_time_explicit') !== -1)     return 'boundary_violation';
   return 'unknown';
 }
 
@@ -460,9 +463,10 @@ export function classifyInput(input, options) {
     guidedSelectionValid = situationValid && subValid;
 
     if (!guidedSelectionValid) {
-      // 非法選項：不覆寫分類結果，標記來源為 guided_invalid
-      classificationSource = ['guided_invalid'];
-      // confidence 不升為 high：保留文字偵測的結果（可能是 low）
+      // 非法選項：不覆寫分類結果，保留文字偵測來源並 append guided_invalid
+      classificationSource = classificationSource.concat(['guided_invalid']);
+      // 上限降為 medium（防止高分文字偵測被誤以為是「引導確認」的 high）
+      if (classificationConfidence === 'high') classificationConfidence = 'medium';
     } else {
       const textConflict = situationKey && situationKey !== guided.situationKey && topScore >= 4;
       situationKey = guided.situationKey;
