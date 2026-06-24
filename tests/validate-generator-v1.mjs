@@ -254,6 +254,63 @@ console.log('── G9 邊界容錯 ──');
 }
 
 /* ════════════════════════════════════════════════
+   G10 角色語義標記（語氣辨識）
+   小天鼠：直接嗆聲標記必須出現
+   唬爛虎：誇飾升溫標記必須出現；落地必須含「現在」
+   語義互換：mouse 內容不含 tiger 誇飾標記；tiger 不含 mouse 嗆聲標記
+════════════════════════════════════════════════ */
+console.log('── G10 角色語義標記 ──');
+{
+  // 小天鼠直接嗆聲標記（必須出現在 truth + boundary + selfOwn + comicExit 的任一欄）
+  const MOUSE_SEMANTIC = ['你', '不是在', '套餐', '先焦', '先冒煙', '嗶——'];
+  // 唬爛虎誇飾升溫標記（必須出現在 l1 + l2 的任一段）
+  const TIGER_EXAGGERATION = ['峰會', '認證', '宣布', '稽查員', '委員會', '歷史時刻', '緊急'];
+
+  function mouseText(r) {
+    const m = r && r.mouseOutput;
+    if (!m) return '';
+    return [m.truth, m.boundary, m.selfOwn, m.comicExit].join('');
+  }
+  function tigerEscalation(r) {
+    const t = r && r.tigerOutput;
+    if (!t) return '';
+    return [t.l1, t.l2].join('');
+  }
+
+  // 小天鼠：三組輸出各至少命中一個直接嗆聲標記
+  assert('G10-01 specific mouse 命中直接嗆聲標記',
+    MOUSE_SEMANTIC.some(m => mouseText(rSpec).includes(m)), mouseText(rSpec).slice(0, 60));
+  assert('G10-02 conflict mouse 命中直接嗆聲標記',
+    MOUSE_SEMANTIC.some(m => mouseText(rConf).includes(m)), mouseText(rConf).slice(0, 60));
+  assert('G10-03 general  mouse 命中直接嗆聲標記',
+    MOUSE_SEMANTIC.some(m => mouseText(rGen).includes(m)),  mouseText(rGen).slice(0, 60));
+
+  // 唬爛虎：三組輸出各至少命中一個誇飾升溫標記
+  assert('G10-04 specific tiger 命中誇飾升溫標記',
+    TIGER_EXAGGERATION.some(m => tigerEscalation(rSpec).includes(m)), tigerEscalation(rSpec).slice(0, 60));
+  assert('G10-05 conflict tiger 命中誇飾升溫標記',
+    TIGER_EXAGGERATION.some(m => tigerEscalation(rConf).includes(m)), tigerEscalation(rConf).slice(0, 60));
+  assert('G10-06 general  tiger 命中誇飾升溫標記',
+    TIGER_EXAGGERATION.some(m => tigerEscalation(rGen).includes(m)),  tigerEscalation(rGen).slice(0, 60));
+
+  // 唬爛虎 landing 必含「現在」（反差落地標記）
+  assert('G10-07 specific tiger landing 含「現在」',
+    rSpec && rSpec.tigerOutput.landing.includes('現在'), rSpec && rSpec.tigerOutput.landing);
+  assert('G10-08 conflict tiger landing 含「現在」',
+    rConf && rConf.tigerOutput.landing.includes('現在'), rConf && rConf.tigerOutput.landing);
+  assert('G10-09 general  tiger landing 含「現在」',
+    rGen  && rGen.tigerOutput.landing.includes('現在'),  rGen  && rGen.tigerOutput.landing);
+
+  // 語義互換測試：mouse 的嗆聲文案不含 tiger 誇飾標記
+  assert('G10-10 mouse content 無 tiger 誇飾標記（semantic swap 失敗）',
+    !TIGER_EXAGGERATION.some(m => mouseText(rSpec).includes(m)), mouseText(rSpec).slice(0, 60));
+  // 語義互換測試：tiger l1+l2 不含 mouse 專屬嗆聲構型
+  const MOUSE_UNIQUE = ['套餐', '先焦', '先冒煙', '嗶——'];
+  assert('G10-11 tiger escalation 無 mouse 專屬嗆聲標記（semantic swap 失敗）',
+    !MOUSE_UNIQUE.some(m => tigerEscalation(rSpec).includes(m)), tigerEscalation(rSpec).slice(0, 60));
+}
+
+/* ════════════════════════════════════════════════
    結果
 ════════════════════════════════════════════════ */
 console.log('\n' + '═'.repeat(60));
