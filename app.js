@@ -222,6 +222,54 @@ function renderMildAngerCard(id){
   return '<div class="result-card tag-rat"><div class="who">'+RAT_ICON+' 小天鼠收到你的氣</div><div class="body-text">這股火先幫你接住了。揍空氣三下，再回來讓我們把它翻譯成才華。</div></div>';
 }
 
+/* 嗆聲模式：攻擊意圖偵測
+   設計原則：只攔「第一人稱攻擊意圖」；受害描述（老闆罵我是廢物）不攔。
+   採用明確動詞+方向詞組合，不靠內容詞（廢物/醜）單獨判斷。 */
+var ROAST_ABUSE_PATTERNS=[
+  {cat:'violence',words:[
+    '我要打孩子','我要打他','我要打她','我要揍他','我要揍她',
+    '去打他','去打她','去揍他','去揍她',
+    '打死他','打死她','揍死他','揍死她',
+    '體罰他','體罰她','虐待孩子','虐待他','虐待她',
+    '傷害他','傷害她']},
+  {cat:'threat',words:[
+    '我要報復','幫我報復','讓他後悔','讓她後悔',
+    '我要威脅他','我要威脅她','去找他麻煩','去找她麻煩']},
+  {cat:'doxx',words:[
+    '公開他的電話','公開她的電話',
+    '公開他的地址','公開她的地址',
+    '公開他的學校','公開她的學校',
+    '幫我曝光他','幫我曝光她',
+    '曝光他的資料','曝光她的資料',
+    '公開姓名電話','曝光個資']},
+  {cat:'abuse_request',words:[
+    '幫我罵他','幫我罵她',
+    '幫我羞辱他','幫我羞辱她',
+    '讓大家去罵','讓大家去打',
+    '號召大家去','一起去罵','一起去打',
+    '公開羞辱他','公開羞辱她']},
+  {cat:'minor_sexual',words:[
+    '兒童性','對孩子做那種','讓孩子拍']}
+];
+function checkRoastSafety(text){
+  text=text||'';
+  for(var i=0;i<ROAST_ABUSE_PATTERNS.length;i++){
+    var rule=ROAST_ABUSE_PATTERNS[i];
+    for(var j=0;j<rule.words.length;j++){
+      if(text.indexOf(rule.words[j])!==-1) return {level:'roast_abuse',cat:rule.cat};
+    }
+  }
+  return {level:'ok'};
+}
+function renderRoastAbuseCard(){
+  return '<div class="result-card tag-rat"><div class="who">'+RAT_ICON+' 小天鼠先暫停一下</div><div class="body-text">這句已經不是放話，是可能真的傷到人。\n小天鼠先幫你把重點改成界線與需求，不提供威脅或羞辱版本。\n\n試著說說：發生了什麼？你希望改變的是什麼？</div></div>';
+}
+function toggleRoastRules(btn){
+  var d=btn.nextElementSibling;
+  if(d.style.display==='none'){d.style.display='block';btn.textContent='完整守則 ▴';}
+  else{d.style.display='none';btn.textContent='完整守則 ▾';}
+}
+
 /* ---------------------------------------------------
    3. 變化引擎
 --------------------------------------------------- */
@@ -408,11 +456,13 @@ var TARGET_ROAST_DB={
         boundary:['今天的飯就是今天的選擇，你可以不喜歡，但不可以不試——試一口是今天的規定。','我不會每次都做你喜歡的，但我願意聽你說什麼是你真的不行的，其他的我們都可以試試。','不吃可以，但餓了就是餓了，餓是今天選擇的結果——這個我先說清楚。']
       },
       talkBack:{
-        keywords:['頂嘴','回嘴','回我','你說什麼','態度','怎麼說話','不尊重','嗆','對我說話','什麼態度'],
-        truth:['你不是受不了他說的那句話，你受不了的是那個語氣——那個語氣讓你覺得你說的話不值得被好好回應。','你在意的不是輸贏，你在意的是這個孩子對你說話的方式，裡面有沒有起碼的尊重。','孩子頂嘴讓你最難受的部分，不是那句話，是那句話背後「你說的不算數」的感覺。'],
-        analogy:['你說一件事，他接一句讓你不舒服的話——這個打乒乓的方式，你本來以為你是發球的那個人。','孩子說的話就像回音，但比你說的多了一點力道，多了一點反方向——你一時不確定要怎麼接。','你說了規定，他說了一句讓你必須回應的話，然後你們都偏離了原來要討論的那件事。'],
-        honest:['你不敢說的是：你有時候不確定你的要求是不是值得被這樣堅持，但你說出去了，你必須撐著。','你真正想說的是：「你可以有意見，你可以不同意，但說話的方式我需要你尊重我。」','你沒說出口的是：你其實希望他以後能說出自己的想法，只是不是用這個方式。'],
-        boundary:['你可以不同意，但說話的語氣我需要你調整——內容可以討論，方式必須尊重。','有意見你可以說，說完我會聽，但我也需要你聽我說完，這是雙向的。','等你願意用我能接受的方式說話，我們再繼續談——這不是懲罰，是說清楚怎麼溝通。']
+        /* 定義：孩子使用讓照顧者難以繼續溝通的語氣或方式回應。
+           不同意、解釋、表達情緒本身不等於頂嘴。不把服從視為唯一正確答案。*/
+        keywords:['頂嘴','回嘴','反嗆','大小聲','講不聽','沒禮貌','態度差'],
+        truth:['你不是不能接受不同意，而是不想開口就像進入辯論決賽。','你介意的不是孩子有意見，是那個意見說出來的方式讓你沒辦法繼續聽下去。','你在意的是溝通方式，不是誰對誰錯。'],
+        analogy:['你只是提醒一件事，對方卻瞬間把客廳切換成記者會現場。','你說一句，孩子接三句，而且還帶著音效——這個來回，你有點吃不消。','你本來只是在說一件事，後來你忘了原來在說什麼，因為你在處理說話的方式。'],
+        honest:['你可以有自己的意見，但我也希望我的話能被好好聽完。','你不敢說的是：你其實希望他能說出自己的想法，只是不是用這個方式。','你沒說出口的是：你不是要他服從，你只是想要說話的時候有人真的在聽。'],
+        boundary:['你可以不同意，請換一個不傷人的方式說——等我們都能好好講，再繼續討論。','有意見可以說，說的時候讓我也說完，我們輪流，沒有人可以一直搶。','這個話題我想繼續，但需要我們都用平靜一點的語氣——現在先停一下，等一下再說。']
       },
       screen:{
         keywords:['手機','電視','平板','遊戲','3C','網路','影片','一直看','一直玩','不放下','YouTube','不關'],
@@ -1379,7 +1429,8 @@ function renderInputArea(id,opts){
   var prefill=flow.routeB?getStepPrefill(id):(flow.input||'');
   var sharedInput='<div class="field-block"><label for="main-input">'+placeholder+'</label><textarea id="main-input" placeholder="'+placeholder+'">'+escapeHtml(prefill)+'</textarea></div>';
   if(id==='roast'){
-    els.inputArea.innerHTML=sharedInput+chipBlock('target-chip','對象',['老闆/主管','客戶','同事','孩子','爸媽/長輩','兄弟姊妹','另一半','朋友','其他']);
+    var roastNotice='<div class="roast-notice" style="font-size:0.85em;color:#888;margin-top:0.5em;line-height:1.5;">小天鼠幫你把悶氣說清楚，不幫你霸凌、威脅或公開羞辱別人。分享前請拿掉姓名與私人資料。<button class="link-btn" style="font-size:inherit;color:#aaa;background:none;border:none;cursor:pointer;padding:0 0 0 0.3em;" onclick="toggleRoastRules(this)">完整守則 ▾</button><div style="display:none;margin-top:0.4em;">禁止生成：① 暴力體罰意圖 ② 威脅報復 ③ 公開電話地址等個資 ④ 號召霸凌羞辱 ⑤ 仇恨歧視內容。高風險輸入不生成、不扣額度，只記匿名分類。</div></div>';
+    els.inputArea.innerHTML=sharedInput+chipBlock('target-chip','對象',['老闆/主管','客戶','同事','孩子','爸媽/長輩','兄弟姊妹','另一半','朋友','其他'])+roastNotice;
   } else if(id==='bigdream'){
     els.inputArea.innerHTML=sharedInput+chipBlock('topic-chip','主題',['財富','健康','事業','旅行','品牌','影響力']);
   } else if(id==='lost'){
@@ -1428,6 +1479,16 @@ function runGenerate(id){
   var safety=checkSafety(input);
   if(safety.level==='crisis'){els.results.innerHTML=renderCrisisCard();logEvent('GENERATE',{mode:id,safety:'crisis'});return;}
   if(safety.level==='violence'){els.results.innerHTML=renderViolenceRedirectCard();logEvent('GENERATE',{mode:id,safety:'violence'});return;}
+
+  /* 嗆聲模式防濫用：攻擊意圖攔截，不扣額度，只記匿名分類 */
+  if(id==='roast'){
+    var roastSafety=checkRoastSafety(input);
+    if(roastSafety.level==='roast_abuse'){
+      els.results.innerHTML=renderRoastAbuseCard();
+      logEvent('GENERATE',{mode:'roast',safety:'roast_abuse',category:roastSafety.cat});
+      return;
+    }
+  }
 
   /* Route B 步驟不扣 quick（旅程費已在起點扣除） */
   var qType=quotaTypeForMode(id);

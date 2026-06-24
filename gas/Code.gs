@@ -68,8 +68,8 @@ function saveLogEvent(data) {
   var sheet = ss.getSheetByName('16_流量事件');
   if (!sheet) return { ok: false, message: '找不到 16_流量事件' };
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(['時間','userId','eventType','mode','subMode','source','device','sessionId']);
-    sheet.getRange(1,1,1,8).setFontWeight('bold');
+    sheet.appendRow(['時間','userId','eventType','mode','subMode','source','device','sessionId','targetCategory','situationCategory','matchType']);
+    sheet.getRange(1,1,1,11).setFontWeight('bold');
     sheet.setFrozenRows(1);
   }
   sheet.appendRow([
@@ -306,6 +306,46 @@ function updateDailyStats(clean, ss) {
   var colMap = { GENERATE:2, REGENERATE:2, GENERATE_SONG:3, ENTER_WORKSHOP:3, COPY:4, SHARE:5, PARTNER_CLICK:6 };
   var col = colMap[clean.action];
   if (col) sheet.getRange(rowIdx,col).setValue(Number(sheet.getRange(rowIdx,col).getValue()||0)+1);
+}
+
+// ----------------------------------------------
+// migrateRoastColumns
+// 一次性遷移：為 01_生成紀錄 和 16_流量事件 補上三個追蹤欄位
+// 只補缺少的，不覆蓋、不搬動既有資料，遷移前後資料筆數不變
+// ----------------------------------------------
+function migrateRoastColumns() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var results = [];
+
+  // 01_生成紀錄：期望表頭是 RECORD_HEADERS（18 欄）
+  var sheet01 = ss.getSheetByName('01_生成紀錄');
+  if (sheet01) {
+    var before01 = sheet01.getLastRow();
+    var h01 = sheet01.getRange(1, 1, 1, sheet01.getLastColumn()).getValues()[0];
+    var toAdd01 = ['targetCategory','situationCategory','matchType'].filter(function(c){ return h01.indexOf(c) === -1; });
+    toAdd01.forEach(function(col) {
+      var newCol = sheet01.getLastColumn() + 1;
+      sheet01.getRange(1, newCol).setValue(col).setFontWeight('bold');
+    });
+    sheet01.setFrozenRows(1);
+    results.push({sheet:'01_生成紀錄', added:toAdd01, rowsBefore:before01, rowsAfter:sheet01.getLastRow()});
+  }
+
+  // 16_流量事件：期望表頭 11 欄
+  var sheet16 = ss.getSheetByName('16_流量事件');
+  if (sheet16) {
+    var before16 = sheet16.getLastRow();
+    var h16 = sheet16.getRange(1, 1, 1, sheet16.getLastColumn()).getValues()[0];
+    var toAdd16 = ['targetCategory','situationCategory','matchType'].filter(function(c){ return h16.indexOf(c) === -1; });
+    toAdd16.forEach(function(col) {
+      var newCol = sheet16.getLastColumn() + 1;
+      sheet16.getRange(1, newCol).setValue(col).setFontWeight('bold');
+    });
+    sheet16.setFrozenRows(1);
+    results.push({sheet:'16_流量事件', added:toAdd16, rowsBefore:before16, rowsAfter:sheet16.getLastRow()});
+  }
+
+  return results;
 }
 
 // ----------------------------------------------
