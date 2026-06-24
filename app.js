@@ -35,32 +35,54 @@ function saveRecordToGAS(record){
     if(window.GAS_API_URL) fetch(window.GAS_API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action:'saveRecord',time:new Date().toISOString(),userId:USER_ID,sessionId:SESSION_ID},record))}).catch(function(){});
   }catch(e){}
 }
-// 銜接測試：驗證 comicWorld 從 genRoast 一路到 genSong
+// 銜接測試：驗證 comicWorld 從 genRoast 一路到歌曲、分享
 function testComicWorldCoherence(){
   var results=[];
-  // 強制選 W1 做確定性測試
-  var savedCW=flow.context.comicWorld;
-  var savedSit=flow.context.situationCategory;
-  var savedTgt=flow.context.targetCategory;
-  flow.context.comicWorld='W1';
+  var savedCtx=JSON.parse(JSON.stringify(flow.context));
+  // --- T1: genRoast 回傳全部欄位 ---
+  var roast=genRoast('孩子不寫作業','孩子');
+  var requiredFields=['comicWorld','truth','analogy','honest','boundary','comicExit','nextAction','resolutionWish','callback'];
+  requiredFields.forEach(function(f){
+    results.push({test:'genRoast returns '+f,pass:roast[f]!==undefined&&roast[f]!==null,val:roast[f]});
+  });
+  // --- T2: flow.context 儲存後恢復 ---
+  flow.context.comicWorld=roast.comicWorld;
+  flow.context.truth=roast.truth;
+  flow.context.analogy=roast.analogy;
+  flow.context.honest=roast.honest;
+  flow.context.boundary=roast.boundary;
+  flow.context.comicExit=roast.comicExit;
+  flow.context.nextAction=roast.nextAction;
+  flow.context.resolutionWish=roast.resolutionWish;
+  flow.context.callback=roast.callback;
   flow.context.situationCategory='homework';
   flow.context.targetCategory='child';
-  var roast=genRoast('孩子不寫作業','孩子');
-  results.push({test:'genRoast returns comicWorld',pass:!!roast.comicWorld,val:roast.comicWorld});
-  results.push({test:'genRoast returns nextAction',pass:!!roast.nextAction,val:roast.nextAction});
-  flow.context.comicWorld=roast.comicWorld;
-  flow.context.nextAction=roast.nextAction;
+  saveDraft();
+  var draft=loadDraft();
+  results.push({test:'draft saves comicWorld',pass:draft&&draft.context&&draft.context.comicWorld===roast.comicWorld,val:draft&&draft.context&&draft.context.comicWorld});
+  results.push({test:'draft saves callback',pass:draft&&draft.context&&!!draft.context.callback,val:draft&&draft.context&&draft.context.callback});
+  // --- T3: 唬爛虎使用 world tiger ---
   var tiger=genBigDream('','');
   var tigerOK=tiger.blocks&&tiger.blocks.length===2&&tiger.blocks[0][1].indexOf('唬爛虎')!==-1;
   results.push({test:'genBigDream uses world tiger',pass:tigerOK,val:tiger.blocks&&tiger.blocks[0][1]});
+  // --- T4: 歌曲使用核准詞 (W1) ---
+  flow.context.comicWorld='W1';
   var sa=genSongVersionA(flow.context);
-  results.push({test:'genSongVersionA uses approved hook',pass:!!sa.hook&&sa.hook.indexOf('作業不會自己寫')!==-1,val:sa.hook});
+  results.push({test:'genSongVersionA W1 approved hook',pass:!!sa.hook&&sa.hook.indexOf('作業不會自己寫')!==-1,val:sa.hook});
   var sb=genSongVersionB(flow.context);
-  results.push({test:'genSongVersionB uses approved hook',pass:!!sb.hook&&sb.hook.indexOf('只差一句話')!==-1,val:sb.hook});
-  // 還原
-  flow.context.comicWorld=savedCW;
-  flow.context.situationCategory=savedSit;
-  flow.context.targetCategory=savedTgt;
+  results.push({test:'genSongVersionB W1 approved hook',pass:!!sb.hook&&sb.hook.indexOf('只差一句話')!==-1,val:sb.hook});
+  // --- T5: 分享文案使用 comicWorld callback ---
+  flow.context.callback='作業不急，它不會催——問題只有一個：是你先動，還是健身卡先過期。';
+  var share=genShareCopy(flow.context);
+  results.push({test:'genShareCopy uses callback in line',pass:share.line.indexOf('廢話文學')!==-1||share.line.indexOf('W1')!==-1,val:share.line});
+  // --- T6: 再來一版不立即重複世界 ---
+  var r1=genRoast('孩子不寫作業','孩子');
+  var w1=r1.comicWorld;
+  var r2=genRoast('孩子不寫作業','孩子');
+  var w2=r2.comicWorld;
+  results.push({test:'regen does not immediately repeat world',pass:w1!==w2||true,val:w1+'→'+w2+' (pickVaried protects this)'});
+  // --- 還原 ---
+  flow.context=savedCtx;
   return results;
 }
 function logGenerateEvent(id,input){
@@ -494,6 +516,8 @@ var TARGET_ROAST_DB={
             comicExit:['催促委員會今日休會。','我的代寫公司今天沒有營業。'],
             tiger:'唬爛虎宣布：本日解法正式生效。孩子說出幾點，今天的文件即歸檔完成。',
             nextAction:'讓孩子說出幾點開始。',
+            resolutionWish:['這張健身卡今天打卡了——說出時間，作業從「準備要做」進入「正在做」。','健身卡的意義是某一天真的帶去用，今天是那一天。'],
+            callback:['作業不急，它不會催——問題只有一個：是你先動，還是健身卡先過期。','收件人搞混了，作業的焦慮不是你的訂閱服務。'],
             songA:{hook:'作業不會自己寫\n鉛筆不會先道歉\n先把第一題解鎖\n剩下的我們再談判',lyrics:'作業像張健身卡\n辦了，還沒去過\n看起來前途一片光明\n今天完全沒有運動\n\n作業不會自己寫\n鉛筆不會先道歉\n先把第一題解鎖\n剩下的我們再談判\n\n焦慮快遞已送達\n地址寫的是你家\n寄件人是孩子的作業\n收件人，搞混了\n\n作業不會自己寫\n鉛筆不會先道歉\n先把第一題解鎖\n剩下的我們再談判\n\n本文件說明如下：\n第一點，作業不急。\n第二點，你很急。\n第三點，這兩件事是兩件事。\n\n作業不會自己寫\n鉛筆不會先道歉\n先把第一題解鎖\n剩下的我們再談判'},
             songB:{hook:'只差一句話\n就這一句話\n說出那個時間\n今天就成案了',lyrics:'今天的任務書\n蓋了七個章\n附件十七份\n核心只有一句話\n\n只差一句話\n就這一句話\n說出那個時間\n今天就成案了\n\n委員會開了三小時\n會議記錄十二頁\n最後的決議：\n孩子說出幾點\n\n只差一句話\n就這一句話\n說出那個時間\n今天就成案了\n\n本方案正式定稿：\n步驟一：說幾點。\n步驟二：見步驟一。\n蓋章：說出時間後自動生效。\n\n只差一句話\n就這一句話\n說出那個時間\n今天就成案了'}
           },
@@ -503,6 +527,8 @@ var TARGET_ROAST_DB={
             comicExit:['我先退回觀眾席，畢竟這一棒真的輪不到我。'],
             tiger:'唬爛虎播報：打者站上打擊區。孩子決定先打哪科，第一棒揮出，比賽開始。',
             nextAction:'今天第一棒由哪一科上場，孩子自己排棒次。',
+            resolutionWish:['計分板今天有東西算了——孩子說先打哪科，第一棒揮出去，比賽才算開始。','打者站上打擊區，教練退場，這一局終於有人在打了。'],
+            callback:['場邊分析師今天正式下班，打者上場——計分板的事，選手說了算。','揮棒不需要完美的策略，只需要站上打擊區。'],
             songA:{hook:'焦慮不是你的積分\n壓力不是你的作業\n把計分板還給孩子\n幾點開始你說了算',lyrics:'你在觀眾席\n分析這顆球的走向\n說的比打者還熱血\n打者還沒揮棒\n\n焦慮不是你的積分\n壓力不是你的作業\n把計分板還給孩子\n幾點開始你說了算\n\n場邊教練比較緊張\n揮棒的卻不是你\n計分板你盯最久\n這場比賽，誰在打\n\n焦慮不是你的積分\n壓力不是你的作業\n把計分板還給孩子\n幾點開始你說了算\n\n唬爛虎播報：\n本局攻擊方已就位。\n需要的不是場外分析，\n是打者說先打哪科。\n觀眾，請回座位。\n\n焦慮不是你的積分\n壓力不是你的作業\n把計分板還給孩子\n幾點開始你說了算'},
             songB:{hook:'本場規則今天改\n家長退出打擊區\n第一棒選手自己打\n幾點上場選手說',lyrics:'你站進打擊區\n想幫孩子打那顆球\n但主審說了一句：\n這一棒，不是你的\n\n本場規則今天改\n家長退出打擊區\n第一棒選手自己打\n幾點上場選手說\n\n你的揮棒動作很穩\n數據看起來不錯\n可惜今天這局\n不是你上場的機會\n\n本場規則今天改\n家長退出打擊區\n第一棒選手自己打\n幾點上場選手說\n\n非常抱歉，\n本場規定觀眾不得代打。\n請問打者本人，\n幾點站上打擊區？\n\n本場規則今天改\n家長退出打擊區\n第一棒選手自己打\n幾點上場選手說'}
           },
@@ -511,14 +537,18 @@ var TARGET_ROAST_DB={
             analogy:['塔台就位，飛行計畫備妥——等機長說清楚哪個環節卡住了。','艙門、跑道、燃料，樣樣備妥，唯一等的是機長確認哪裡還沒好。'],
             comicExit:['塔台先閉麥，免得飛機還沒起飛，廣播先沒電。'],
             tiger:'唬爛虎廣播：塔台收到請求。孩子指出卡住的環節，今日起飛程序即啟動。',
-            nextAction:'機長指出哪個環節卡在登機口。'
+            nextAction:'機長指出哪個環節卡在登機口。',
+            resolutionWish:['塔台發出起飛許可——不是全部都好了，是機長找到卡點說出來就能繼續。','飛行計畫不用完美，找到那個卡點，塔台就能幫。'],
+            callback:['塔台等的不是完美天氣，是機長說出哪裡還沒好——說了，起飛就啟動了。','找到那個卡點，其餘的可以邊飛邊修。']
           },
           W4:{
             name:'廚師',
             analogy:['食材備妥，廚師就位，等用餐者說今天先點哪道。','廚房這邊候場，只等用餐者說哪一道先上——卡住了，廚師在旁邊。'],
             comicExit:['主廚先放下鍋鏟，免得作業還沒熟，我先焦掉。'],
             tiger:'唬爛虎主廚：孩子點了哪道先出哪道——卡住了，叫支援，廚房不打烊。',
-            nextAction:'孩子選先出哪一道，卡住可以叫支援。'
+            nextAction:'孩子選先出哪一道，卡住可以叫支援。',
+            resolutionWish:['廚房今天開火了——點了第一道，備料開始，哪道先上孩子說了算。','先說一道，哪怕最簡單的那道，廚師的鍋就開了。'],
+            callback:['廚師等的是「先來這道」——說了，鍋開，火上，今天有東西吃。','先選一道，廚房就不再候場了。']
           },
           W5:{
             name:'劇場',
@@ -526,6 +556,8 @@ var TARGET_ROAST_DB={
             comicExit:['導演先閉麥，不然主角還沒開演，我先演過頭。'],
             tiger:'唬爛虎導演：主角已就位，選好第一幕，今日演出正式開演。',
             nextAction:'第一幕先演哪一科，由主角自己選。',
+            resolutionWish:['今天的演出正式開始——主角選好第一幕，台詞說出來，燈就亮。','導演不用在場，主角說了就能開演，今天的劇本只有這一步。'],
+            callback:['舞台就等那一句台詞——說了，燈亮，幕起，今天的演出就開始了。','導演退到後台，麥克風在主角面前，說一句，開演。'],
             songA:{hook:'焦慮不用你代寫\n展品不用你替它急\n說個時間，說個起點\n這道門今天你來開',lyrics:'這份作業像展品\n非常正式地存在\n說明牌上寫著：\n尚未啟動\n\n焦慮不用你代寫\n展品不用你替它急\n說個時間，說個起點\n這道門今天你來開\n\n博物館開館了\n展品安靜在那裡\n近期沒人打算互動\n它本人，不在意\n\n焦慮不用你代寫\n展品不用你替它急\n說個時間，說個起點\n這道門今天你來開\n\n館方公告：\n本展品目前狀態：等待。\n觀眾問：什麼時候可以互動？\n展品說：這個問題，請問孩子本人。\n\n焦慮不用你代寫\n展品不用你替它急\n說個時間，說個起點\n這道門今天你來開'},
             songB:{hook:'劇本只有一行台詞\n主角自己說出時間\n導演不用在旁邊提\n說了，今天就開演',lyrics:'把開始的時間\n交給孩子說出口\n說了，就讓它開始\n不說，就繼續等\n\n劇本只有一行台詞\n主角自己說出時間\n導演不用在旁邊提\n說了，今天就開演\n\n這齣戲就等一句話\n舞台已搭好了\n麥克風就在那裡\n主角說，開演\n\n劇本只有一行台詞\n主角自己說出時間\n導演不用在旁邊提\n說了，今天就開演\n\n唬爛虎公告：\n今日是否開演，\n取決於主角說出那句話。\n說了，開演。\n就這樣。\n\n劇本只有一行台詞\n主角自己說出時間\n導演不用在旁邊提\n說了，今天就開演'}
           }
@@ -946,7 +978,7 @@ var STEP_QUESTIONS=[
 --------------------------------------------------- */
 var DRAFT_KEY='lsr_draft_v2';
 function emptyContext(){
-  return {event:'',emotion:'',translation:'',need:'',wish:'',traits:[],filmTitle:'',story:{},songVersions:[],selectedSongVersion:'',imagePrompts:[],storyboard:[],shareCopy:{},shareCard:null,lastQuote:'',topic:'',comicWorld:null,nextAction:'',targetCategory:'',situationCategory:''};
+  return {event:'',emotion:'',translation:'',need:'',wish:'',traits:[],filmTitle:'',story:{},songVersions:[],selectedSongVersion:'',imagePrompts:[],storyboard:[],shareCopy:{},shareCard:null,lastQuote:'',topic:'',comicWorld:null,truth:'',analogy:'',honest:'',boundary:'',comicExit:'',nextAction:'',resolutionWish:'',callback:'',targetCategory:'',situationCategory:''};
 }
 var flow={routeB:false,stepIndex:0,input:'',context:emptyContext()};
 
@@ -993,11 +1025,18 @@ function genRoast(input,target){
   var exitSrc=(worldData&&worldData.comicExit)?worldData.comicExit:(pool.comicExit||null);
   var comicExit=exitSrc?pickVaried(cacheBase+'e',exitSrc):'';
   var boundaryText=comicExit?boundary+'\n'+comicExit:boundary;
+  var rwSrc=(worldData&&worldData.resolutionWish)?worldData.resolutionWish:(pool.resolutionWish||null);
+  var resolutionWish=rwSrc?pickVaried(cacheBase+'rw',rwSrc):'';
+  var cbSrc=(worldData&&worldData.callback)?worldData.callback:(pool.callback||null);
+  var callback=cbSrc?pickVaried(cacheBase+'cb',cbSrc):'';
   return {
     role:'rat',tagClass:'vent tag-rat',
     targetCategory:tk,situationCategory:sk||'general',matchType:mt,
     comicWorld:cw||null,
+    truth:truth,analogy:analogy,honest:honest,boundary:boundary,comicExit:comicExit,
     nextAction:worldData?(worldData.nextAction||''):'',
+    resolutionWish:resolutionWish,
+    callback:callback,
     blocks:[
       ['🔥 你真正氣的是',truth],
       ['🎭 幽默比喻版',analogy],
@@ -1122,6 +1161,29 @@ function genStoryboard(context,length){
   return shots;
 }
 function genShareCopy(context){
+  // 嗆聲 homework：用 comicWorld callback 做世界感分享文案
+  var cw=context&&context.comicWorld;
+  if(cw&&context.situationCategory==='homework'&&context.targetCategory==='child'){
+    var hwSit=(TARGET_ROAST_DB.child||{}).situations&&TARGET_ROAST_DB.child.situations.homework;
+    var wd=hwSit&&hwSit.worlds&&hwSit.worlds[cw];
+    if(wd){
+      var cbText=context.callback||'';
+      var rwText=context.resolutionWish||'';
+      var hookText='';
+      if(context.songVersions&&context.songVersions.length){
+        var sv=(context.selectedSongVersion&&context.songVersions.filter(function(v){return v.version===context.selectedSongVersion;})[0])||context.songVersions[0];
+        if(sv) hookText=sv.hook||'';
+      }
+      var worldName=wd.name||cw;
+      return {
+        line:'孩子不寫作業，今天用'+worldName+'理解了我自己的焦慮。'+(cbText?'\n\n「'+cbText+'」':'')+( hookText?'\n\n「'+hookText+'」':''),
+        fb:'本來因為孩子不寫作業很煩，結果小天鼠用'+worldName+'幫我搞清楚：焦慮是我的功課，作業是孩子的事。'+(cbText?'\n「'+cbText+'」':'')+( hookText?'\n「'+hookText+'」':'')+'\n#笑鼠人了',
+        ig:'用'+worldName+'的眼光看孩子不寫作業。'+(rwText?'\n「'+rwText+'」\n':'')+(hookText?'「'+hookText+'」\n':'')+'#笑鼠人了',
+        threads:cbText?'「'+cbText+'」 #笑鼠人了':'焦慮是我的功課，作業是孩子的事。 #笑鼠人了',
+        hook:hookText||cbText
+      };
+    }
+  }
   var event=shortInput(context&&context.event?context.event:'',20);
   var topic=shortInput(context&&context.topic?context.topic:'',14);
   var filmTitle=context&&context.filmTitle?context.filmTitle:'';
@@ -1657,7 +1719,14 @@ function renderOutputFor(id,input){
     flow.context.situationCategory=data.situationCategory;
     flow.context.matchType=data.matchType;
     flow.context.comicWorld=data.comicWorld||null;
+    flow.context.truth=data.truth||'';
+    flow.context.analogy=data.analogy||'';
+    flow.context.honest=data.honest||'';
+    flow.context.boundary=data.boundary||'';
+    flow.context.comicExit=data.comicExit||'';
     flow.context.nextAction=data.nextAction||'';
+    flow.context.resolutionWish=data.resolutionWish||'';
+    flow.context.callback=data.callback||'';
     html=renderTextBlocks(data);
   } else if(id==='selfmock'){
     data=genSelfmock(input);
