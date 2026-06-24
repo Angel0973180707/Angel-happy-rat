@@ -1041,6 +1041,30 @@ function genLost(input,emotionKey){
   return {role:'lost',tagClass:'tag-lost',need:entry.need,translation:entry.translate,blocks:[['🧭 迷航摘要','你輸入的是：「'+shortInput(input,24)+'」'],['🧠 大腦偷偷話',entry.brain],['🔁 情緒翻譯',(emotionKey||'這個感覺')+' 翻譯成人話就是：'+entry.translate],['💡 真正需求',entry.need.join('、')],['👣 下一步小行動',entry.action],[RAT_ICON+' 小天鼠補一句',entry.rat],[TIGER_ICON+' 唬爛虎補一句',entry.tiger]],quote:pickGoldenQuote('lost')};
 }
 function genStrength(input){
+  // homework fast path：回收 comicWorld 資料
+  var cw=flow.context.comicWorld;
+  if(cw&&flow.context.situationCategory==='homework'&&flow.context.targetCategory==='child'){
+    var hwSit=(TARGET_ROAST_DB.child||{}).situations&&TARGET_ROAST_DB.child.situations.homework;
+    var wd=hwSit&&hwSit.worlds&&hwSit.worlds[cw];
+    if(wd){
+      var worldName=wd.name||cw;
+      var comicExitText=flow.context.comicExit||(wd.comicExit&&wd.comicExit[0])||'';
+      var nextActionText=wd.nextAction||'';
+      var callbackText=flow.context.callback||(wd.callback&&wd.callback[0])||'';
+      var analogyText=flow.context.analogy||(wd.analogy&&wd.analogy[0])||'';
+      return {
+        role:'shine',tagClass:'tag-shine',
+        traits:['看見真正的問題','守住界線還留出口','用'+worldName+'的眼光下台'],
+        blocks:[
+          ['🔑 你剛才做到的事','沒有追著作業跑，用'+worldName+'的眼光看見了真正的問題。'],
+          ['💎 你的亮點','說清楚了界線，同時給對方留了出口——「'+comicExitText+'」'],
+          ['⚡ 你的超能力',callbackText||analogyText],
+          ['🧩 今天的下一步',nextActionText]
+        ],
+        quote:pickGoldenQuote('strength')
+      };
+    }
+  }
   var lower=input||'';
   var matched=STRENGTH_MAP.filter(function(item){return item.kw.some(function(k){return lower.indexOf(k)!==-1;});});
   if(!matched.length) matched=[NEUTRAL_TRAITS[Math.floor(Math.random()*NEUTRAL_TRAITS.length)]];
@@ -1050,6 +1074,36 @@ function genStrength(input){
   return {role:'shine',tagClass:'tag-shine',traits:traits.map(function(t){return t.trait;}),blocks:[['🔑 我聽見的關鍵字',shortInput(input,30)],['💎 可能亮點',keywordList],['⚡ 你的超能力',powerLine],['🧩 適合你的創作方向',traits.map(function(t){return t.trait;}).join(' x ')+' 的內容創作或服務']],quote:pickGoldenQuote('strength')};
 }
 function genDirector(input,context){
+  // homework fast path：回收 comicWorld 資料
+  var cw=(context||flow.context).comicWorld;
+  var scat=(context||flow.context).situationCategory;
+  var tcat=(context||flow.context).targetCategory;
+  if(cw&&scat==='homework'&&tcat==='child'){
+    var hwSit=(TARGET_ROAST_DB.child||{}).situations&&TARGET_ROAST_DB.child.situations.homework;
+    var wd=hwSit&&hwSit.worlds&&hwSit.worlds[cw];
+    if(wd){
+      var ctx=context||flow.context;
+      var worldName=wd.name||cw;
+      var analogyText=ctx.analogy||(wd.analogy&&wd.analogy[0])||'';
+      var comicExitText=ctx.comicExit||(wd.comicExit&&wd.comicExit[0])||'';
+      var nextActionText=wd.nextAction||'';
+      var resolutionText=ctx.resolutionWish||(wd.resolutionWish&&wd.resolutionWish[0])||'';
+      var callbackText=ctx.callback||(wd.callback&&wd.callback[0])||'';
+      var truthText=ctx.truth||(hwSit.truth&&hwSit.truth[0])||'';
+      return {
+        role:'director',cinema:true,
+        title:'《用'+worldName+'看「孩子不寫作業」》',
+        genre:worldName+'喜劇',
+        antagonist:'那份比孩子還不安的焦慮——它比作業更早到，也比作業更慢走。',
+        act1:analogyText?analogyText+'  孩子不急，作業也不急，唯一在急的是旁邊那個大人。'
+          :'孩子不寫作業，場面尷尬——但最不著急的那個人，不是大人。',
+        act2:comicExitText?comicExitText+'  真相是：'+truthText
+          :'說清楚界線，同時給對方留了出口。'+truthText,
+        act3:resolutionText+'\n\n今天的起點：'+nextActionText,
+        ending:callbackText
+      };
+    }
+  }
   var tpl=pickVaried('director',DIRECTOR_TEMPLATES);
   var event=shortInput(context.event||input,20);
   var emotion=context.emotion||'';
