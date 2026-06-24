@@ -16,7 +16,8 @@ var SHEET_NAMES = [
 var RECORD_HEADERS = [
   'timestamp','action','mode','route','input','output',
   'userId','sessionId','url','userAgent','partner','email',
-  'partnerId','referralCode','targetUrl'
+  'partnerId','referralCode','targetUrl',
+  'targetCategory','situationCategory','matchType'
 ];
 
 // ----------------------------------------------
@@ -72,14 +73,17 @@ function saveLogEvent(data) {
     sheet.setFrozenRows(1);
   }
   sheet.appendRow([
-    data.time       || new Date().toISOString(),
-    data.userId     || '',
-    data.eventType  || data.action || '',
-    data.mode       || '',
-    data.subMode    || '',
-    data.source     || '',
-    data.device     || data.userAgent || '',
-    data.sessionId  || ''
+    data.time              || new Date().toISOString(),
+    data.userId            || '',
+    data.eventType         || data.action || '',
+    data.mode              || '',
+    data.subMode           || '',
+    data.source            || '',
+    data.device            || data.userAgent || '',
+    data.sessionId         || '',
+    data.targetCategory    || '',
+    data.situationCategory || '',
+    data.matchType         || ''
   ]);
   return { ok: true };
 }
@@ -100,7 +104,7 @@ function setupSheets() {
 function getHeadersForSheet(name) {
   if (name === '14_合作夥伴設定') return ['partnerId','name','url','apiEndpoint','referralCode','revenueShare','whiteLabelUrl','enabled'];
   if (name === '15_合作導流紀錄') return ['timestamp','partnerId','userId','sessionId','referralCode','targetUrl','action'];
-  if (name === '16_流量事件')     return ['時間','userId','eventType','mode','subMode','source','device','sessionId'];
+  if (name === '16_流量事件')     return ['時間','userId','eventType','mode','subMode','source','device','sessionId','targetCategory','situationCategory','matchType'];
   if (name === '17_每日統計')     return ['日期','快速生成','工坊生成','複製','分享','合作點擊'];
   return RECORD_HEADERS;
 }
@@ -160,9 +164,12 @@ function normalizeRecord(data) {
     userAgent:    sanitizeText(data.userAgent    || ''),
     partner:      data.partner ? JSON.stringify(data.partner) : '',
     email:        sanitizeText(data.email        || ''),
-    partnerId:    sanitizeText(data.partnerId    || (data.partner && data.partner.partnerId) || ''),
-    referralCode: sanitizeText(data.referralCode || (data.partner && data.partner.referralCode) || ''),
-    targetUrl:    sanitizeText(data.targetUrl    || (data.partner && data.partner.url) || '')
+    partnerId:         sanitizeText(data.partnerId    || (data.partner && data.partner.partnerId) || ''),
+    referralCode:      sanitizeText(data.referralCode || (data.partner && data.partner.referralCode) || ''),
+    targetUrl:         sanitizeText(data.targetUrl    || (data.partner && data.partner.url) || ''),
+    targetCategory:    sanitizeText(data.targetCategory    || ''),
+    situationCategory: sanitizeText(data.situationCategory || ''),
+    matchType:         sanitizeText(data.matchType         || '')
   };
 }
 
