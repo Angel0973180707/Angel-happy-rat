@@ -420,8 +420,9 @@ console.log('── C9 未知情境 domain fallback ──');
   assert('C9-03 null situation', r.situationKey === null, r.situationKey);
 }
 {
+  // 迷惘(2)+未來(2)=4 → self_direction 應確定命中，不用寬鬆斷言
   const r = classifyInput('感覺很迷惘不知道未來', '自己');
-  assert('C9-04 自己迷惘 → self_direction 或 self', r.situationKey === 'self_direction' || r.domain === 'self', r.situationKey);
+  assert('C9-04 自己迷惘 → self_direction', r.situationKey === 'self_direction', r.situationKey);
 }
 {
   // other target + 無 finance kw → unknown domain
@@ -538,6 +539,108 @@ console.log('── C11 guidedSelection ──');
   });
   assert('C11-05 空輸入+guided → high', r.classificationConfidence === 'high', r.classificationConfidence);
   assert('C11-05 guided lateSleep', r.situationKey === 'lateSleep', r.situationKey);
+}
+
+/* ════════════════════════════════════════════════
+   C12 v2.2 回歸案例（14 組）
+   — 短句補強 / screen 衝突閘門 / guidedSelection 合法性
+════════════════════════════════════════════════ */
+console.log('── C12 v2.2 回歸 ──');
+
+// ── 短句補強 ──
+{
+  const r = classifyInput('客戶催稿', '客戶');
+  assert('C12-01 客戶催稿 → rush', r.situationKey === 'rush', r.situationKey);
+}
+{
+  const r = classifyInput('同事搶功', '同事');
+  assert('C12-02 同事搶功 → credit', r.situationKey === 'credit', r.situationKey);
+}
+{
+  const r = classifyInput('爸媽逼婚', '爸媽');
+  assert('C12-03 爸媽逼婚 → marriage', r.situationKey === 'marriage', r.situationKey);
+}
+
+// ── screen 衝突 evidence 閘門 ──
+{
+  // 無 stop_resistance / screen_time evidence → conflict unknown
+  const r = classifyInput('另一半一直滑手機', '另一半');
+  assert('C12-04 partner screen situationKey', r.situationKey === 'screen', r.situationKey);
+  assert('C12-04 無 evidence → conflict unknown', r.primaryConflictType === 'unknown', r.primaryConflictType);
+}
+{
+  // stop_resistance_explicit（不肯停） → transition_resistance
+  const r = classifyInput('另一半不肯停，一直滑手機', '另一半');
+  assert('C12-05 partner screen + 不肯停 → transition_resistance', r.primaryConflictType === 'transition_resistance', r.primaryConflictType);
+  assert('C12-05 stop_resistance token', has(r.evidenceTokens, 'stop_resistance_explicit'), r.evidenceTokens);
+}
+{
+  // child screen 無 evidence → unknown（partner screen 同邏輯）
+  const r = classifyInput('孩子一直玩遊戲', '孩子');
+  assert('C12-06 child screen_general → unknown conflict', r.primaryConflictType === 'unknown', r.primaryConflictType);
+  assert('C12-06 subSituationKey screen_general', r.subSituationKey === 'screen_general', r.subSituationKey);
+}
+{
+  // child screen + stop_resistance → transition_resistance
+  const r = classifyInput('孩子不肯關電視，不放下手機', '孩子');
+  assert('C12-07 child screen+不肯關 → transition_resistance', r.primaryConflictType === 'transition_resistance', r.primaryConflictType);
+}
+
+// ── guidedSelection 合法值驗證 ──
+{
+  // 完全非法 situationKey → invalid + source guided_invalid + NOT high
+  const r = classifyInput('孩子今天很煩', {
+    targetLabel: '孩子',
+    guidedSelection: { situationKey: 'not_real' }
+  });
+  assert('C12-08 非法 sk → guidedSelectionValid false', r.guidedSelectionValid === false, r.guidedSelectionValid);
+  assert('C12-08 source guided_invalid', has(r.classificationSource, 'guided_invalid'), r.classificationSource);
+  assert('C12-08 NOT high confidence', r.classificationConfidence !== 'high', r.classificationConfidence);
+}
+{
+  // 跨對象：孩子選 boss.disrespect → 非法
+  const r = classifyInput('孩子今天很煩', {
+    targetLabel: '孩子',
+    guidedSelection: { situationKey: 'disrespect' }
+  });
+  assert('C12-09 跨對象 disrespect → invalid', r.guidedSelectionValid === false, r.guidedSelectionValid);
+  assert('C12-09 source guided_invalid', has(r.classificationSource, 'guided_invalid'), r.classificationSource);
+}
+{
+  // 合法 situationKey + 非法 subSituationKey → invalid
+  const r = classifyInput('孩子不寫作業', {
+    targetLabel: '孩子',
+    guidedSelection: { situationKey: 'homework', subSituationKey: 'screen_time' }
+  });
+  assert('C12-10 homework+screen_time sub → invalid', r.guidedSelectionValid === false, r.guidedSelectionValid);
+  assert('C12-10 source guided_invalid', has(r.classificationSource, 'guided_invalid'), r.classificationSource);
+}
+{
+  // 合法 situationKey + 合法 subSituationKey → valid
+  const r = classifyInput('孩子玩手機', {
+    targetLabel: '孩子',
+    guidedSelection: { situationKey: 'screen', subSituationKey: 'screen_time' }
+  });
+  assert('C12-11 合法 screen+screen_time → valid', r.guidedSelectionValid === true, r.guidedSelectionValid);
+  assert('C12-11 source guided_select', has(r.classificationSource, 'guided_select'), r.classificationSource);
+}
+{
+  // 無 guidedSelection → guidedSelectionValid = null
+  const r = classifyInput('孩子不寫作業', '孩子');
+  assert('C12-12 無 guided → null', r.guidedSelectionValid === null, r.guidedSelectionValid);
+}
+{
+  // 非法 guided 不應覆寫文字偵測結果
+  const r = classifyInput('孩子不寫作業', {
+    targetLabel: '孩子',
+    guidedSelection: { situationKey: 'also_fake' }
+  });
+  assert('C12-13 非法 guided 不覆寫 situation', r.situationKey === 'homework', r.situationKey);
+}
+{
+  // 客戶催進度（多字片語）
+  const r = classifyInput('客戶說催進度，今天要', '客戶');
+  assert('C12-14 催進度 → rush', r.situationKey === 'rush', r.situationKey);
 }
 
 /* ════════════════════════════════════════════════

@@ -18,7 +18,7 @@
  * MIN_SCORE = 2（單字元關鍵詞不單獨觸發情境）
  */
 
-export const VERSION = 'v2.1-phase1';
+export const VERSION = 'v2.2-phase1';
 
 const MIN_SCORE = 2;
 
@@ -56,6 +56,25 @@ const DOMAIN_FROM_TARGET = {
   self: 'self', other: 'unknown',
 };
 
+// ── 1b. guidedSelection 合法值表（防止非法選項污染結果）─────────────
+const GUIDED_SITUATION_MAP = {
+  child:    ['lateSleep', 'homework', 'screen', 'procrastinate', 'picky', 'talkBack', 'messyRoom'],
+  boss:     ['disrespect', 'overtime', 'blame'],
+  client:   ['revision', 'rush'],
+  coworker: ['credit', 'push_blame'],
+  parents:  ['cross_generation', 'marriage', 'compare', 'meddle'],
+  sibling:  [],
+  partner:  ['screen', 'chores', 'finance', 'misunderstood'],
+  friend:   ['flake', 'gossip'],
+  self:     ['self_procrastinate', 'self_direction', 'self_finance', 'self_comparison', 'self_diet'],
+  other:    [],
+};
+
+const GUIDED_SUB_SITUATION_MAP = {
+  screen:           ['screen_time', 'screen_content', 'screen_at_bedtime', 'screen_at_meals', 'screen_hidden_use', 'screen_general'],
+  cross_generation: ['grandparent_treat_override', 'grandparent_rules_general'],
+};
+
 // ── 2. Situation keyword rules（加權）─────────────────────────────
 // 順序 = 次要優先序（加權分相同時先列者優先）
 const SITUATION_RULES = {
@@ -75,16 +94,16 @@ const SITUATION_RULES = {
   ],
   client: [
     { key: 'revision', kw: ['修改','再改','又改','改稿','不對','重做','重來','調整','版本','退稿','再調'] },
-    { key: 'rush',     kw: ['催','什麼時候','好了沒','趕','快點','立刻','今天要','趕快'] },
+    { key: 'rush',     kw: ['催稿','催進度','趕稿','催交','什麼時候','好了沒','快點','立刻','今天要','趕快','催一下'] },
   ],
   coworker: [
-    { key: 'credit',     kw: ['功勞','搶','我做的','沒說是我','沒提到我','說是他','佔便宜','沒認可'] },
+    { key: 'credit',     kw: ['功勞','搶功','搶成果','我做的','沒說是我','沒提到我','說是他','佔便宜','沒認可'] },
     { key: 'push_blame', kw: ['卸責','不關我','都是你','你沒說','我不知道','沒人告訴'] },
   ],
   parents: [
     // cross_generation 置前：爺奶關鍵詞 len≥2，優先於「比」(len=1)
     { key: 'cross_generation', kw: ['爺爺','奶奶','阿公','阿嬤','爺奶'] },
-    { key: 'marriage',         kw: ['結婚','催婚','男友','女友','交往','嫁','娶','對象','找個人','來不及','沒對象'] },
+    { key: 'marriage',         kw: ['結婚','催婚','逼婚','男友','女友','交往','嫁','娶','對象','找個人','來不及','沒對象'] },
     // compare 刪除單字「比」，避免誤判
     { key: 'compare',          kw: ['別人','人家','同學','表哥','表姊','鄰居','比不上','哪像你','別人家','別人的孩子','別人都'] },
     { key: 'meddle',           kw: ['干涉','不關你','我的事','你不要管','一直問','一直說','煩死了','管太多'] },
@@ -266,15 +285,26 @@ function deriveHomeworkConflict(evidenceTokens) {
   return 'unknown';
 }
 
-/** 子情境對應的 conflictType */
+/** 子情境對應的 conflictType（screen_general 不在此表：由 evidence 閘門決定）*/
 function subSituationConflict(subKey) {
   const m = {
     screen_time: 'boundary_violation', screen_hidden_use: 'trust',
     screen_content: 'boundary_violation', screen_at_meals: 'responsibility_gap',
-    screen_at_bedtime: 'transition_resistance', screen_general: 'transition_resistance',
+    screen_at_bedtime: 'transition_resistance',
     grandparent_treat_override: 'expectation_gap', grandparent_rules_general: 'expectation_gap',
   };
   return m[subKey] || null;
+}
+
+/** screen 衝突需要 evidence 才能推論，否則回 unknown */
+function deriveScreenConflict(subSituationKey, evidenceTokens) {
+  if (subSituationKey && subSituationKey !== 'screen_general') {
+    const sc = subSituationConflict(subSituationKey);
+    if (sc) return sc;
+  }
+  if (evidenceTokens.indexOf('stop_resistance_explicit') !== -1) return 'transition_resistance';
+  if (evidenceTokens.indexOf('screen_time_explicit') !== -1) return 'boundary_violation';
+  return 'unknown';
 }
 
 function derivePrimaryConflict(situationKey, subSituationKey, evidenceTokens, sharedConflicts) {
@@ -282,6 +312,7 @@ function derivePrimaryConflict(situationKey, subSituationKey, evidenceTokens, sh
     return sharedConflicts.length ? sharedConflicts[0] : 'unknown';
   }
   if (situationKey === 'homework') return deriveHomeworkConflict(evidenceTokens);
+  if (situationKey === 'screen') return deriveScreenConflict(subSituationKey, evidenceTokens);
   if (subSituationKey) {
     const sc = subSituationConflict(subSituationKey);
     if (sc) return sc;
@@ -413,15 +444,34 @@ export function classifyInput(input, options) {
     classificationConfidence = (hasSubRules && isGenericFallback) || isTied ? 'medium' : 'high';
   }
 
-  // ── Step 8: guidedSelection override
+  // ── Step 8: guidedSelection override（含合法值驗證）
+  let guidedSelectionValid = null; // null = 沒有提供 guidedSelection
+
   if (guided && guided.situationKey) {
-    const textConflict = situationKey && situationKey !== guided.situationKey && topScore >= 4;
-    situationKey = guided.situationKey;
-    if (guided.subSituationKey) subSituationKey = guided.subSituationKey;
-    classificationSource = textConflict
-      ? ['guided_select', 'text_conflict']
-      : ['guided_select', 'user_input'];
-    classificationConfidence = textConflict ? 'medium' : 'high';
+    const validSituations = GUIDED_SITUATION_MAP[targetRole] || [];
+    const situationValid = validSituations.indexOf(guided.situationKey) !== -1;
+
+    let subValid = true;
+    if (situationValid && guided.subSituationKey) {
+      const validSubs = GUIDED_SUB_SITUATION_MAP[guided.situationKey] || [];
+      subValid = validSubs.indexOf(guided.subSituationKey) !== -1;
+    }
+
+    guidedSelectionValid = situationValid && subValid;
+
+    if (!guidedSelectionValid) {
+      // 非法選項：不覆寫分類結果，標記來源為 guided_invalid
+      classificationSource = ['guided_invalid'];
+      // confidence 不升為 high：保留文字偵測的結果（可能是 low）
+    } else {
+      const textConflict = situationKey && situationKey !== guided.situationKey && topScore >= 4;
+      situationKey = guided.situationKey;
+      if (guided.subSituationKey) subSituationKey = guided.subSituationKey;
+      classificationSource = textConflict
+        ? ['guided_select', 'text_conflict']
+        : ['guided_select', 'user_input'];
+      classificationConfidence = textConflict ? 'medium' : 'high';
+    }
   }
 
   // ── Step 9: Derived fields
@@ -457,5 +507,6 @@ export function classifyInput(input, options) {
     candidateSituationKeys,
     classificationSource,
     classificationConfidence,
+    guidedSelectionValid,
   };
 }
