@@ -124,7 +124,7 @@ transition / clarify / reset / redistribute / commit / unknown
 
 ```
 1. 關鍵詞命中 situationKey → confidence = high，matchType = specific
-2. 命中 situationKey 但 subSituationKey 不確定 → confidence = medium，subSituationKey = null
+2. 命中 situationKey 但 subSituationKey 不確定 → confidence = medium，subSituationKey = "screen_general"（screen 情境）或對應情境的一般子鍵
 3. 無法命中 situationKey，但 primaryConflictType 可識別 → confidence = low，matchType = conflict
 4. 以上皆否 → matchType = general，帶入原句最多 20 字（不記錄全句）
 ```
