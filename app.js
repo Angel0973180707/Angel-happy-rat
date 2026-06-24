@@ -437,10 +437,55 @@ var TARGET_ROAST_DB={
       },
       homework:{
         keywords:['功課','作業','讀書','學校','考試','成績','不寫','沒寫','不念','不讀','還沒寫','不想寫'],
-        truth:['你不是在催功課，你是在說：我希望你的未來有更多選擇，但這句話太長，說出來的是「你寫了沒」。','你對功課的堅持不是控制，是你把對未來的擔心，轉換成了一個你現在可以管理的事情。','你看見的是功課沒寫，你真正擔心的是孩子有沒有能力面對之後更大的事情。'],
-        analogy:['催功課就像在澆一棵你看不見的樹——你不確定有沒有在長，但你繼續澆，因為你知道不澆就一定不長。','你說「去寫功課」，他說「等一下」，然後等一下還是等一下——這個時間的換算方式，你們用的是不同的公式。','孩子說「反正沒用」的時候，他在說的不是功課——他在說一件比功課大很多的事，只是用功課的語言說出來的。'],
-        honest:['你不敢說的是：你也不確定現在學的這些對他的未來有多少用，但你不敢賭，所以你繼續催。','你真正想說的是：「我催你，是因為我希望你之後有選擇，這句話說出來你可能不信，但它是真的。」','你沒說出口的是：你希望有一天他能回頭說「還好你當時逼我」，就算不說，你也希望是這樣。'],
-        boundary:['功課是你的事，後果也是你的——我可以陪你，但不可以替你扛這件事。','今天就先從一科開始，做完一科再說，切小一點比較不可怕，這是策略不是退讓。','你不想寫，我們可以討論怎麼讓它快一點，但「不寫」不在選項裡，這個規定今天有效。']
+        truth:[
+          '作業是孩子的功課，焦慮是你的功課。這兩件事，從來不在同一本課本裡。',
+          '如果現在有人比較焦慮，看起來那個人不是作業。',
+          '如果現在要算誰最沉得住氣，作業贏了，你輸了，孩子沒有算進去。',
+          '這件事裡表現最從容的，是作業。它不急，不煩，不催——完全不像當事人。',
+          '孩子那份焦慮有沒有到不知道，你這份先到了。這個配送順序，可以改一改。'
+        ],
+        honest:[
+          '你幾點開始，就幾點開始。不說，我也不替你估算。',
+          '我不問你現在是什麼感覺，只問你幾點說出那個時間。',
+          '我陪你，不等於我替你急。',
+          '這不是你能不能的問題，是你還沒說幾點的問題。',
+          '把開始的時間交給孩子說。說出去了，就別替他拿回來。'
+        ],
+        boundary:[
+          '我陪你，不等於我替你急。',
+          '這是你的作業，從哪裡開始是你的決定，我在旁邊。',
+          '說了就開始，沒說就繼續等——我不催，但我也不代替你說。',
+          '你有選擇，開始的那一刻是你的。說了，我就跟上。'
+        ],
+        comicExit:['好，我先把催促鈴關靜音，免得我們兩個都想封鎖我。'],
+        availableWorlds:['W1','W2','W3','W4','W5'],
+        worlds:{
+          W1:{
+            analogy:['這份作業像未拆封的健身卡：看起來充滿希望，目前完全沒有運動。','備妥了，在等，等被啟動。'],
+            comicExit:['催促委員會今日休會。','我的代寫公司今天沒有營業。'],
+            nextAction:'讓孩子說出幾點開始。'
+          },
+          W2:{
+            analogy:['你在觀眾席，比打者還熱血——但揮棒的輪不到你。','場上最沉得住氣的選手，今天不是你。'],
+            comicExit:['我先退回觀眾席，畢竟這一棒真的輪不到我。'],
+            nextAction:'今天第一棒由哪一科上場，孩子自己排棒次。'
+          },
+          W3:{
+            analogy:['跑道已清空，燃料備妥，天氣許可——現在只等機長說幾點起飛。','塔台就位，登機口開著，唯一的關鍵是機長本人。'],
+            comicExit:['塔台先閉麥，免得飛機還沒起飛，廣播先沒電。'],
+            nextAction:'機長指出哪個環節卡在登機口。'
+          },
+          W4:{
+            analogy:['食材備妥，刀工就位，廚師候場——只缺孩子說幾點要開那盤菜。','廚師已就位，等用餐者說今天先出哪一道。'],
+            comicExit:['主廚先放下鍋鏟，免得作業還沒熟，我先焦掉。'],
+            nextAction:'孩子選先出哪一道，卡住可以叫支援。'
+          },
+          W5:{
+            analogy:['這齣戲就等一句話——主角說出第一幕，今天就開演。','舞台搭好了，燈光就位，只差主角說第一幕從哪裡開場。'],
+            comicExit:['導演先閉麥，不然主角還沒開演，我先演過頭。'],
+            nextAction:'第一幕先演哪一科，由主角自己選。'
+          }
+        }
       },
       procrastinate:{
         keywords:['拖延','拖拖拉拉','等一下','不急','之後再說','明天再','慢慢來','等等','拖到','不動'],
@@ -888,10 +933,21 @@ function genRoast(input,target){
   var pool=(sk&&db.situations&&db.situations[sk])?db.situations[sk]:db.general;
   var cacheBase='rv_'+tk+'_'+(sk||'g')+'_';
   var vars={target:target,input:shortInput(input,20)};
+  // comicWorld：有定義才啟用，同次生成鎖定同一世界
+  var worldData=null;
+  if(pool.availableWorlds&&pool.worlds&&pool.availableWorlds.length){
+    var cw=pickVaried(cacheBase+'w',pool.availableWorlds);
+    worldData=pool.worlds[cw]||null;
+  }
   var truth=fill(pickVaried(cacheBase+'t',pool.truth),vars);
-  var analogy=fill(pickVaried(cacheBase+'a',pool.analogy),vars);
+  var analogySrc=(worldData&&worldData.analogy)?worldData.analogy:pool.analogy;
+  var analogy=fill(pickVaried(cacheBase+'a',analogySrc),vars);
   var honest=fill(pickVaried(cacheBase+'h',pool.honest),vars);
   var boundary=fill(pickVaried(cacheBase+'b',pool.boundary),vars);
+  // comicExit 接在界線句後，不另開卡片
+  var exitSrc=(worldData&&worldData.comicExit)?worldData.comicExit:(pool.comicExit||null);
+  var comicExit=exitSrc?pickVaried(cacheBase+'e',exitSrc):'';
+  var boundaryText=comicExit?boundary+'\n'+comicExit:boundary;
   return {
     role:'rat',tagClass:'vent tag-rat',
     targetCategory:tk,situationCategory:sk||'general',matchType:mt,
@@ -899,7 +955,7 @@ function genRoast(input,target){
       ['🔥 你真正氣的是',truth],
       ['🎭 幽默比喻版',analogy],
       ['💬 不敢講的真心話',honest],
-      ['🧱 現實界線句',boundary]
+      ['🧱 現實界線句',boundaryText]
     ],
     quote:pickGoldenQuote('roast')
   };
