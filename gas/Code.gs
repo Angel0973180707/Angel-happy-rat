@@ -349,6 +349,36 @@ function migrateRoastColumns() {
 }
 
 // ----------------------------------------------
+// addRoastColumnNotes
+// 為 01_生成紀錄 和 16_流量事件 的三個英文欄位加中文儲存格備註
+// 只寫備註，不改欄位名稱，不影響資料
+// ----------------------------------------------
+function addRoastColumnNotes() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var NOTES = {
+    targetCategory:    '嗆聲對象分類（child / boss / client / coworker / parents / sibling / partner / friend / other）',
+    situationCategory: '嗆聲情境分類（如 lateSleep / homework / talkBack / general…）；未命中情境時為 general',
+    matchType:         '命中類型：specific = 情境關鍵字命中；general = 使用同對象通用詞庫'
+  };
+  var results = [];
+  ['01_生成紀錄', '16_流量事件'].forEach(function(name) {
+    var sheet = ss.getSheetByName(name);
+    if (!sheet) { results.push({sheet: name, ok: false, reason: '找不到工作表'}); return; }
+    var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    var added = [];
+    headers.forEach(function(h, i) {
+      if (NOTES[h]) {
+        sheet.getRange(1, i + 1).setNote(NOTES[h]);
+        added.push(h);
+      }
+    });
+    results.push({sheet: name, notesAdded: added});
+  });
+  Logger.log(JSON.stringify(results));
+  return results;
+}
+
+// ----------------------------------------------
 // jsonOutput
 // ----------------------------------------------
 function jsonOutput(obj) {
