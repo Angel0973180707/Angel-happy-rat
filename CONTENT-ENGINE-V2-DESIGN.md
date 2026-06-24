@@ -1,6 +1,6 @@
 # 《笑鼠人了！》內容引擎 V2 架構設計
 
-版本：v1.2（2026-06-25）｜狀態：待 Angel-x 審核，尚未寫入程式
+版本：v1.3（2026-06-25）｜狀態：待 Angel-x 審核，尚未寫入程式
 
 ---
 
@@ -15,7 +15,7 @@
 | `speakerRole` | string | 說話者身分（parent / employee / partner / sibling / friend / self / unknown） |
 | `targetRole` | string | 被嗆對象（child / boss / partner / grandparent / coworker / self / unknown） |
 | `subjectRole` | string \| null | 第三方角色（可空）。三方衝突才填，例如爺奶衝突中的孩子 |
-| `subjectKey` | string | 衝突核心事件物件（screen / homework / chores / task / schedule / food / money / unknown） |
+| `subjectKey` | string | 衝突核心事件物件（screen / homework / chores / rules / task / schedule / food / money / unknown）。注意：`chores` 為家事分工衝突；`rules` 為管教規則或跨代規則衝突，兩者不可混用 |
 | `interactionType` | string | `directed`（有明確對象）或 `self`（自我嗆聲，無外部對象） |
 
 ### 1.2 場域與情境欄位
@@ -38,19 +38,49 @@
 
 ### 1.4 子情境清單
 
-**screen 子情境（目前支援的五種）**
+**screen 子情境（目前支援的六種）**
 
 | subSituationKey | 說明 | 觸發關鍵詞範例 |
 |-----------------|------|----------------|
 | `screen_time` | 使用時間爭執 | 一直玩、不肯收、還沒到時間、說好了但沒收 |
 | `screen_content` | 內容問題 | 看什麼、玩什麼遊戲、不適合的內容 |
-| `screen_routine` | 作息影響 | 睡覺、睡太晚、作業、吃飯都在玩 |
-| `screen_table` | 餐桌使用 | 吃飯還在看、邊吃邊玩 |
-| `screen_hidden` | 偷偷使用 | 偷偷、躲起來、被發現、不讓人看到 |
+| `screen_at_bedtime` | 作息影響（睡前） | 睡覺、睡太晚、睡前還在玩 |
+| `screen_at_meals` | 餐桌使用 | 吃飯還在看、邊吃邊玩 |
+| `screen_hidden_use` | 偷偷使用 | 偷偷、躲起來、被發現、不讓人看到 |
+| `screen_general` | 無法識別子情境 | 無關鍵詞命中或輸入過短 |
 
-> 使用者未提供足夠資訊時，`subSituationKey = null`，回傳 screen 一般詞庫。
+> 使用者未提供足夠資訊時，`subSituationKey = "screen_general"`，回傳 screen_general 詞庫，**不假設是關機時間問題**。
 
 **其他情境子鍵**（待後續定義）：homework_block / homework_forgot / lateSleep_alarm / lateSleep_night_owl 等
+
+### evidenceTokens 標準化格式（requiredEvidence 實作合約）
+
+`requiredEvidence` 一律使用結構化格式，不得用人話描述：
+
+```json
+{
+  "mode": "any",
+  "tokens": ["token_name", ...]
+}
+```
+
+- `mode: "any"`：token 陣列中任一命中即觸發
+- `mode: "all"`：全部 token 都要命中才觸發
+- `tokens: []`：無強制（一般詞庫，classificationConfidence 不影響觸發）
+
+**標準 evidenceToken 清單**
+
+| token | 觸發條件（關鍵詞或描述出現即命中） |
+|-------|-------------------------------------|
+| `screen_time_explicit` | 「時間」「不肯收」「說好了」「繼續玩」「幾點」 |
+| `stop_resistance_explicit` | 阻力或拒絕描述（「不要」「就是不收」「賴著不動」） |
+| `rules_conflict_explicit` | 兩套規則衝突（「我說不行，爺奶說可以」「規則不同」「爺奶說可以」） |
+| `appeal_to_other_explicit` | 孩子找第三方轉圜（「去找爺奶」「問爸爸說可以」） |
+| `chores_mention_explicit` | 家事、分工不均（「家事都是我做」「不平均」「我都在做」） |
+| `procrastinate_mention_explicit` | 拖延描述（「一直拖」「說等一下」「不知道怎麼開始」「拖了好幾天」） |
+
+> 新 token 命名規則：`{事件}_{行為}_explicit`。
+> 未命中任何 token 且 `tokens` 非空 → `classificationConfidence = low` → 走 general 詞庫，並在輸出後附 `clarificationOptions[]`（非阻塞）。
 
 ### 1.5 衝突本質值域（primaryConflictType）
 
@@ -131,10 +161,11 @@ transition / clarify / reset / redistribute / commit / unknown
 
 ### 第三層：General（安全 Fallback）
 
-- 觸發條件：situationKey = unknown 且 conflictType = unknown
-- 詞庫來源：`general[targetRole]`
+- 觸發條件：situationKey = unknown 且 `primaryConflictType = unknown`
+- 詞庫來源：先查 `general[targetRole]`；若 targetRole 無對應詞庫 → fallback 至 `general.unknown`
 - 規則：truth 帶入使用者原句關鍵詞（最多 10 字，不保存完整原句），不另行推斷原因
-- 不確定語氣：「關於這件事，目前還不清楚是哪個環節——可以先說說看哪個比較接近？」
+- **輸出順序（強制）**：先輸出幽默結果，再於結果後附加 `clarificationOptions[]`（非阻塞）
+- 不確定語氣在 clarificationOptions 中呈現，不得在輸出前以問卷擋住生成
 
 ---
 
@@ -154,6 +185,23 @@ transition / clarify / reset / redistribute / commit / unknown
 | `callback` | 歌曲與後續可回扣的笑點 | 可簡化 |
 | `comicWorld` | 本次選用的世界（寫入 flow.context，全流程共用） | ✅ |
 | `interactionType` | directed / self（self 時無外部對象，comicExit 給自己台階） | ✅ |
+| `clarificationOptions` | 分類信心低時，在結果後附加的選項（非阻塞） | 選填 |
+
+### clarificationOptions 格式（非阻塞，永遠在結果後）
+
+```json
+{
+  "trigger": "classificationConfidence=low",
+  "position": "after_output",
+  "options": [
+    { "label": "時間沒說好", "maps_to": "screen_time" },
+    { "label": "說好了但沒守", "maps_to": "screen_time" },
+    { "label": "看了不該看的", "maps_to": "screen_content" }
+  ]
+}
+```
+
+> **Quick Mode 強制規則**：任何情況都必須先輸出完整幽默結果，`clarificationOptions` 附加在結果之後。不得在生成前先顯示問題或選單阻塞輸出。
 
 ---
 
@@ -247,9 +295,9 @@ transition / clarify / reset / redistribute / commit / unknown
 | 建議 comicWorld | W_播報台 / W1 廢話文學 |
 
 > 其他子情境需有對應 `requiredEvidence` 才能啟用：
-> - `screen_table`：需使用者提到「吃飯」「餐桌」才可用餐桌相關 analogy
-> - `screen_hidden`：需提到「偷偷」「被發現」才可用隱藏使用相關 analogy
-> - 未提供時一律用 screen_time 一般詞庫，不主動假設
+> - `screen_at_meals`：需使用者提到「吃飯」「餐桌」才可用餐桌相關 analogy
+> - `screen_hidden_use`：需提到「偷偷」「被發現」才可用隱藏使用相關 analogy
+> - 未提供足夠關鍵詞時，一律回傳 `screen_general` 詞庫，不主動假設子情境
 
 #### 5 條嗆聲核心句
 
@@ -261,7 +309,7 @@ transition / clarify / reset / redistribute / commit / unknown
 
 #### 流程 A：W_播報台
 
-**requiredEvidence**：使用者提到「時間」「不肯收」「說好了」或「繼續玩」中至少一項。
+**requiredEvidence**：`{ mode: "any", tokens: ["screen_time_explicit", "stop_resistance_explicit"] }`
 
 - **analogy**：「今天的直播間開播了，主播（孩子）目前沒有掛台計畫，頻道的收播時間還沒出來。」
 - **honest**：「我不是要搶走手機，我是要說清楚幾點到幾點是你的時間。」
@@ -280,7 +328,7 @@ transition / clarify / reset / redistribute / commit / unknown
 
 #### 流程 B：W1 廢話文學
 
-**requiredEvidence**：無強制（廢話文學可用於一般 screen_time，不需特定細節）。
+**requiredEvidence**：`{ mode: "any", tokens: [] }` — 無強制，可用於 `screen_general` 一般詞庫。
 
 - **analogy**：「手機是一份很有吸引力的文件，目前的閱讀進度是：無限捲動中。」
 - **honest**：「你喜歡玩手機，我知道。我要說的是結束時間，不是說你不對。」
@@ -319,7 +367,7 @@ transition / clarify / reset / redistribute / commit / unknown
 - ✅ 未說「一直玩了多久」（「藍光很忠實」不含時間斷言）
 - ✅ 未診斷原因（成癮、逃避）
 - ✅ boundary 可執行
-- ✅ `screen_hidden` 等子情境需 requiredEvidence，不自行觸發
+- ✅ `screen_hidden_use` 等子情境需 requiredEvidence，不自行觸發
 
 ---
 
@@ -332,7 +380,7 @@ transition / clarify / reset / redistribute / commit / unknown
 | speakerRole | parent |
 | targetRole | grandparent |
 | subjectRole | child（第三方角色，三方衝突） |
-| subjectKey | chores（廣義：親子規則） |
+| subjectKey | rules |
 | interactionType | directed |
 | domain | family |
 | situationKey | cross_generation_rules |
@@ -362,7 +410,7 @@ transition / clarify / reset / redistribute / commit / unknown
 
 #### 流程 A：W_合夥公司
 
-**requiredEvidence**：使用者提到「規則不同」「爺奶說可以」「我說不行」中至少一項。
+**requiredEvidence**：`{ mode: "any", tokens: ["rules_conflict_explicit"] }`
 
 - **analogy**：「這家公司有兩位主管，政策尚未對齊，員工已找到效率最高的那個窗口。」
 - **honest**：「我不是說你們的方式不好——我是說我們需要先說好哪些事是一致的。」
@@ -381,7 +429,7 @@ transition / clarify / reset / redistribute / commit / unknown
 
 #### 流程 B：W1 廢話文學
 
-**requiredEvidence**：無強制（廢話文學可用於確認衝突存在但細節不清楚的情況）。
+**requiredEvidence**：`{ mode: "any", tokens: [] }` — 無強制，可用於 cross_generation_rules 一般詞庫。
 
 - **analogy**：「這件事目前有兩份說明書，孩子收到的那份執行起來比較順手。」
 - **honest**：「我知道你們是因為愛孩子——我說的不是愛，是哪些事需要我們一起守。」
@@ -559,7 +607,7 @@ transition / clarify / reset / redistribute / commit / unknown
 
 #### 流程 A：W_合夥公司
 
-**requiredEvidence**：使用者提到「做家事」「不平均」「我都在做」中至少一項。
+**requiredEvidence**：`{ mode: "any", tokens: ["chores_mention_explicit"] }`
 
 - **analogy**：「這家公司有兩位合夥人，但可見的工作分配表只有一份——另一份在某人腦子裡，目前沒有對外開放。」
 - **honest**：「我不是說你不做，我是說有些事我需要你說你看見了。」
@@ -653,9 +701,9 @@ transition / clarify / reset / redistribute / commit / unknown
 
 #### 5 條嗆聲核心句
 
-1. 這件事還沒開始，腦子已經把它完成了很多次——可惜只有一個版本會變成真的。
+1. 這件事還沒開始，腦子已經預演過開始的感覺——可惜預演不算動工。
 2. 「等一下去做」已經說了幾個「等一下」——計次器目前沒有在走。
-3. 卡住不是因為懶，是把某一個步驟想得太大——就那個步驟，把它縮小。
+3. 卡住的感覺有幾種可能——其中一種是第一步的範圍比想像中可以更小。
 4. 這件事很重要，這件事等一下再說——兩件事同時在腦子裡是可以共存的。
 5. 待辦清單上有這件事，它沒有動，但它很有自知之明地待在那裡。
 
@@ -663,7 +711,7 @@ transition / clarify / reset / redistribute / commit / unknown
 
 #### 流程 A：W1 廢話文學
 
-**requiredEvidence**：無強制（自我拖延情境 general 程度較高）。
+**requiredEvidence**：`{ mode: "any", tokens: [] }` — 無強制，自我拖延情境 general 程度較高。
 
 - **analogy**：「這份任務進入了準備狀態——就像辦好的健身卡，充滿希望，目前沒有進場。」
 - **honest**：「不想做，或是不知道從哪裡開始——這兩件事都可以，先弄清楚是哪個。」
@@ -673,16 +721,16 @@ transition / clarify / reset / redistribute / commit / unknown
 - **song hook A（廢話文學）**：
   ```
   任務說明讀完了
-  策略分析做了三輪
+  各個角度都想過了
   第一步還在草稿
   但準備工作非常完整
   ```
-  comedyDevice: `self_deprecation`（三輪分析了什麼都沒動，說話者自己就是那個人）
+  comedyDevice: `self_deprecation`（各種分析做完了什麼都沒動，說話者自己就是那個人）
   callbackVariant: 「準備工作非常完整」→唬爛虎可回收「正式執行階段，現在開始」
 
 #### 流程 B：W_氣象播報
 
-**requiredEvidence**：使用者提到「一直拖」「不知道怎麼開始」「拖了幾天」。
+**requiredEvidence**：`{ mode: "any", tokens: ["procrastinate_mention_explicit"] }`
 
 - **analogy**：「今天的個人天氣：拖延指數偏高，能見度低，預計在說出第一步後轉晴。」
 - **honest**：「我知道這件事重要，不知道的是為什麼還沒開始——是累？卡在哪裡？還是不知道怎麼切入？」
@@ -692,11 +740,11 @@ transition / clarify / reset / redistribute / commit / unknown
 - **song hook B（氣象播報）**：
   ```
   今天拖延指數持續偏高
-  已連續觀測三天了
+  觀測站已開始記錄
   預計在說出第一步後轉晴
   氣象局建議不用等晴天才出發
   ```
-  comedyDevice: `self_deprecation`（觀測三天、說話者自己就是那個三天的數據）
+  comedyDevice: `self_deprecation`（持續觀測中、說話者自己就是那個數據）
   callbackVariant: 「氣象局建議」→唬爛虎可回收「科學數據支持：出發就是轉晴的開始」
 
 #### Fallback 範例
@@ -710,7 +758,7 @@ transition / clarify / reset / redistribute / commit / unknown
 | 項目 | 分數 | 說明 |
 |------|------|------|
 | 情境相關性 | 4.5 | interactionType=self，自嘲框架清楚 |
-| 好笑程度 | 4.2 | 「準備工作非常完整」「氣象局已觀測三天」自嘲精準 |
+| 好笑程度 | 4.2 | 「準備工作非常完整」「觀測站已開始記錄」自嘲精準 |
 | 角色辨識度 | 4.3 | 自我嗆聲模式清楚，沒有外部指責 |
 | 流程銜接 | 4.0 | callback 都能進唬爛虎 |
 | 分享記憶點 | 4.0 | 兩個 hook 都可截圖 |
@@ -741,9 +789,9 @@ transition / clarify / reset / redistribute / commit / unknown
 | `classificationConfidence` | low / medium / high | 分類可靠度（供分析 fallback 比例） |
 
 **GA4 隱私規則**：
-- 不傳送 `fallback_trigger`，不保存任何使用者輸入原句片段
-- 不傳送 `subSituationKey` 的具體內容（僅傳是否命中 specific）
-- `primaryConflictType` 只傳正規化分類值，不傳推斷過程
+- 不傳送 `normalizedUnknownToken`，不保存任何使用者輸入原句片段或 fallback 觸發文字
+- 不傳送 `subSituationKey` 的具體值（僅傳是否命中 specific，用 `subSituationHit: boolean` 表示）
+- `primaryConflictType` 只傳正規化分類值，不傳推斷過程或原始輸入片段
 
 ### 6.2 GAS 記錄表擴充
 
@@ -765,14 +813,25 @@ transition / clarify / reset / redistribute / commit / unknown
 
 ---
 
-## 七、待確認事項
+## 七、架構決策定案（v1.3 全部確認）
 
-1. **subSituationKey 觸發邏輯**：screen 的五個子情境，前端是否需要額外 UI 選項？或純靠關鍵詞推斷？
-2. **cross_generation_rules 詞庫位置**：是放 Batch 2（親子與長輩）還是保留在 Batch 1 孩子情境下？
-3. **self_procrastinate 輸出 schema**：已確認與 directed 相同，interactionType=self 是唯一差異——是否需要在 UI 上有對應提示（例如：不顯示「對方」相關字樣）？
-4. **歌曲模板引擎實作時程**：是否列入 R3，還是等五個 Batch 的情境內容完成後再統一實作？
-5. **humorLevel = gentle 的 hook 審核**：案例 C 幽默分 3.4，Angel-x 是否確認 gentle 層級 3.3–3.6 可接受，不需另外設計高強度幽默策略？
+| # | 議題 | 決策 |
+|---|------|------|
+| 1 | subSituationKey 觸發邏輯 | 純靠關鍵詞推斷，不增加前端 UI 選項；低信心走 general 詞庫 |
+| 2 | cross_generation_rules 詞庫位置 | 放 **Batch 2**（親子與長輩），不在 Batch 1 孩子情境下 |
+| 3 | interactionType=self 的 UI 差異 | 同 directed schema；UI 自動隱藏「對方」相關字樣，不新增欄位 |
+| 4 | 歌曲模板引擎實作時程 | 列入 **R3**，五個 Batch 情境內容完成後統一實作 |
+| 5 | humorLevel=gentle 通過門檻 | 3.3–3.6 可接受；**尊嚴/安全必須 ≥ 4.5**，不強迫達到 4.0 |
 
 ---
 
-*v1.2：分類 schema 升版（主/次衝突、需求、子情境、信心度、來源）；歌曲規範加 comedyDevice + callbackVariant；五案依新 schema 修訂並重新評分；GA4/GAS 移除 fallback 原句記錄；conflictType 明確標示為後台專用。核准後才進行程式實作。*
+## 八、待辦（v1.3 後）
+
+- [ ] Batch 1 情境樣本（賴床、孩子拖延、沉迷3C）：純文字，不直接寫入 app.js
+- [ ] Case A Fallback 範例補 clarificationOptions 格式
+- [ ] R3 歌曲模板引擎設計（待五 Batch 完成後）
+- [ ] Batch 2：cross_generation_rules 詞庫完整展開
+
+---
+
+*v1.3：requiredEvidence 改為結構化 token 格式；新增 evidenceTokens 標準清單；新增 clarificationOptions + Quick Mode 規則；Case A screen fallback 改 screen_general；Case B subjectKey 改 rules；Case E 移除捏造細節（三輪/三天/很多次/步驟太大）；GA4 移除 fallback_trigger 改 normalizedUnknownToken；Section 七待確認事項全部定案。核准後才進行程式實作。*
