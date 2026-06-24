@@ -281,7 +281,6 @@ async function callApi(action, extra) {
   var body = Object.assign({ action: action, adminKey: ADMIN_KEY }, extra || {});
   var res = await fetch(API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
   return res.json();
