@@ -946,6 +946,12 @@ callback    → 用誇飾意象落回具體小步驟
 
 ### 情境 1：孩子不寫作業
 
+```
+sampleInput:    孩子拖著不開始寫作業
+subSituationKey: homework_not_started
+evidenceTokens: [homework_explicit, not_started_explicit]
+```
+
 #### 小天鼠 嗆聲
 
 ```
@@ -954,13 +960,13 @@ directRoast:
 
 absurdObservation:
 桌上那份靜靜的，比你還有耐心。
-它不急，可以等到明天——問題是明天早上要交。
+它不急，它可以一直等——問題是等的人不只它。
 
 honestLine:
-今晚這件事得完成，這不是選修。
+這件事得動，而且只有你能開始。
 
 boundary:
-幾點動筆，說一個，我不管你先做哪題。
+先選一科，或告訴我卡在哪，兩個選一個。
 
 selfOwn:
 好，我先收麥，免得最後完成作文的人是我。
@@ -1008,10 +1014,10 @@ Hook
 Outro（收麥）
 好，我先收麥
 免得最後完成作文的人是我
-幾點動筆你說
+先選一科，或告訴我卡在哪
 我就不再播報了
                                     ← 預計笑點：self_deprecation + callback（「完成作文的是我」
-                                                回收 selfOwn，笑著退場）
+                                                回收 selfOwn，選擇入口替代時間斷言，笑著退場）
 ```
 
 ---
@@ -1074,7 +1080,7 @@ Hook
 
 Outro（反差落地）
 申請書先放著
-鉛筆在第三行桌角被找到了
+鉛筆在桌角被找到了
 紅地毯還沒收走
 先找到筆蓋，再說第一個字
                     ← punchline：鉛筆在桌角被找到（世界遺產 → 桌角，反差落地）
@@ -1092,6 +1098,12 @@ Outro（反差落地）
 ---
 
 ### 情境 2：孩子沉迷 3C
+
+```
+sampleInput:    到了約定時間，孩子還不肯關手機
+subSituationKey: screen_time
+evidenceTokens: [screen_explicit, agreed_time_explicit, stop_resistance_explicit]
+```
 
 #### 小天鼠 嗆聲
 
@@ -1138,9 +1150,9 @@ Verse 1
 我說了幾點了
 螢幕說還有一關
 
-家長版連續劇今晚第三集
+家長版連續劇今晚繼續播出
 說話者是唯一認真在播的
-                                    ← 預計笑點：self_deprecation（說話者把自己比作連續劇，播到第三集）
+                                    ← 預計笑點：self_deprecation（說話者把自己比作連續劇，對手是螢幕）
 
 Bridge
 我發現我說的話
@@ -1170,23 +1182,24 @@ scaleUp1:
 拇指一滑，今晚的議程改寫了，江山隨時可以換朝。
 
 scaleUp2:
-電量一格，帝國不倒——路由器已經在考慮寫服役回憶錄了。
+電量一格，帝國不倒——帝國史官已開始提筆，記錄這場任務。
 
 scaleUp3:
-這場帝國最長的登錄記錄，路由器計劃退休後出三冊，
-記錄服役期間最難忘的一個任務：等待主人說幾點下線。
+帝國史官在記錄本的最後一頁寫道：
+這場任務的持續時間，超過了帝國任何一次征戰紀錄；
+史官本人也開始考慮何時可以退役。
 
 snapBack:
 所以，說一個幾點。
 
 callback:
-路由器回憶錄先緩，你說了幾點，它就先去充電了。
+史官的記錄本先合上，你說了幾點，帝國正式收兵。
 ```
 
 **預計笑點位置與喜劇機制**
-- `scaleUp1→2`「江山換朝→帝國不倒」：exaggeration 第一/二級（同一個帝國意象升溫）
-- `scaleUp3`「路由器出三冊退休回憶錄」：exaggeration 第三級 + absurdity（路由器寫書記錄等待任務）
-- `callback`「你說了幾點，它就去充電了」：contrast + callback（三冊回憶錄 → 去充電，punchline）
+- `scaleUp1→2`「江山換朝→帝國不倒→史官出場」：exaggeration 第一/二級（帝國意象升溫，史官接棒）
+- `scaleUp3`「史官記錄超過所有征戰，考慮退役」：exaggeration 第三級 + absurdity（帝國史官因等待一個幾點而疲憊）
+- `callback`「史官合上記錄本，帝國收兵」：contrast + callback（史詩紀錄 → 說了幾點就收兵，punchline）
 
 ---
 
@@ -1201,26 +1214,26 @@ Hook
                     ← 誇飾第一級：帝國意象開場
 
 Verse 1
-帝國的邊境在第五關
-第五關過了，領土擴張
-領土擴張之後
-連晚餐那一個小時都入版圖了
-                    ← 誇飾第二級：領土擴張，晚餐時間也失守
+帝國的領土每一滑都在增加
+這局沒有計時器，帝國自己說何時收兵
+版圖擴大的速度
+連史官都記不完
+                    ← 誇飾第二級：帝國領土無限延伸，史官跟不上
 
 Bridge
-路由器後來出了三冊回憶錄
-說帝國最長的一次任務
-就是等待主人說幾點下線
-路由器說等到快長白頭髮
-                    ← 誇飾第三級：退休著作 + 路由器快長白頭髮
+路由器升格為帝國史官
+記錄這場任務的持續時間
+超過了帝國任何一次征戰
+史官說等到快長白頭髮了
+                    ← 誇飾第三級：路由器升格史官（世界統一），白頭髮誇飾落點
 
 Hook
 
 Outro（反差落地）
-回憶錄還沒寫完
+史官還沒寫完今天的記錄
 因為你說了幾點
-路由器就先去充電了
-                    ← punchline：說了幾點，帝國回憶錄讓位給充電（反差落地）
+帝國正式收兵了
+                    ← punchline：史詩記錄 → 說了幾點就收兵（反差落地，世界全程帝國）
 ```
 
 ---
@@ -1235,6 +1248,14 @@ Outro（反差落地）
 ---
 
 ### 情境 3：跨代教養規則衝突
+
+```
+sampleInput:    爸媽說不能再吃糖，爺奶卻說沒關係
+subSituationKey: grandparent_treat_override
+evidenceTokens: [grandparent_explicit, parent_rule_explicit, treat_override_explicit]
+```
+
+> ⚠️ **子情境限定**：本樣本糖果道具（糖走三院、糖本人不予置評）僅在 sampleInput 明確包含零食 / 糖果時啟用。通用跨代規則衝突（未提及具體物品）請改用 `grandparent_rules_general` 詞庫，不得直接套用此樣本。
 
 #### 小天鼠 嗆聲
 
@@ -1403,4 +1424,4 @@ Outro（反差落地）
 
 ---
 
-*v1.4：Section 四新增角色笑法正式分工框架。v1.4.1：Section 九三組樣本依 Angel-x 修正指令重寫——directRoast 直接用「你」、禁止預先軟化、selfOwn 三組不重複且從本情境長出、唬爛虎三級誇飾同一道具升溫、世界全程鎖定、反差落地形成 punchline。*
+*v1.4：Section 四新增角色笑法正式分工框架。v1.4.1：Section 九三組樣本重寫。v1.4.2：evidence 對齊修正——三組加 sampleInput / subSituationKey / evidenceTokens；移除「明天早上要交」「今晚必須完成」；作業 boundary 改選擇入口；3C Song A 移除「第三集」；3C 帝國世界統一（路由器升格帝國史官，移除第五關 / 晚餐一小時 / 三冊）；作業 Song B「第三行桌角」→「在桌角」；情境 3 加糖果子情境限定注釋。*
