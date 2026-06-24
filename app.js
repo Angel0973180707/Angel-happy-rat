@@ -265,7 +265,8 @@ function renderRoastAbuseCard(){
   return '<div class="result-card tag-rat"><div class="who">'+RAT_ICON+' 小天鼠先暫停一下</div><div class="body-text">這句已經不是放話，是可能真的傷到人。\n小天鼠先幫你把重點改成界線與需求，不提供威脅或羞辱版本。\n\n試著說說：發生了什麼？你希望改變的是什麼？</div></div>';
 }
 function toggleRoastRules(btn){
-  var d=btn.nextElementSibling;
+  var d=document.getElementById('roast-rules-detail');
+  if(!d) return;
   if(d.style.display==='none'){d.style.display='block';btn.textContent='完整守則 ▴';}
   else{d.style.display='none';btn.textContent='完整守則 ▾';}
 }
@@ -1429,8 +1430,10 @@ function renderInputArea(id,opts){
   var prefill=flow.routeB?getStepPrefill(id):(flow.input||'');
   var sharedInput='<div class="field-block"><label for="main-input">'+placeholder+'</label><textarea id="main-input" placeholder="'+placeholder+'">'+escapeHtml(prefill)+'</textarea></div>';
   if(id==='roast'){
-    var roastNotice='<div class="roast-notice" style="font-size:0.85em;color:#888;margin-top:0.5em;line-height:1.5;">小天鼠幫你把悶氣說清楚，不幫你霸凌、威脅或公開羞辱別人。分享前請拿掉姓名與私人資料。<button class="link-btn" style="font-size:inherit;color:#aaa;background:none;border:none;cursor:pointer;padding:0 0 0 0.3em;" onclick="toggleRoastRules(this)">完整守則 ▾</button><div style="display:none;margin-top:0.4em;">禁止生成：① 暴力體罰意圖 ② 威脅報復 ③ 公開電話地址等個資 ④ 號召霸凌羞辱 ⑤ 仇恨歧視內容。高風險輸入不生成、不扣額度，只記匿名分類。</div></div>';
+    var roastNotice='<div class="roast-notice" style="font-size:0.85em;color:#888;margin-top:0.5em;line-height:1.5;">小天鼠幫你把悶氣說清楚，不幫你霸凌、威脅或公開羞辱別人。分享前請拿掉姓名與私人資料。<button id="roast-rules-btn" class="link-btn" style="font-size:inherit;color:#aaa;background:none;border:none;cursor:pointer;padding:0 0 0 0.3em;">完整守則 ▾</button><div id="roast-rules-detail" style="display:none;margin-top:0.4em;">禁止生成：① 暴力體罰意圖 ② 威脅報復 ③ 公開電話地址等個資 ④ 號召霸凌羞辱 ⑤ 仇恨歧視內容。高風險輸入不生成、不扣額度，只記匿名分類。</div></div>';
     els.inputArea.innerHTML=sharedInput+chipBlock('target-chip','對象',['老闆/主管','客戶','同事','孩子','爸媽/長輩','兄弟姊妹','另一半','朋友','其他'])+roastNotice;
+    var rulesBtn=els.inputArea.querySelector('#roast-rules-btn');
+    if(rulesBtn) rulesBtn.addEventListener('click',function(){toggleRoastRules(rulesBtn);});
   } else if(id==='bigdream'){
     els.inputArea.innerHTML=sharedInput+chipBlock('topic-chip','主題',['財富','健康','事業','旅行','品牌','影響力']);
   } else if(id==='lost'){
