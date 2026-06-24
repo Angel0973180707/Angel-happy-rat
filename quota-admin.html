@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>笑鼠人了！方案碼管理台</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#1a1a1a;font-size:14px}
+header{background:#1a1a2e;color:#fff;padding:14px 20px;display:flex;align-items:center;gap:10px}
+header h1{font-size:16px;font-weight:600}
+header .version{font-size:11px;opacity:.6;margin-left:auto}
+#auth-panel{max-width:480px;margin:60px auto;background:#fff;border-radius:12px;padding:32px;box-shadow:0 2px 16px rgba(0,0,0,.08)}
+#auth-panel h2{font-size:18px;margin-bottom:20px;color:#333}
+#main-panel{display:none;max-width:900px;margin:24px auto;padding:0 16px 40px}
+.field{margin-bottom:14px}
+label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px}
+input,select,textarea{width:100%;padding:8px 10px;border:1px solid #d0d0d0;border-radius:6px;font-size:13px;outline:none;background:#fff}
+input:focus,select:focus{border-color:#6c63ff}
+.btn{display:inline-block;padding:8px 18px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.btn-primary{background:#6c63ff;color:#fff}
+.btn-primary:hover{opacity:.88}
+.btn-danger{background:#e53e3e;color:#fff}
+.btn-danger:hover{opacity:.88}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.card{background:#fff;border-radius:10px;padding:20px;box-shadow:0 1px 6px rgba(0,0,0,.07);margin-bottom:16px}
+.card h3{font-size:14px;font-weight:700;color:#333;margin-bottom:14px;border-bottom:1px solid #f0f0f0;padding-bottom:8px}
+.tabs{display:flex;gap:0;border-bottom:2px solid #e8e8e8;margin-bottom:18px}
+.tab{padding:9px 18px;cursor:pointer;font-size:13px;font-weight:600;color:#888;border-bottom:2px solid transparent;margin-bottom:-2px}
+.tab.active{color:#6c63ff;border-color:#6c63ff}
+.tab-panel{display:none}.tab-panel.active{display:block}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#f7f7f9;padding:8px 10px;text-align:left;font-weight:600;color:#555;border-bottom:1px solid #e0e0e0}
+td{padding:8px 10px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+tr:hover td{background:#fafafe}
+.badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-gift{background:#fef3c7;color:#92400e}
+.badge-student{background:#d1fae5;color:#065f46}
+.badge-custom{background:#ede9fe;color:#4c1d95}
+.badge-on{background:#dcfce7;color:#166534}
+.badge-off{background:#fee2e2;color:#991b1b}
+.badge-expired{background:#f3f4f6;color:#6b7280}
+.msg{padding:10px 14px;border-radius:6px;margin-bottom:12px;font-size:13px;display:none}
+.msg.ok{background:#d1fae5;color:#065f46;display:block}
+.msg.err{background:#fee2e2;color:#991b1b;display:block}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+#type-custom-fields{display:none}
+#type-gift-fields{display:none}
+#type-student-fields{display:none}
+.code-display{font-family:monospace;font-size:15px;font-weight:700;background:#f0eeff;padding:10px 14px;border-radius:6px;letter-spacing:.05em;color:#4c1d95;margin-top:10px;display:none}
+.member-box{background:#f9f9ff;border:1px solid #e0deff;border-radius:8px;padding:14px;margin-top:12px;display:none}
+.member-box .row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #ece9ff;font-size:12px}
+.member-box .row:last-child{border-bottom:none}
+.member-box .k{color:#666;font-weight:600}
+.member-box .v{color:#333;font-family:monospace;word-break:break-all}
+</style>
+</head>
+<body>
+<header>
+  <h1>笑鼠人了！方案碼管理台</h1>
+  <span class="version">quota.gs v3</span>
+</header>
+
+<!-- 登入區塊 -->
+<div id="auth-panel">
+  <h2>管理員登入</h2>
+  <div class="field">
+    <label>GAS API URL</label>
+    <input type="text" id="gas-url" value="https://script.google.com/macros/s/AKfycbzFkewVnwkmxQfHQACgjbrm0c6b4pj-tnhjEApqHDGZkanwAmQkqObV0bAMxFBNAV-E/exec" placeholder="GAS 部署網址">
+  </div>
+  <div class="field">
+    <label>管理員金鑰 (Script Properties: ADMIN_KEY)</label>
+    <input type="password" id="admin-key" placeholder="輸入管理員金鑰">
+  </div>
+  <div class="msg" id="auth-msg"></div>
+  <button class="btn btn-primary" onclick="doLogin()" style="width:100%;margin-top:4px">登入驗證</button>
+</div>
+
+<!-- 主面板 -->
+<div id="main-panel">
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('codes')">方案碼管理</div>
+    <div class="tab" onclick="switchTab('members')">會員查詢</div>
+    <div class="tab" onclick="switchTab('tools')">工具</div>
+  </div>
+
+  <!-- 方案碼管理 -->
+  <div id="tab-codes" class="tab-panel active">
+    <div class="card">
+      <h3>產生新方案碼</h3>
+      <div class="field">
+        <label>類型</label>
+        <select id="code-type" onchange="onTypeChange()">
+          <option value="custom">自訂方案（TEST-* / GROUP-* 等）</option>
+          <option value="gift">贈送工坊次數（HAPPY-*）</option>
+          <option value="student">學員方案（LEARN-*）</option>
+        </select>
+      </div>
+
+      <!-- custom 欄位 -->
+      <div id="type-custom-fields">
+        <div class="row2">
+          <div class="field">
+            <label>前綴（TEST 或 GROUP）</label>
+            <input type="text" id="c-prefix" value="TEST" placeholder="TEST">
+          </div>
+          <div class="field">
+            <label>備註</label>
+            <input type="text" id="c-note" placeholder="例：2026暑假測試">
+          </div>
+        </div>
+        <div class="row3">
+          <div class="field">
+            <label>每日快速次數</label>
+            <input type="number" id="c-quick" value="50" min="1">
+          </div>
+          <div class="field">
+            <label>每日旅程次數</label>
+            <input type="number" id="c-journey" value="10" min="1">
+          </div>
+          <div class="field">
+            <label>每日工坊次數</label>
+            <input type="number" id="c-workshop" value="10" min="1">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>方案有效天數</label>
+            <input type="number" id="c-days" value="30" min="1">
+          </div>
+          <div class="field">
+            <label>最多兌換人數</label>
+            <input type="number" id="c-maxppl" value="1" min="1">
+          </div>
+        </div>
+      </div>
+
+      <!-- gift 欄位 -->
+      <div id="type-gift-fields">
+        <div class="row2">
+          <div class="field">
+            <label>贈送工坊次數</label>
+            <input type="number" id="g-value" value="3" min="1">
+          </div>
+          <div class="field">
+            <label>方案碼有效天數</label>
+            <input type="number" id="g-days" value="90" min="1">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>最多兌換人數</label>
+            <input type="number" id="g-maxppl" value="1" min="1">
+          </div>
+          <div class="field">
+            <label>備註</label>
+            <input type="text" id="g-note" placeholder="例：贈送給王小明">
+          </div>
+        </div>
+      </div>
+
+      <!-- student 欄位 -->
+      <div id="type-student-fields">
+        <div class="row2">
+          <div class="field">
+            <label>有效天數</label>
+            <input type="number" id="s-days" value="30" min="1">
+          </div>
+          <div class="field">
+            <label>最多啟用人數</label>
+            <input type="number" id="s-maxppl" value="30" min="1">
+          </div>
+        </div>
+        <div class="field">
+          <label>課程備註</label>
+          <input type="text" id="s-note" placeholder="例：2026暑假班">
+        </div>
+      </div>
+
+      <div class="msg" id="create-msg"></div>
+      <button class="btn btn-primary" onclick="createCode()" id="create-btn">產生方案碼</button>
+      <div class="code-display" id="code-result"></div>
+    </div>
+
+    <div class="card">
+      <h3>全部方案碼 <button class="btn btn-sm btn-primary" onclick="loadCodes()" style="float:right">重新整理</button></h3>
+      <div id="codes-table-wrap">
+        <table>
+          <thead><tr>
+            <th>方案碼</th><th>類型</th><th>每日限額 Q/J/W</th>
+            <th>方案天</th><th>兌換</th><th>到期</th><th>備註</th><th>操作</th>
+          </tr></thead>
+          <tbody id="codes-tbody"><tr><td colspan="8" style="color:#aaa;text-align:center;padding:20px">點「重新整理」載入資料</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 會員查詢 -->
+  <div id="tab-members" class="tab-panel">
+    <div class="card">
+      <h3>查詢會員</h3>
+      <div style="display:flex;gap:10px">
+        <input type="text" id="search-userid" placeholder="輸入 userId（LINE UID 或其他）" style="flex:1">
+        <button class="btn btn-primary" onclick="searchMember()">查詢</button>
+      </div>
+      <div class="msg" id="member-msg"></div>
+      <div class="member-box" id="member-box"></div>
+
+      <div style="margin-top:18px;border-top:1px solid #f0f0f0;padding-top:16px">
+        <h3 style="margin-bottom:10px">贈送工坊額度</h3>
+        <div class="row3">
+          <div class="field">
+            <label>userId</label>
+            <input type="text" id="grant-userid" placeholder="和上方查詢同步填入">
+          </div>
+          <div class="field">
+            <label>贈送次數</label>
+            <input type="number" id="grant-amount" value="1" min="1">
+          </div>
+          <div class="field">
+            <label>備註</label>
+            <input type="text" id="grant-note" placeholder="原因">
+          </div>
+        </div>
+        <div class="msg" id="grant-msg"></div>
+        <button class="btn btn-primary" onclick="grantBonus()">確認贈送</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>會員列表（最多 50 筆）<button class="btn btn-sm btn-primary" onclick="loadMembers()" style="float:right">載入</button></h3>
+      <div id="members-table-wrap">
+        <table>
+          <thead><tr>
+            <th>userId</th><th>方案</th><th>到期</th><th>剩餘bonus</th>
+            <th>今日快速</th><th>今日旅程</th><th>今日工坊</th><th>最後使用</th>
+          </tr></thead>
+          <tbody id="members-tbody"><tr><td colspan="8" style="color:#aaa;text-align:center;padding:20px">點「載入」</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 工具 -->
+  <div id="tab-tools" class="tab-panel">
+    <div class="card">
+      <h3>Schema 遷移</h3>
+      <p style="color:#666;font-size:12px;margin-bottom:14px">
+        在 21_會員資料 補齊新欄位（customDailyQuick / Journey / Workshop）。<br>
+        已有此欄位的 Sheet 不受影響，舊資料不會被覆寫。
+      </p>
+      <div class="msg" id="migrate-msg"></div>
+      <button class="btn btn-primary" onclick="migrateSchema()">執行 Schema 遷移</button>
+    </div>
+
+    <div class="card">
+      <h3>停用方案碼</h3>
+      <div style="display:flex;gap:10px">
+        <input type="text" id="disable-code" placeholder="輸入完整方案碼" style="flex:1">
+        <button class="btn btn-danger" onclick="disableCode()">停用</button>
+      </div>
+      <div class="msg" id="disable-msg"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var API_URL = '';
+var ADMIN_KEY = '';
+
+function showMsg(id, text, isErr) {
+  var el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'msg ' + (isErr ? 'err' : 'ok');
+}
+
+async function callApi(action, extra) {
+  var body = Object.assign({ action: action, adminKey: ADMIN_KEY }, extra || {});
+  var res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
+
+async function doLogin() {
+  API_URL   = document.getElementById('gas-url').value.trim();
+  ADMIN_KEY = document.getElementById('admin-key').value.trim();
+  if (!API_URL || !ADMIN_KEY) { showMsg('auth-msg','請填入 GAS URL 與管理員金鑰',true); return; }
+  showMsg('auth-msg','驗證中…',false);
+  try {
+    var r = await callApi('adminListCodes');
+    if (r.ok === false) { showMsg('auth-msg', r.message || '驗證失敗', true); return; }
+    document.getElementById('auth-panel').style.display = 'none';
+    document.getElementById('main-panel').style.display = 'block';
+    renderCodesTable(r.codes || []);
+  } catch(e) {
+    showMsg('auth-msg', '連線失敗：' + e.message, true);
+  }
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(function(t,i){
+    t.classList.toggle('active', ['codes','members','tools'][i]===name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(function(p,i){
+    p.classList.toggle('active', ['tab-codes','tab-members','tab-tools'][i]==='tab-'+name);
+  });
+}
+
+function onTypeChange() {
+  var t = document.getElementById('code-type').value;
+  document.getElementById('type-custom-fields').style.display  = t==='custom'  ? '' : 'none';
+  document.getElementById('type-gift-fields').style.display    = t==='gift'    ? '' : 'none';
+  document.getElementById('type-student-fields').style.display = t==='student' ? '' : 'none';
+}
+onTypeChange();
+
+async function createCode() {
+  var type = document.getElementById('code-type').value;
+  var opts = { type: type };
+  if (type === 'custom') {
+    opts.prefix       = document.getElementById('c-prefix').value.trim() || 'TEST';
+    opts.dailyQuick   = parseInt(document.getElementById('c-quick').value,10);
+    opts.dailyJourney = parseInt(document.getElementById('c-journey').value,10);
+    opts.dailyWorkshop= parseInt(document.getElementById('c-workshop').value,10);
+    opts.planDays     = parseInt(document.getElementById('c-days').value,10);
+    opts.maxRedemptions = parseInt(document.getElementById('c-maxppl').value,10);
+    opts.note         = document.getElementById('c-note').value.trim();
+  } else if (type === 'gift') {
+    opts.value        = parseInt(document.getElementById('g-value').value,10);
+    opts.expiryDays   = parseInt(document.getElementById('g-days').value,10);
+    opts.maxRedemptions = parseInt(document.getElementById('g-maxppl').value,10);
+    opts.note         = document.getElementById('g-note').value.trim();
+  } else {
+    opts.planDays     = parseInt(document.getElementById('s-days').value,10);
+    opts.maxRedemptions = parseInt(document.getElementById('s-maxppl').value,10);
+    opts.note         = document.getElementById('s-note').value.trim();
+  }
+  var btn = document.getElementById('create-btn');
+  btn.disabled = true;
+  showMsg('create-msg','產生中…',false);
+  try {
+    var r = await callApi('adminCreateCode', opts);
+    if (!r.ok) { showMsg('create-msg', r.message || '失敗', true); btn.disabled=false; return; }
+    showMsg('create-msg','產生成功！', false);
+    var disp = document.getElementById('code-result');
+    var info = r.code;
+    if (r.expiresAt) info += '\n到期：' + r.expiresAt.slice(0,10);
+    if (type==='custom') info += '\n每日 Q:'+opts.dailyQuick+' J:'+opts.dailyJourney+' W:'+opts.dailyWorkshop;
+    if (type==='gift')   info += '\n贈送工坊次數：' + opts.value;
+    disp.textContent = info;
+    disp.style.display = 'block';
+    loadCodes();
+  } catch(e) {
+    showMsg('create-msg', '連線失敗：'+e.message, true);
+  }
+  btn.disabled = false;
+}
+
+async function loadCodes() {
+  var r = await callApi('adminListCodes');
+  renderCodesTable(r.codes || []);
+}
+
+function renderCodesTable(codes) {
+  var tb = document.getElementById('codes-tbody');
+  if (!codes.length) {
+    tb.innerHTML = '<tr><td colspan="8" style="color:#aaa;text-align:center;padding:20px">尚無方案碼</td></tr>';
+    return;
+  }
+  tb.innerHTML = codes.map(function(c) {
+    var typeBadge = '<span class="badge badge-'+c.type+'">'+c.type+'</span>';
+    var statusBadge = c.expired ? '<span class="badge badge-expired">已過期</span>'
+                    : c.enabled ? '<span class="badge badge-on">啟用</span>'
+                    : '<span class="badge badge-off">已停用</span>';
+    var limits = c.type==='custom' ? (c.dailyQuick+'/'+c.dailyJourney+'/'+c.dailyWorkshop) : '—';
+    var disableBtn = (c.enabled && !c.expired)
+      ? '<button class="btn btn-sm btn-danger" onclick="quickDisable(\''+c.code+'\')">停用</button>'
+      : '';
+    return '<tr>'
+      +'<td><code style="font-size:11px">'+c.code+'</code></td>'
+      +'<td>'+typeBadge+'</td>'
+      +'<td>'+limits+'</td>'
+      +'<td>'+(c.planDays||'—')+'天</td>'
+      +'<td>'+(c.redeemedCount||0)+'/'+(c.maxRedemptions||1)+'</td>'
+      +'<td>'+(c.expiresAt||'—')+' '+statusBadge+'</td>'
+      +'<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(c.note||'')+'</td>'
+      +'<td>'+disableBtn+'</td>'
+      +'</tr>';
+  }).join('');
+}
+
+async function quickDisable(code) {
+  if (!confirm('停用 '+code+' ？')) return;
+  var r = await callApi('adminDisableCode', { code: code });
+  if (r.ok) loadCodes();
+  else alert(r.message);
+}
+
+async function searchMember() {
+  var uid = document.getElementById('search-userid').value.trim();
+  if (!uid) return;
+  document.getElementById('grant-userid').value = uid;
+  var r = await callApi('adminGetMember', { userId: uid });
+  var box = document.getElementById('member-box');
+  if (!r.ok) {
+    showMsg('member-msg', r.message || '查無此使用者', true);
+    box.style.display = 'none'; return;
+  }
+  var m = r.member;
+  var planExpired = m.planEndAt && new Date(m.planEndAt) < new Date();
+  box.innerHTML = [
+    ['userId',              m.userId],
+    ['方案',                m.planType + (planExpired ? ' (已過期)' : '')],
+    ['到期日',              m.planEndAt ? String(m.planEndAt).slice(0,10) : '—'],
+    ['bonus 餘額',          m.bonusBalance || 0],
+    ['今日快速已用',        m.dailyQuickUsed || 0],
+    ['今日旅程已用',        m.dailyJourneyUsed || 0],
+    ['今日工坊已用',        m.dailyWorkshopUsed || 0],
+    ['自訂快速上限',        m.customDailyQuick || '—'],
+    ['自訂旅程上限',        m.customDailyJourney || '—'],
+    ['自訂工坊上限',        m.customDailyWorkshop || '—'],
+    ['最後使用日期',        m.lastUsageDate || '—'],
+    ['建立時間',            m.createdAt ? String(m.createdAt).slice(0,10) : '—']
+  ].map(function(r){
+    return '<div class="row"><span class="k">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';
+  }).join('');
+  box.style.display = 'block';
+  showMsg('member-msg','', false);
+  document.getElementById('member-msg').style.display = 'none';
+}
+
+async function grantBonus() {
+  var uid    = document.getElementById('grant-userid').value.trim();
+  var amount = parseInt(document.getElementById('grant-amount').value, 10);
+  var note   = document.getElementById('grant-note').value.trim();
+  if (!uid || !amount || amount <= 0) { showMsg('grant-msg','請填入 userId 與次數',true); return; }
+  var r = await callApi('adminGrantBonus', { userId: uid, amount: amount, note: note });
+  showMsg('grant-msg', r.message || (r.ok ? '成功' : '失敗'), !r.ok);
+}
+
+async function loadMembers() {
+  var r = await callApi('adminListMembers', { limit: 50 });
+  var tb = document.getElementById('members-tbody');
+  if (!r.ok || !r.members || !r.members.length) {
+    tb.innerHTML = '<tr><td colspan="8" style="color:#aaa;text-align:center;padding:16px">尚無資料</td></tr>'; return;
+  }
+  tb.innerHTML = r.members.map(function(m) {
+    var planExpired = m.planEndAt && new Date(m.planEndAt) < new Date();
+    var planLabel   = (m.planType||'free') + (planExpired ? '(過期)' : '');
+    return '<tr>'
+      +'<td style="font-size:11px;font-family:monospace">'+(m.userId||'')+'</td>'
+      +'<td><span class="badge badge-'+(m.planType||'free')+'">'+planLabel+'</span></td>'
+      +'<td>'+(m.planEndAt ? String(m.planEndAt).slice(0,10) : '—')+'</td>'
+      +'<td>'+(m.bonusBalance||0)+'</td>'
+      +'<td>'+(m.dailyQuickUsed||0)+'</td>'
+      +'<td>'+(m.dailyJourneyUsed||0)+'</td>'
+      +'<td>'+(m.dailyWorkshopUsed||0)+'</td>'
+      +'<td>'+(m.lastUsageDate||'—')+'</td>'
+      +'</tr>';
+  }).join('');
+}
+
+async function migrateSchema() {
+  var r = await callApi('adminMigrateSchema');
+  showMsg('migrate-msg', r.message || (r.ok ? '完成' : '失敗'), !r.ok);
+}
+
+async function disableCode() {
+  var code = document.getElementById('disable-code').value.trim();
+  if (!code) return;
+  var r = await callApi('adminDisableCode', { code: code });
+  showMsg('disable-msg', r.message || (r.ok ? '已停用' : '失敗'), !r.ok);
+  if (r.ok) loadCodes();
+}
+
+document.getElementById('admin-key').addEventListener('keydown', function(e){
+  if (e.key === 'Enter') doLogin();
+});
+</script>
+</body>
+</html>
