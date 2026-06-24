@@ -2,7 +2,7 @@
    目標：離線可開首頁與所有模式（純前端生成，不需要網路）。
    策略：app shell cache-first，其餘走 network-first 並回退快取。
 */
-var CACHE_NAME = 'Angel-happy-rat-shell-v3';
+var CACHE_NAME = 'Angel-happy-rat-shell-v4';
 var SHELL_FILES = [
   './',
   './index.html',
@@ -41,6 +41,12 @@ self.addEventListener('fetch', function(event){
   // 2) 避免 30MB+ 檔案塞爆離線快取，違反「離線只開首頁」的初衷
   if(req.destination === 'video' || /\.mp4($|\?)/i.test(req.url)){
     return; // 交給瀏覽器原生網路請求 + HTTP cache 處理
+  }
+
+  // 後台管理頁面不走 SPA fallback，直接從網路取
+  if(req.mode === 'navigate' && req.url.indexOf('quota-admin.html') >= 0){
+    event.respondWith(fetch(req));
+    return;
   }
 
   // SPA navigation fallback：讓重新整理 / 直接輸入 URL 都能拿到 index.html
