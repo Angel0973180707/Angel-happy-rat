@@ -2,7 +2,7 @@
    目標：離線可開首頁與所有模式（純前端生成，不需要網路）。
    策略：app shell cache-first，其餘走 network-first 並回退快取。
 */
-var CACHE_NAME = 'Angel-happy-rat-shell-v2';
+var CACHE_NAME = 'Angel-happy-rat-shell-v3';
 var SHELL_FILES = [
   './',
   './index.html',
