@@ -1,9 +1,10 @@
 /**
- * character-generator-v1.js — Phase 3 角色生成器 v1.1
+ * character-generator-v1.js — Phase 3 角色生成器 v1.2
  *
  * 純函式 ES Module。無 DOM 依賴。不接 app.js。
  *
  * v1.0 → v1.1：每個詞庫欄位從 1 個變體擴充至 3 個，pickVaried 可正常輪換。
+ * v1.1 → v1.2：BANNED_TONE 補 6 個心理師語氣詞；helpdesk selfOwn C2/C3 補 我先 標記。
  *
  * mouseOutput（小天鼠）：
  *   { comicWorld, truth, analogy, honest, boundary, selfOwn, comicExit, callback }
@@ -20,7 +21,7 @@
  * 禁用語氣規則：所有文案均不得出現 BANNED_TONE 中的詞彙。
  */
 
-export const VERSION = 'v1.1-phase3';
+export const VERSION = 'v1.2-phase3';
 
 // ── 禁止捏造樣式（出口供測試） ────────────────────────────────────────
 export const BANNED_PATTERNS = [
@@ -35,6 +36,7 @@ export const BANNED_PATTERNS = [
 // ── 禁用語氣（心理師/成功學語氣，出口供測試）────────────────────────
 export const BANNED_TONE = [
   '我理解你', '也許', '建議您', '感受', '療癒', '成功學',
+  '陪伴你', '接住你', '允許自己', '課題', '覺察', '內在',
 ];
 
 // ── Varied picker（同 key 不重複相鄰選項）────────────────────────────
@@ -202,8 +204,8 @@ const CONTENT_DB = {
         ],
         selfOwn: [
           '我的耐心方案可能忘了續約，現在只剩一聲「嗶——」可以提供服務。',
-          '我的服務時數可能超出系統上限，理性判斷能力正在下降，先申報一聲。',
-          '我的客服劇本在這裡失效了，不確定下一句該說什麼，先讓你說。',
+          '我先申報一聲：服務時數超出系統上限，理性判斷能力正在下降。',
+          '我先停：客服劇本在這裡失效了，不確定下一句說什麼。',
         ],
         comicExit: [
           '客服中心一號線暫停接聽，二號線請稍候，電話不掛，讓你先說。',

@@ -268,8 +268,13 @@ console.log('── G9 邊界容錯 ──');
 ════════════════════════════════════════════════ */
 console.log('── G10 角色語義標記 ──');
 {
-  // 小天鼠直接嗆聲標記（必須出現在 truth + boundary + selfOwn + comicExit 的任一欄）
-  const MOUSE_SEMANTIC = ['你', '不是在', '套餐', '先焦', '先冒煙', '嗶——'];
+  // 小天鼠直接嗆聲／自我解嘲標記（必須出現在 truth + boundary + selfOwn + comicExit 任一欄）
+  // 注意：單字「你」太寬（雞湯也有），改用更具辨識度的詞組
+  const MOUSE_SEMANTIC = [
+    '你不是在', '不供應', '拿去當',
+    '先焦', '先冒煙', '嗶——',
+    '我承認', '我先', '忘了續約', '我以前',
+  ];
   // 唬爛虎誇飾升溫標記（必須出現在 l1 + l2 的任一段）
   const TIGER_EXAGGERATION = ['峰會', '認證', '宣布', '稽查員', '委員會', '歷史時刻', '緊急'];
 
@@ -386,15 +391,29 @@ console.log('── G12 全詞庫 BANNED_PATTERNS ──');
 ════════════════════════════════════════════════ */
 console.log('── G13 comicWorld 不跳世界 ──');
 {
-  const CONTAMINATION = {
-    chef:     ['氣象', '天氣', '颱風', '播報', '客服', '申訴', '待辦氣象台'],
-    weather:  ['食材', '備料', '主廚', '出菜', '廚房', '套餐', '客服', '申訴'],
-    helpdesk: ['食材', '備料', '主廚', '出菜', '廚房', '套餐', '氣象', '天氣', '颱風'],
+  // 可擴充 world 對照表
+  // allowed：此 world 的專屬詞彙（文件用，不做存在測試）
+  // banned ：此 world 的世界觀中不應出現的其他 world 詞彙（做污染測試）
+  // 預留擴充：baseball / theater / airport / corporate / nonsense
+  const WORLD_DEFS = {
+    chef: {
+      allowed: ['食材', '備料', '主廚', '出菜', '廚房', '菜單', '爐火', '評審', '稽查員', '外場'],
+      banned:  ['氣象', '天氣', '颱風', '播報', '待辦氣象台', '客服', '申訴'],
+    },
+    weather: {
+      allowed: ['氣象', '天氣', '颱風', '播報', '氣候', '降水', '降雨', '排水', '氣象局'],
+      banned:  ['食材', '備料', '主廚', '出菜', '廚房', '套餐', '客服', '申訴'],
+    },
+    helpdesk: {
+      allowed: ['客服', '申訴', '案件', '系統', '排號', '線路', '服務', '嗶'],
+      banned:  ['食材', '備料', '主廚', '出菜', '廚房', '套餐', '氣象', '天氣', '颱風'],
+    },
   };
 
   Object.entries(_CONTENT_DB).forEach(([poolKey, pool]) => {
     Object.entries(pool.worlds || {}).forEach(([worldKey, wd]) => {
-      const forbidden = CONTAMINATION[worldKey] || [];
+      const worldDef = WORLD_DEFS[worldKey];
+      const forbidden = worldDef ? worldDef.banned : [];
       if (forbidden.length === 0) return;
 
       const worldTexts = [
