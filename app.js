@@ -931,6 +931,7 @@ function emptyContext(){
   return {event:'',emotion:'',translation:'',need:'',wish:'',traits:[],filmTitle:'',story:{},songVersions:[],selectedSongVersion:'',imagePrompts:[],storyboard:[],shareCopy:{},shareCard:null,lastQuote:'',topic:'',comicWorld:null,truth:'',analogy:'',honest:'',boundary:'',comicExit:'',nextAction:'',resolutionWish:'',callback:'',targetCategory:'',situationCategory:''};
 }
 var flow={routeB:false,stepIndex:0,input:'',context:emptyContext()};
+var roastV2State={lastWorld:null,pendingGuidedInput:null};
 
 function saveDraft(){
   try{ localStorage.setItem(DRAFT_KEY,JSON.stringify({ts:Date.now(),context:flow.context,stepIndex:flow.stepIndex,input:flow.input,routeB:flow.routeB})); }catch(e){}
@@ -1636,10 +1637,34 @@ function renderInputArea(id,opts){
   var prefill=flow.routeB?getStepPrefill(id):(flow.input||'');
   var sharedInput='<div class="field-block"><label for="main-input">'+placeholder+'</label><textarea id="main-input" placeholder="'+placeholder+'">'+escapeHtml(prefill)+'</textarea></div>';
   if(id==='roast'){
+    roastV2State.pendingGuidedInput=null;
     var roastNotice='<div class="roast-notice" style="font-size:0.85em;color:#888;margin-top:0.5em;line-height:1.5;">小天鼠幫你把悶氣說清楚，不幫你霸凌、威脅或公開羞辱別人。分享前請拿掉姓名與私人資料。<button id="roast-rules-btn" class="link-btn" style="font-size:inherit;color:#aaa;background:none;border:none;cursor:pointer;padding:0 0 0 0.3em;">完整守則 ▾</button><div id="roast-rules-detail" style="display:none;margin-top:0.4em;">禁止生成：① 暴力體罰意圖 ② 威脅報復 ③ 公開電話地址等個資 ④ 號召霸凌羞辱 ⑤ 仇恨歧視內容。高風險輸入不生成、不扣額度，只記匿名分類。</div></div>';
-    els.inputArea.innerHTML=sharedInput+chipBlock('target-chip','對象',['老闆/主管','客戶','同事','孩子','爸媽/長輩','兄弟姊妹','另一半','朋友','其他'])+roastNotice;
+    var guidedWrap='<div id="v2-guided-wrap" style="margin:0.4em 0 0.1em;"><button type="button" id="btn-v2-guided" class="link-btn" style="font-size:0.88em;color:#999;">幫我開個頭 ▾</button><div id="v2-guided-panel" style="display:none;margin-top:0.4em;padding:0.6em 0.7em;background:#f8f8f8;border-radius:8px;"></div></div>';
+    els.inputArea.innerHTML=sharedInput+chipBlock('target-chip','對象',['老闆/主管','客戶','同事','孩子','爸媽/長輩','兄弟姊妹','另一半','朋友','其他'])+guidedWrap+roastNotice;
     var rulesBtn=els.inputArea.querySelector('#roast-rules-btn');
     if(rulesBtn) rulesBtn.addEventListener('click',function(){toggleRoastRules(rulesBtn);});
+    /* 幫我開個頭 toggle */
+    var gBtn=document.getElementById('btn-v2-guided');
+    var gPanel=document.getElementById('v2-guided-panel');
+    if(gBtn&&gPanel){
+      gBtn.addEventListener('click',function(){
+        var open=gPanel.style.display!=='none';
+        if(open){gPanel.style.display='none';gBtn.textContent='幫我開個頭 ▾';return;}
+        gPanel.style.display='block';gBtn.textContent='幫我開個頭 ▴';
+        buildAndBindGuidedPanel(gPanel);
+      });
+    }
+    /* 切換對象 chip 時同步重建 guided panel */
+    Array.prototype.forEach.call(
+      els.inputArea.querySelectorAll('[data-chip-group="target-chip"] .chip'),
+      function(chip){
+        chip.addEventListener('click',function(){
+          roastV2State.pendingGuidedInput=null;
+          var gp=document.getElementById('v2-guided-panel');
+          if(gp&&gp.style.display!=='none') setTimeout(function(){buildAndBindGuidedPanel(gp);},10);
+        });
+      }
+    );
   } else if(id==='bigdream'){
     els.inputArea.innerHTML=sharedInput+chipBlock('topic-chip','主題',['財富','健康','事業','旅行','品牌','影響力']);
   } else if(id==='lost'){
@@ -1725,21 +1750,40 @@ function runGenerate(id){
 function renderOutputFor(id,input){
   var data, html='';
   if(id==='roast'){
-    data=genRoast(input,getChipValue('target-chip'));
-    flow.context.event=input;
-    flow.context.targetCategory=data.targetCategory;
-    flow.context.situationCategory=data.situationCategory;
-    flow.context.matchType=data.matchType;
-    flow.context.comicWorld=data.comicWorld||null;
-    flow.context.truth=data.truth||'';
-    flow.context.analogy=data.analogy||'';
-    flow.context.honest=data.honest||'';
-    flow.context.boundary=data.boundary||'';
-    flow.context.comicExit=data.comicExit||'';
-    flow.context.nextAction=data.nextAction||'';
-    flow.context.resolutionWish=data.resolutionWish||'';
-    flow.context.callback=data.callback||'';
-    html=renderTextBlocks(data);
+    var _tLabel=getChipValue('target-chip')||'其他';
+    var v2r=runRoastV2(input,_tLabel,roastV2State.pendingGuidedInput);
+    if(v2r){
+      var _mv=v2r.roast.mouseOutput;
+      flow.context.event=input;
+      flow.context.targetCategory=v2r.classification.targetRole||_tLabel;
+      flow.context.situationCategory=v2r.evidence.layerKey||'general';
+      flow.context.matchType=v2r.evidence.layer||'general';
+      flow.context.comicWorld=_mv.comicWorld||null;
+      flow.context.truth=_mv.truth||'';
+      flow.context.analogy=_mv.analogy||'';
+      flow.context.honest=_mv.honest||'';
+      flow.context.boundary=_mv.boundary||'';
+      flow.context.comicExit=_mv.comicExit||'';
+      flow.context.callback=_mv.callback||'';
+      flow.context.nextAction='';flow.context.resolutionWish='';
+      html=renderRoastV2Block(v2r,input,_tLabel);
+    } else {
+      data=genRoast(input,_tLabel);
+      flow.context.event=input;
+      flow.context.targetCategory=data.targetCategory;
+      flow.context.situationCategory=data.situationCategory;
+      flow.context.matchType=data.matchType;
+      flow.context.comicWorld=data.comicWorld||null;
+      flow.context.truth=data.truth||'';
+      flow.context.analogy=data.analogy||'';
+      flow.context.honest=data.honest||'';
+      flow.context.boundary=data.boundary||'';
+      flow.context.comicExit=data.comicExit||'';
+      flow.context.nextAction=data.nextAction||'';
+      flow.context.resolutionWish=data.resolutionWish||'';
+      flow.context.callback=data.callback||'';
+      html=renderTextBlocks(data);
+    }
   } else if(id==='selfmock'){
     data=genSelfmock(input);
     flow.context.event=flow.context.event||input;
@@ -1782,6 +1826,7 @@ function renderOutputFor(id,input){
 }
 
 function bindResultActions(id){
+  if(id==='roast') bindRoastClarifyEvents();
   /* 複製（只複製內容文字，不含按鈕） */
   var copyBtn=document.getElementById('btn-copy-result');
   if(copyBtn){
@@ -2133,6 +2178,188 @@ function bindThemeVideos(){
         v.style.display='';
         v.load();
       },{once:true});
+    });
+  });
+}
+
+/* ---------------------------------------------------
+   Phase 5 嗆聲 V2 接線（只動嗆聲模式）
+   橋接：window.RoastEngineV2（roast-engine-v2.js，type=module，異步載入）
+   V1 genRoast 保留作 fallback
+--------------------------------------------------- */
+
+var ROAST_TARGET_TO_KEY={
+  '老闆/主管':'boss','客戶':'client','同事':'coworker','孩子':'child',
+  '爸媽/長輩':'parents','兄弟姊妹':'sibling','另一半':'partner',
+  '朋友':'friend','其他':'other'
+};
+
+function runRoastV2(input,targetLabel,guidedInput){
+  if(!window.RoastEngineV2) return null;
+  try{
+    var loi=guidedInput||targetLabel;
+    var r=window.RoastEngineV2.run(input,loi,roastV2State.lastWorld);
+    if(!r) return null;
+    roastV2State.lastWorld=r.roast.mouseOutput.comicWorld||null;
+    return r;
+  }catch(e){ return null; }
+}
+
+function renderRoastV2Block(result,input,targetLabel){
+  var m=result.roast.mouseOutput;
+  var t=result.roast.tigerOutput;
+  var tc='vent tag-rat';
+  var mouseSteps=[
+    ['🔥 你真正氣的是',m.truth],
+    ['🎭 幽默比喻版',m.analogy],
+    ['💬 不敢講的真心話',m.honest],
+    ['🧱 現實界線',m.boundary],
+    ['🪞 台階',m.selfOwn],
+    ['🚪 收尾',m.comicExit]
+  ];
+  var mouseHtml=mouseSteps.filter(function(s){return s[1];}).map(function(s){
+    return '<div class="result-card '+tc+'"><div class="who">'+s[0]+'</div><div class="body-text">'+escapeHtml(s[1])+'</div></div>';
+  }).join('');
+  var tigerSteps=[
+    ['🐯 唬爛虎：起手式',t.l1],
+    ['🔊 升溫',t.l2],
+    ['🎯 反差落地',t.landing]
+  ];
+  var tigerHtml=tigerSteps.filter(function(s){return s[1];}).map(function(s){
+    return '<div class="result-card '+tc+'"><div class="who">'+s[0]+'</div><div class="body-text">'+escapeHtml(s[1])+'</div></div>';
+  }).join('');
+  var clarifyHtml='';
+  if(result.clarifyOpts&&result.clarifyOpts.length>0){
+    clarifyHtml=renderRoastClarifyBlock(result.clarifyOpts[0],input,targetLabel);
+  }
+  return mouseHtml+tigerHtml+clarifyHtml;
+}
+
+var _clarifyHeadIdx=0;
+var V2_CLARIFY_HEADS=[
+  '我現在嗆得有點泛，給我一個靶心。',
+  '你補一句，我少亂猜一點，大家都平安。',
+  '要不要補一刀？選一下是哪種狀況。'
+];
+function renderRoastClarifyBlock(opt,input,targetLabel){
+  var head=V2_CLARIFY_HEADS[_clarifyHeadIdx%V2_CLARIFY_HEADS.length];
+  _clarifyHeadIdx++;
+  var preamble='<div class="result-card v2-clarify-block" id="v2-clarify-block">'
+    +'<div class="who">🎯 嗆準一點</div>'
+    +'<div class="body-text" style="margin-bottom:0.35em;">'+escapeHtml(head)+'</div>'
+    +'<div class="body-text" style="font-size:0.88em;color:#888;margin-bottom:0.5em;">'+escapeHtml(opt.prompt)+'</div>';
+  if(opt.type==='guided'&&opt.options&&opt.options.length){
+    var btnHtml=opt.options.map(function(o){
+      return '<button type="button" class="chip v2-clarify-opt" data-sit="'+escapeAttr(o.key)+'" data-inp="'+escapeAttr(input)+'" data-tgt="'+escapeAttr(targetLabel)+'">'+escapeHtml(o.label)+'</button>';
+    }).join('');
+    return preamble+'<div class="chip-row" style="flex-wrap:wrap;">'+btnHtml+'</div></div>';
+  }
+  return preamble
+    +'<div style="display:flex;gap:0.4em;">'
+    +'<input id="v2-clarify-inp" type="text" placeholder="補一句" style="flex:1;padding:0.38em 0.6em;border:1px solid #ddd;border-radius:6px;font-size:0.9em;" data-inp="'+escapeAttr(input)+'" data-tgt="'+escapeAttr(targetLabel)+'">'
+    +'<button type="button" class="btn-copy" id="v2-clarify-go">補一刀</button>'
+    +'</div></div>';
+}
+
+function bindRoastClarifyEvents(){
+  Array.prototype.forEach.call(
+    els.results.querySelectorAll('.v2-clarify-opt'),
+    function(btn){
+      btn.addEventListener('click',function(){
+        var sitKey=btn.dataset.sit;
+        var inp=btn.dataset.inp;
+        var tgt=btn.dataset.tgt;
+        var gi=window.RoastEngineV2?window.RoastEngineV2.buildGuidedInput(tgt,sitKey):null;
+        rerunRoastV2(inp,tgt,gi);
+      });
+    }
+  );
+  var ftBtn=document.getElementById('v2-clarify-go');
+  if(ftBtn){
+    var ftInp=document.getElementById('v2-clarify-inp');
+    ftBtn.addEventListener('click',function(){
+      var extra=ftInp?ftInp.value.trim():'';
+      var inp=ftInp?ftInp.dataset.inp:'';
+      var tgt=ftInp?ftInp.dataset.tgt:'其他';
+      if(!extra){if(ftInp)ftInp.focus();return;}
+      rerunRoastV2(inp+(extra?'；'+extra:''),tgt,null);
+    });
+  }
+}
+
+function rerunRoastV2(input,targetLabel,guidedInput){
+  var result=runRoastV2(input,targetLabel,guidedInput);
+  if(!result) return;
+  var m=result.roast.mouseOutput;
+  flow.context.event=input;
+  flow.context.comicWorld=m.comicWorld||null;
+  flow.context.truth=m.truth||'';
+  flow.context.analogy=m.analogy||'';
+  flow.context.honest=m.honest||'';
+  flow.context.boundary=m.boundary||'';
+  flow.context.comicExit=m.comicExit||'';
+  flow.context.callback=m.callback||'';
+  flow.context.targetCategory=result.classification.targetRole||targetLabel;
+  flow.context.situationCategory=result.evidence.layerKey||'general';
+  var isQuick=QUICK_MODES.indexOf('roast')!==-1&&!flow.routeB;
+  var actionHtml=actionRowHtml()
+    +(isQuick?'<button class="btn-primary btn-make-work" id="btn-make-work" style="margin-top:10px;">🎬 把這件事變成作品</button>':'')
+    +(flow.routeB?routeBNextHtml('roast'):'');
+  els.results.innerHTML=renderRoastV2Block(result,input,targetLabel)+actionHtml;
+  bindResultActions('roast');
+  saveDraft();
+}
+
+function buildAndBindGuidedPanel(panel){
+  var re=window.RoastEngineV2;
+  if(!re){panel.innerHTML='<div style="color:#aaa;font-size:0.85em;">引導模組載入中，請稍等…</div>';return;}
+  var targetLabel=getChipValue('target-chip');
+  var targetKey=targetLabel?ROAST_TARGET_TO_KEY[targetLabel]||'other':null;
+  var menu=re.GUIDED_MENU;
+  if(!targetKey||targetKey==='other'||!menu[targetKey]||!menu[targetKey].situations.length){
+    panel.innerHTML='<div style="color:#aaa;font-size:0.85em;">'
+      +(targetLabel?'「'+targetLabel+'」直接寫，小天鼠會判斷情境。':'請先選對象，再點「幫我開個頭」。')
+      +'</div>';
+    return;
+  }
+  var sits=menu[targetKey].situations;
+  var html='<div class="chip-row" id="v2-sit-chips" style="flex-wrap:wrap;">'
+    +sits.map(function(s){
+      return '<button type="button" class="chip v2-sit-btn" data-key="'+escapeAttr(s.key)+'" data-has-sub="'+(s.subSituations&&s.subSituations.length?'1':'0')+'">'+escapeHtml(s.label)+'</button>';
+    }).join('')+'</div>'
+    +'<div id="v2-sub-panel"></div>'
+    +'<div id="v2-guided-status" style="margin-top:0.4em;font-size:0.83em;color:#777;min-height:1.2em;"></div>';
+  panel.innerHTML=html;
+  Array.prototype.forEach.call(panel.querySelectorAll('.v2-sit-btn'),function(btn){
+    btn.addEventListener('click',function(){
+      Array.prototype.forEach.call(panel.querySelectorAll('.v2-sit-btn'),function(b){b.classList.remove('selected');});
+      btn.classList.add('selected');
+      var sitKey=btn.dataset.key;
+      var hasSub=btn.dataset.hasSub==='1';
+      var statusEl=panel.querySelector('#v2-guided-status');
+      var subPanel=panel.querySelector('#v2-sub-panel');
+      subPanel.innerHTML='';
+      if(hasSub){
+        var sit=null;
+        for(var i=0;i<sits.length;i++){if(sits[i].key===sitKey){sit=sits[i];break;}}
+        if(!sit||!sit.subSituations){return;}
+        var subHtml='<div class="chip-row" style="flex-wrap:wrap;margin-top:0.3em;">'
+          +sit.subSituations.map(function(sub){
+            return '<button type="button" class="chip v2-subsit-btn" data-parent="'+escapeAttr(sitKey)+'" data-key="'+escapeAttr(sub.key)+'">'+escapeHtml(sub.label)+'</button>';
+          }).join('')+'</div>';
+        subPanel.innerHTML=subHtml;
+        Array.prototype.forEach.call(subPanel.querySelectorAll('.v2-subsit-btn'),function(sbtn){
+          sbtn.addEventListener('click',function(){
+            Array.prototype.forEach.call(subPanel.querySelectorAll('.v2-subsit-btn'),function(b){b.classList.remove('selected');});
+            sbtn.classList.add('selected');
+            roastV2State.pendingGuidedInput=re.buildGuidedInput(targetLabel,sitKey,sbtn.dataset.key);
+            statusEl.textContent='已選：'+btn.textContent+' → '+sbtn.textContent+' ✓';
+          });
+        });
+      } else {
+        roastV2State.pendingGuidedInput=re.buildGuidedInput(targetLabel,sitKey);
+        statusEl.textContent='已選：'+btn.textContent+' ✓';
+      }
     });
   });
 }
