@@ -3,113 +3,261 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>笑鼠人了！方案碼管理台</title>
+<title>🐭 笑鼠後台</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#1a1a1a;font-size:14px}
-header{background:#1a1a2e;color:#fff;padding:14px 20px;display:flex;align-items:center;gap:10px}
-header h1{font-size:16px;font-weight:600}
-header .version{font-size:11px;opacity:.6;margin-left:auto}
-#auth-panel{max-width:480px;margin:60px auto;background:#fff;border-radius:12px;padding:32px;box-shadow:0 2px 16px rgba(0,0,0,.08)}
-#auth-panel h2{font-size:18px;margin-bottom:20px;color:#333}
-#main-panel{display:none;max-width:900px;margin:24px auto;padding:0 16px 40px}
-.field{margin-bottom:14px}
-label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px}
-input,select,textarea{width:100%;padding:8px 10px;border:1px solid #d0d0d0;border-radius:6px;font-size:13px;outline:none;background:#fff}
-input:focus,select:focus{border-color:#6c63ff}
-.btn{display:inline-block;padding:8px 18px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s}
-.btn-primary{background:#6c63ff;color:#fff}
-.btn-primary:hover{opacity:.88}
-.btn-danger{background:#e53e3e;color:#fff}
-.btn-danger:hover{opacity:.88}
-.btn-sm{padding:4px 10px;font-size:12px}
-.btn:disabled{opacity:.4;cursor:not-allowed}
-.card{background:#fff;border-radius:10px;padding:20px;box-shadow:0 1px 6px rgba(0,0,0,.07);margin-bottom:16px}
-.card h3{font-size:14px;font-weight:700;color:#333;margin-bottom:14px;border-bottom:1px solid #f0f0f0;padding-bottom:8px}
-.tabs{display:flex;gap:0;border-bottom:2px solid #e8e8e8;margin-bottom:18px}
-.tab{padding:9px 18px;cursor:pointer;font-size:13px;font-weight:600;color:#888;border-bottom:2px solid transparent;margin-bottom:-2px}
-.tab.active{color:#6c63ff;border-color:#6c63ff}
+:root{
+  --purple:#7c3aed;--purple-light:#ede9fe;--purple-mid:#ddd6fe;
+  --green:#059669;--green-light:#d1fae5;
+  --red:#dc2626;--red-light:#fee2e2;
+  --amber:#d97706;--amber-light:#fef3c7;
+  --sky:#0284c7;--sky-light:#e0f2fe;
+  --gray:#6b7280;--gray-light:#f3f4f6;
+  --border:#e5e7eb;--shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.06);
+  --radius:12px;--radius-sm:8px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans TC',sans-serif;
+  background:#f5f3ff;color:#1e1b4b;font-size:15px;line-height:1.5}
+
+/* ─── Header ─── */
+header{
+  background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);
+  color:#fff;padding:16px 24px;display:flex;align-items:center;gap:12px;
+  box-shadow:0 2px 12px rgba(79,70,229,.3);
+}
+header .logo{font-size:22px}
+header h1{font-size:17px;font-weight:700;letter-spacing:.01em}
+header .ver{font-size:11px;opacity:.6;margin-left:auto;font-family:monospace}
+
+/* ─── Login ─── */
+#auth-panel{
+  max-width:460px;margin:64px auto 0;padding:0 16px;
+}
+.login-card{
+  background:#fff;border-radius:20px;padding:36px 32px;
+  box-shadow:0 8px 32px rgba(79,70,229,.12);
+}
+.login-logo{text-align:center;font-size:48px;margin-bottom:4px}
+.login-title{text-align:center;font-size:20px;font-weight:700;color:#1e1b4b;margin-bottom:4px}
+.login-sub{text-align:center;font-size:13px;color:var(--gray);margin-bottom:28px}
+
+/* ─── Main Panel ─── */
+#main-panel{display:none;max-width:960px;margin:0 auto;padding:20px 16px 60px}
+
+/* ─── Tabs ─── */
+.tabs{
+  display:flex;gap:4px;background:#fff;border-radius:var(--radius);padding:6px;
+  box-shadow:var(--shadow);margin-bottom:20px;
+}
+.tab{
+  flex:1;padding:10px 8px;border:none;background:none;border-radius:var(--radius-sm);
+  font-size:14px;font-weight:600;color:var(--gray);cursor:pointer;transition:all .15s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.tab.active{background:var(--purple);color:#fff;box-shadow:0 2px 8px rgba(124,58,237,.35)}
 .tab-panel{display:none}.tab-panel.active{display:block}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th{background:#f7f7f9;padding:8px 10px;text-align:left;font-weight:600;color:#555;border-bottom:1px solid #e0e0e0}
-td{padding:8px 10px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
-tr:hover td{background:#fafafe}
-.badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:600}
-.badge-gift{background:#fef3c7;color:#92400e}
-.badge-student{background:#d1fae5;color:#065f46}
-.badge-custom{background:#ede9fe;color:#4c1d95}
-.badge-on{background:#dcfce7;color:#166534}
-.badge-off{background:#fee2e2;color:#991b1b}
-.badge-expired{background:#f3f4f6;color:#6b7280}
-.msg{padding:10px 14px;border-radius:6px;margin-bottom:12px;font-size:13px;display:none}
-.msg.ok{background:#d1fae5;color:#065f46;display:block}
-.msg.err{background:#fee2e2;color:#991b1b;display:block}
+
+/* ─── Cards ─── */
+.card{background:#fff;border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);margin-bottom:16px}
+.card-title{
+  font-size:15px;font-weight:700;color:#1e1b4b;
+  margin-bottom:16px;display:flex;align-items:center;gap:8px;
+}
+.card-title .icon{font-size:18px}
+.card-title .badge-count{
+  margin-left:auto;font-size:12px;font-weight:600;
+  background:var(--purple-light);color:var(--purple);
+  padding:2px 8px;border-radius:20px;
+}
+.section-divider{
+  border:none;border-top:1px solid var(--border);
+  margin:20px 0;
+}
+
+/* ─── Form ─── */
+.field{margin-bottom:14px}
+label{display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:5px;letter-spacing:.02em}
+input,select,textarea{
+  width:100%;padding:10px 12px;border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);font-size:14px;outline:none;
+  background:#fff;transition:border-color .15s;color:#1e1b4b;
+}
+input:focus,select:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
+select{cursor:pointer}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-#type-custom-fields{display:none}
-#type-gift-fields{display:none}
-#type-student-fields{display:none}
-.code-display{font-family:monospace;font-size:15px;font-weight:700;background:#f0eeff;padding:10px 14px;border-radius:6px;letter-spacing:.05em;color:#4c1d95;margin-top:10px;display:none}
-.member-box{background:#f9f9ff;border:1px solid #e0deff;border-radius:8px;padding:14px;margin-top:12px;display:none}
-.member-box .row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #ece9ff;font-size:12px}
-.member-box .row:last-child{border-bottom:none}
-.member-box .k{color:#666;font-weight:600}
-.member-box .v{color:#333;font-family:monospace;word-break:break-all}
+@media(max-width:600px){.row2,.row3{grid-template-columns:1fr}}
+
+/* ─── Buttons ─── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:10px 20px;border:none;border-radius:var(--radius-sm);
+  font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;
+  text-decoration:none;
+}
+.btn-primary{background:var(--purple);color:#fff}
+.btn-primary:hover{background:#6d28d9;transform:translateY(-1px);box-shadow:0 4px 12px rgba(124,58,237,.3)}
+.btn-success{background:var(--green);color:#fff}
+.btn-success:hover{background:#047857}
+.btn-danger{background:var(--red);color:#fff}
+.btn-danger:hover{background:#b91c1c}
+.btn-outline{background:#fff;color:var(--purple);border:1.5px solid var(--purple-mid)}
+.btn-outline:hover{background:var(--purple-light)}
+.btn-ghost{background:var(--gray-light);color:#374151}
+.btn-ghost:hover{background:#e5e7eb}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-block{width:100%;padding:12px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none !important;box-shadow:none !important}
+
+/* ─── Alerts / Messages ─── */
+.msg{
+  padding:10px 14px;border-radius:var(--radius-sm);
+  margin-bottom:12px;font-size:13px;font-weight:600;display:none;
+}
+.msg.ok{background:var(--green-light);color:#065f46;display:block;border-left:3px solid var(--green)}
+.msg.err{background:var(--red-light);color:#991b1b;display:block;border-left:3px solid var(--red)}
+.msg.info{background:var(--purple-light);color:#4c1d95;display:block;border-left:3px solid var(--purple)}
+.alert-box{
+  padding:12px 14px;border-radius:var(--radius-sm);
+  font-size:13px;font-weight:600;margin-bottom:16px;
+}
+.alert-warning{background:var(--amber-light);color:#78350f;border-left:3px solid var(--amber)}
+
+/* ─── Code Display ─── */
+.code-box{
+  display:none;margin-top:16px;background:linear-gradient(135deg,#f5f3ff,#ede9fe);
+  border:2px solid var(--purple-mid);border-radius:var(--radius);padding:16px 20px;
+}
+.code-box .code-label{font-size:11px;font-weight:700;color:var(--purple);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.code-box .code-value{
+  font-family:monospace;font-size:22px;font-weight:800;
+  color:#3730a3;letter-spacing:.08em;margin-bottom:10px;word-break:break-all;
+}
+.code-box .code-meta{font-size:12px;color:var(--gray);margin-bottom:10px;line-height:1.7}
+.copy-btn{
+  background:#fff;color:var(--purple);border:1.5px solid var(--purple-mid);
+  border-radius:6px;padding:6px 14px;font-size:13px;font-weight:700;
+  cursor:pointer;transition:all .15s;
+}
+.copy-btn:hover{background:var(--purple);color:#fff}
+.copy-btn.copied{background:var(--green);color:#fff;border-color:var(--green)}
+
+/* ─── Table ─── */
+.table-wrap{overflow-x:auto;margin:-4px}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:600px}
+th{
+  background:var(--gray-light);padding:10px 12px;text-align:left;
+  font-size:12px;font-weight:700;color:#374151;letter-spacing:.04em;
+  border-bottom:2px solid var(--border);white-space:nowrap;
+}
+td{padding:10px 12px;border-bottom:1px solid #f3f4f6;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#faf5ff}
+.td-code{font-family:monospace;font-size:12px;font-weight:700;color:#3730a3}
+.td-muted{color:var(--gray);font-size:12px}
+
+/* ─── Badges ─── */
+.badge{
+  display:inline-block;padding:3px 9px;border-radius:20px;
+  font-size:11px;font-weight:700;white-space:nowrap;
+}
+.badge-gift{background:#fef3c7;color:#92400e}
+.badge-student{background:var(--green-light);color:#065f46}
+.badge-custom{background:var(--purple-light);color:#4c1d95}
+.badge-free{background:var(--gray-light);color:#374151}
+.badge-on{background:var(--green-light);color:#065f46}
+.badge-off{background:var(--red-light);color:#991b1b}
+.badge-expired{background:var(--gray-light);color:var(--gray)}
+
+/* ─── Member Box ─── */
+.member-box{
+  background:#faf5ff;border:1.5px solid var(--purple-mid);
+  border-radius:var(--radius);padding:16px;margin-top:14px;display:none;
+}
+.member-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.member-item{padding:8px 10px;background:#fff;border-radius:8px;border:1px solid var(--purple-mid)}
+.member-item .mk{font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.member-item .mv{font-size:13px;color:#1e1b4b;font-family:monospace;word-break:break-all}
+
+/* ─── Quick Stats ─── */
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.stat-card{
+  background:#fff;border-radius:10px;padding:14px 16px;
+  box-shadow:0 1px 4px rgba(0,0,0,.06);text-align:center;
+}
+.stat-card .sv{font-size:24px;font-weight:800;color:var(--purple)}
+.stat-card .sl{font-size:11px;color:var(--gray);font-weight:600;margin-top:2px}
+
+/* ─── Empty state ─── */
+.empty{padding:32px 20px;text-align:center;color:var(--gray)}
+.empty .eicon{font-size:32px;margin-bottom:8px}
+.empty .etxt{font-size:14px}
 </style>
 </head>
 <body>
 <header>
-  <h1>笑鼠人了！方案碼管理台</h1>
-  <span class="version">quota.gs v3</span>
+  <span class="logo">🐭</span>
+  <h1>笑鼠後台</h1>
+  <span class="ver">quota.gs v3</span>
 </header>
 
-<!-- 登入區塊 -->
+<!-- ════ 登入 ════ -->
 <div id="auth-panel">
-  <h2>管理員登入</h2>
-  <div class="field">
-    <label>GAS API URL（與 index.html 第 22 行 GAS_API_URL 相同）</label>
-    <input type="text" id="gas-url" value="https://script.google.com/macros/s/AKfycbzFkewVnwkmxQfHQACgjbrm0c6b4pj-tnhjEApqHDGZkanwAmQkqObV0bAMxFBNAV-E/exec" placeholder="GAS 部署網址">
-    <small style="color:#999;font-size:11px">⚠️ 若重新部署 GAS，需同步更新此欄位預設值與 index.html 第 22 行</small>
+  <div class="login-card">
+    <div class="login-logo">🐭</div>
+    <div class="login-title">笑鼠後台登入</div>
+    <div class="login-sub">方案碼管理 · 會員點數 · 兌換查詢</div>
+
+    <div class="field">
+      <label>GAS API URL</label>
+      <input type="text" id="gas-url"
+        value="https://script.google.com/macros/s/AKfycbzFkewVnwkmxQfHQACgjbrm0c6b4pj-tnhjEApqHDGZkanwAmQkqObV0bAMxFBNAV-E/exec"
+        placeholder="GAS 部署網址">
+      <div style="font-size:11px;color:var(--gray);margin-top:4px">⚠️ 重新部署 GAS 後需同步更新此欄位</div>
+    </div>
+    <div class="field">
+      <label>管理員金鑰</label>
+      <input type="password" id="admin-key" placeholder="ADMIN_KEY">
+    </div>
+    <div class="msg" id="auth-msg"></div>
+    <button class="btn btn-primary btn-block" onclick="doLogin()">登入 →</button>
   </div>
-  <div class="field">
-    <label>管理員金鑰 (Script Properties: ADMIN_KEY)</label>
-    <input type="password" id="admin-key" placeholder="輸入管理員金鑰">
-  </div>
-  <div class="msg" id="auth-msg"></div>
-  <button class="btn btn-primary" onclick="doLogin()" style="width:100%;margin-top:4px">登入驗證</button>
 </div>
 
-<!-- 主面板 -->
+<!-- ════ 主面板 ════ -->
 <div id="main-panel">
+
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('codes')">方案碼管理</div>
-    <div class="tab" onclick="switchTab('members')">會員查詢</div>
-    <div class="tab" onclick="switchTab('tools')">工具</div>
+    <button class="tab active" onclick="switchTab('codes')">🎫 發碼管理</button>
+    <button class="tab" onclick="switchTab('members')">👤 會員點數</button>
+    <button class="tab" onclick="switchTab('tools')">🔧 系統工具</button>
   </div>
 
-  <!-- 方案碼管理 -->
+  <!-- ── Tab 1：發碼管理 ── -->
   <div id="tab-codes" class="tab-panel active">
+
+    <!-- 建立新方案碼 -->
     <div class="card">
-      <h3>產生新方案碼</h3>
+      <div class="card-title"><span class="icon">🎫</span>建立新方案碼</div>
+
       <div class="field">
-        <label>類型</label>
+        <label>選擇類型</label>
         <select id="code-type" onchange="onTypeChange()">
-          <option value="custom">自訂方案（TEST-* / GROUP-* 等）</option>
-          <option value="gift">贈送工坊次數（HAPPY-*）</option>
-          <option value="student">學員方案（LEARN-*）</option>
+          <option value="custom">🧪 測試 / 活動用（TEST-* 或 GROUP-*）— 自訂每日次數</option>
+          <option value="student">📚 學員方案（LEARN-*）— 升為學員方案 N 天</option>
+          <option value="gift">🎁 工坊贈送碼（HAPPY-*）— 直接增加工坊點數</option>
         </select>
       </div>
 
-      <!-- custom 欄位 -->
       <div id="type-custom-fields">
         <div class="row2">
           <div class="field">
             <label>前綴（TEST 或 GROUP）</label>
-            <input type="text" id="c-prefix" value="TEST" placeholder="TEST">
+            <input type="text" id="c-prefix" value="TEST">
           </div>
           <div class="field">
-            <label>備註</label>
-            <input type="text" id="c-note" placeholder="例：2026暑假測試">
+            <label>備註（給自己看）</label>
+            <input type="text" id="c-note" placeholder="例：2026暑假測試碼">
           </div>
         </div>
         <div class="row3">
@@ -128,49 +276,24 @@ tr:hover td{background:#fafafe}
         </div>
         <div class="row2">
           <div class="field">
-            <label>方案有效天數</label>
+            <label>有效天數</label>
             <input type="number" id="c-days" value="30" min="1">
           </div>
           <div class="field">
-            <label>最多兌換人數</label>
+            <label>最多幾人可用</label>
             <input type="number" id="c-maxppl" value="1" min="1">
           </div>
         </div>
       </div>
 
-      <!-- gift 欄位 -->
-      <div id="type-gift-fields">
+      <div id="type-student-fields" style="display:none">
         <div class="row2">
           <div class="field">
-            <label>贈送工坊次數</label>
-            <input type="number" id="g-value" value="3" min="1">
-          </div>
-          <div class="field">
-            <label>方案碼有效天數</label>
-            <input type="number" id="g-days" value="90" min="1">
-          </div>
-        </div>
-        <div class="row2">
-          <div class="field">
-            <label>最多兌換人數</label>
-            <input type="number" id="g-maxppl" value="1" min="1">
-          </div>
-          <div class="field">
-            <label>備註</label>
-            <input type="text" id="g-note" placeholder="例：贈送給王小明">
-          </div>
-        </div>
-      </div>
-
-      <!-- student 欄位 -->
-      <div id="type-student-fields">
-        <div class="row2">
-          <div class="field">
-            <label>有效天數</label>
+            <label>學員方案天數</label>
             <input type="number" id="s-days" value="30" min="1">
           </div>
           <div class="field">
-            <label>最多啟用人數</label>
+            <label>最多幾人可用</label>
             <input type="number" id="s-maxppl" value="30" min="1">
           </div>
         </div>
@@ -180,29 +303,65 @@ tr:hover td{background:#fafafe}
         </div>
       </div>
 
+      <div id="type-gift-fields" style="display:none">
+        <div class="row2">
+          <div class="field">
+            <label>贈送工坊次數</label>
+            <input type="number" id="g-value" value="3" min="1">
+          </div>
+          <div class="field">
+            <label>兌換碼有效天數</label>
+            <input type="number" id="g-days" value="90" min="1">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>最多幾人可用</label>
+            <input type="number" id="g-maxppl" value="1" min="1">
+          </div>
+          <div class="field">
+            <label>備註</label>
+            <input type="text" id="g-note" placeholder="例：贈給王小明">
+          </div>
+        </div>
+      </div>
+
       <div class="msg" id="create-msg"></div>
-      <button class="btn btn-primary" onclick="createCode()" id="create-btn">產生方案碼</button>
-      <div class="code-display" id="code-result"></div>
+      <button class="btn btn-primary" onclick="createCode()" id="create-btn">✨ 產生方案碼</button>
+
+      <!-- 產生結果 -->
+      <div class="code-box" id="code-result">
+        <div class="code-label">✅ 方案碼已產生，複製後發給對方</div>
+        <div class="code-value" id="code-val"></div>
+        <div class="code-meta" id="code-meta"></div>
+        <button class="copy-btn" id="copy-btn" onclick="copyCode()">📋 複製方案碼</button>
+      </div>
     </div>
 
+    <!-- 現有方案碼列表 -->
     <div class="card">
-      <h3>全部方案碼 <button class="btn btn-sm btn-primary" onclick="loadCodes()" style="float:right">重新整理</button></h3>
-      <div id="codes-table-wrap">
+      <div class="card-title">
+        <span class="icon">📋</span>現有方案碼
+        <button class="btn btn-ghost btn-sm" onclick="loadCodes()" style="margin-left:auto">重新整理</button>
+      </div>
+      <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>方案碼</th><th>類型</th><th>每日限額 Q/J/W</th>
-            <th>方案天</th><th>兌換</th><th>到期</th><th>備註</th><th>操作</th>
+            <th>方案碼</th><th>類型</th><th>每日 Q/J/W</th>
+            <th>天數</th><th>兌換人數</th><th>到期日</th><th>備註</th><th>操作</th>
           </tr></thead>
-          <tbody id="codes-tbody"><tr><td colspan="8" style="color:#aaa;text-align:center;padding:20px">點「重新整理」載入資料</td></tr></tbody>
+          <tbody id="codes-tbody">
+            <tr><td colspan="8"><div class="empty"><div class="eicon">📋</div><div class="etxt">點「重新整理」載入</div></div></td></tr>
+          </tbody>
         </table>
       </div>
     </div>
 
+    <!-- 查誰兌換 -->
     <div class="card">
-      <h3>查兌換碼使用紀錄</h3>
-      <p style="font-size:12px;color:#888;margin-bottom:10px">輸入方案碼，查看哪些人兌換過、兌換時間。也可點上方表格的「查誰兌換」快速帶入。</p>
-      <div style="display:flex;gap:10px;margin-bottom:6px">
-        <input type="text" id="lookup-code" placeholder="例：LEARN-A4R3-K9FZ 或 HAPPY-XXXX-XXXX" style="flex:1">
+      <div class="card-title"><span class="icon">🔍</span>查誰兌換了這個碼</div>
+      <div style="display:flex;gap:10px;margin-bottom:10px">
+        <input type="text" id="lookup-code" placeholder="貼上方案碼，例：LEARN-A4R3-K9FZ" style="flex:1">
         <button class="btn btn-primary" onclick="lookupCodeRedemptions()">查詢</button>
       </div>
       <div class="msg" id="lookup-msg"></div>
@@ -210,92 +369,98 @@ tr:hover td{background:#fafafe}
     </div>
   </div>
 
-  <!-- 會員查詢 -->
+  <!-- ── Tab 2：會員點數 ── -->
   <div id="tab-members" class="tab-panel">
+
+    <!-- 查詢會員 -->
     <div class="card">
-      <h3>查詢會員</h3>
+      <div class="card-title"><span class="icon">🔍</span>查詢會員狀態</div>
       <div style="display:flex;gap:10px">
-        <input type="text" id="search-userid" placeholder="輸入 userId（LINE UID 或其他）" style="flex:1">
+        <input type="text" id="search-userid" placeholder="輸入 userId（LINE UID）" style="flex:1">
         <button class="btn btn-primary" onclick="searchMember()">查詢</button>
       </div>
       <div class="msg" id="member-msg"></div>
       <div class="member-box" id="member-box"></div>
-
-      <div style="margin-top:18px;border-top:1px solid #f0f0f0;padding-top:16px">
-        <h3 style="margin-bottom:6px">直接贈送工坊點數</h3>
-        <p style="font-size:12px;color:#e07000;background:#fff8ee;border-radius:6px;padding:6px 10px;margin-bottom:12px">⚠️ 此功能只增加工坊模式（Workshop）的 bonus 次數，不影響快速/旅程每日額度。不需對方輸入兌換碼，直接入帳。</p>
-        <div class="row3">
-          <div class="field">
-            <label>userId</label>
-            <input type="text" id="grant-userid" placeholder="和上方查詢同步填入">
-          </div>
-          <div class="field">
-            <label>贈送工坊點數（次）</label>
-            <input type="number" id="grant-amount" value="1" min="1">
-          </div>
-          <div class="field">
-            <label>備註</label>
-            <input type="text" id="grant-note" placeholder="原因">
-          </div>
-        </div>
-        <div class="msg" id="grant-msg"></div>
-        <button class="btn btn-primary" onclick="grantBonus()">確認贈送</button>
-      </div>
     </div>
 
+    <!-- 直接送工坊點數 -->
     <div class="card">
-      <h3>會員列表（最多 50 筆）<button class="btn btn-sm btn-primary" onclick="loadMembers()" style="float:right">載入</button></h3>
-      <div id="members-table-wrap">
+      <div class="card-title"><span class="icon">🎁</span>直接送工坊點數給特定會員</div>
+      <div class="alert-box alert-warning">⚠️ 只增加工坊模式 bonus，不影響快速/旅程每日額度。不需對方輸入碼，直接入帳。</div>
+      <div class="row3">
+        <div class="field">
+          <label>userId（查詢後自動填入）</label>
+          <input type="text" id="grant-userid" placeholder="U開頭的LINE UID">
+        </div>
+        <div class="field">
+          <label>贈送工坊點數（次）</label>
+          <input type="number" id="grant-amount" value="1" min="1">
+        </div>
+        <div class="field">
+          <label>備註原因</label>
+          <input type="text" id="grant-note" placeholder="例：課程補贈">
+        </div>
+      </div>
+      <div class="msg" id="grant-msg"></div>
+      <button class="btn btn-success" onclick="grantBonus()">🎁 確認送出點數</button>
+    </div>
+
+    <!-- 會員列表 -->
+    <div class="card">
+      <div class="card-title">
+        <span class="icon">👥</span>會員列表
+        <button class="btn btn-ghost btn-sm" onclick="loadMembers()" style="margin-left:auto">載入最新</button>
+      </div>
+      <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>userId</th><th>方案</th><th>到期</th><th>剩餘bonus</th>
+            <th>userId</th><th>方案</th><th>到期</th><th>工坊bonus</th>
             <th>今日快速</th><th>今日旅程</th><th>今日工坊</th><th>最後使用</th>
           </tr></thead>
-          <tbody id="members-tbody"><tr><td colspan="8" style="color:#aaa;text-align:center;padding:20px">點「載入」</td></tr></tbody>
+          <tbody id="members-tbody">
+            <tr><td colspan="8"><div class="empty"><div class="eicon">👥</div><div class="etxt">點「載入最新」</div></div></td></tr>
+          </tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- 工具 -->
+  <!-- ── Tab 3：系統工具 ── -->
   <div id="tab-tools" class="tab-panel">
     <div class="card">
-      <h3>Schema 遷移</h3>
-      <p style="color:#666;font-size:12px;margin-bottom:14px">
-        在 21_會員資料 補齊新欄位（customDailyQuick / Journey / Workshop）。<br>
-        已有此欄位的 Sheet 不受影響，舊資料不會被覆寫。
-      </p>
+      <div class="card-title"><span class="icon">🔧</span>Schema 遷移</div>
+      <p style="color:var(--gray);font-size:13px;margin-bottom:16px">在 21_會員資料 自動補齊新欄位。已有欄位的不動，舊資料不被覆蓋。</p>
       <div class="msg" id="migrate-msg"></div>
-      <button class="btn btn-primary" onclick="migrateSchema()">執行 Schema 遷移</button>
+      <button class="btn btn-outline" onclick="migrateSchema()">執行 Schema 遷移</button>
     </div>
 
     <div class="card">
-      <h3>停用方案碼</h3>
+      <div class="card-title"><span class="icon">🚫</span>停用方案碼</div>
       <div style="display:flex;gap:10px">
-        <input type="text" id="disable-code" placeholder="輸入完整方案碼" style="flex:1">
+        <input type="text" id="disable-code" placeholder="貼上完整方案碼" style="flex:1">
         <button class="btn btn-danger" onclick="disableCode()">停用</button>
       </div>
       <div class="msg" id="disable-msg"></div>
     </div>
   </div>
-</div>
+
+</div><!-- end main-panel -->
 
 <script>
 var API_URL = '';
 var ADMIN_KEY = '';
+var _lastCode = '';
 
 function showMsg(id, text, isErr) {
   var el = document.getElementById(id);
+  if (!text) { el.style.display = 'none'; return; }
   el.textContent = text;
   el.className = 'msg ' + (isErr ? 'err' : 'ok');
 }
 
 async function callApi(action, extra) {
   var body = Object.assign({ action: action, adminKey: ADMIN_KEY }, extra || {});
-  var res = await fetch(API_URL, {
-    method: 'POST',
-    body: JSON.stringify(body)
-  });
+  var res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(body) });
   return res.json();
 }
 
@@ -336,22 +501,22 @@ async function createCode() {
   var type = document.getElementById('code-type').value;
   var opts = { type: type };
   if (type === 'custom') {
-    opts.prefix       = document.getElementById('c-prefix').value.trim() || 'TEST';
-    opts.dailyQuick   = parseInt(document.getElementById('c-quick').value,10);
-    opts.dailyJourney = parseInt(document.getElementById('c-journey').value,10);
-    opts.dailyWorkshop= parseInt(document.getElementById('c-workshop').value,10);
-    opts.planDays     = parseInt(document.getElementById('c-days').value,10);
-    opts.maxRedemptions = parseInt(document.getElementById('c-maxppl').value,10);
-    opts.note         = document.getElementById('c-note').value.trim();
+    opts.prefix        = document.getElementById('c-prefix').value.trim() || 'TEST';
+    opts.dailyQuick    = parseInt(document.getElementById('c-quick').value,10);
+    opts.dailyJourney  = parseInt(document.getElementById('c-journey').value,10);
+    opts.dailyWorkshop = parseInt(document.getElementById('c-workshop').value,10);
+    opts.planDays      = parseInt(document.getElementById('c-days').value,10);
+    opts.maxRedemptions= parseInt(document.getElementById('c-maxppl').value,10);
+    opts.note          = document.getElementById('c-note').value.trim();
   } else if (type === 'gift') {
-    opts.value        = parseInt(document.getElementById('g-value').value,10);
-    opts.expiryDays   = parseInt(document.getElementById('g-days').value,10);
-    opts.maxRedemptions = parseInt(document.getElementById('g-maxppl').value,10);
-    opts.note         = document.getElementById('g-note').value.trim();
+    opts.value         = parseInt(document.getElementById('g-value').value,10);
+    opts.expiryDays    = parseInt(document.getElementById('g-days').value,10);
+    opts.maxRedemptions= parseInt(document.getElementById('g-maxppl').value,10);
+    opts.note          = document.getElementById('g-note').value.trim();
   } else {
-    opts.planDays     = parseInt(document.getElementById('s-days').value,10);
-    opts.maxRedemptions = parseInt(document.getElementById('s-maxppl').value,10);
-    opts.note         = document.getElementById('s-note').value.trim();
+    opts.planDays      = parseInt(document.getElementById('s-days').value,10);
+    opts.maxRedemptions= parseInt(document.getElementById('s-maxppl').value,10);
+    opts.note          = document.getElementById('s-note').value.trim();
   }
   var btn = document.getElementById('create-btn');
   btn.disabled = true;
@@ -359,19 +524,34 @@ async function createCode() {
   try {
     var r = await callApi('adminCreateCode', opts);
     if (!r.ok) { showMsg('create-msg', r.message || '失敗', true); btn.disabled=false; return; }
-    showMsg('create-msg','產生成功！', false);
-    var disp = document.getElementById('code-result');
-    var info = r.code;
-    if (r.expiresAt) info += '\n到期：' + r.expiresAt.slice(0,10);
-    if (type==='custom') info += '\n每日 Q:'+opts.dailyQuick+' J:'+opts.dailyJourney+' W:'+opts.dailyWorkshop;
-    if (type==='gift')   info += '\n贈送工坊次數：' + opts.value;
-    disp.textContent = info;
-    disp.style.display = 'block';
+    showMsg('create-msg','', false);
+    _lastCode = r.code;
+    document.getElementById('code-val').textContent = r.code;
+    var meta = [];
+    if (r.expiresAt) meta.push('到期：' + r.expiresAt.slice(0,10));
+    if (type==='custom') meta.push('每日 快速×'+opts.dailyQuick+'　旅程×'+opts.dailyJourney+'　工坊×'+opts.dailyWorkshop+'　有效 '+opts.planDays+' 天　最多 '+opts.maxRedemptions+' 人');
+    if (type==='student') meta.push('學員方案 '+opts.planDays+' 天　最多 '+opts.maxRedemptions+' 人');
+    if (type==='gift') meta.push('贈送工坊次數 '+opts.value+' 次　最多 '+opts.maxRedemptions+' 人');
+    document.getElementById('code-meta').textContent = meta.join('\n');
+    var copyBtn = document.getElementById('copy-btn');
+    copyBtn.textContent = '📋 複製方案碼';
+    copyBtn.className = 'copy-btn';
+    document.getElementById('code-result').style.display = 'block';
     loadCodes();
   } catch(e) {
     showMsg('create-msg', '連線失敗：'+e.message, true);
   }
   btn.disabled = false;
+}
+
+function copyCode() {
+  if (!_lastCode) return;
+  navigator.clipboard.writeText(_lastCode).then(function(){
+    var btn = document.getElementById('copy-btn');
+    btn.textContent = '✅ 已複製！';
+    btn.className = 'copy-btn copied';
+    setTimeout(function(){ btn.textContent='📋 複製方案碼'; btn.className='copy-btn'; }, 2000);
+  });
 }
 
 async function loadCodes() {
@@ -382,36 +562,35 @@ async function loadCodes() {
 function renderCodesTable(codes) {
   var tb = document.getElementById('codes-tbody');
   if (!codes.length) {
-    tb.innerHTML = '<tr><td colspan="8" style="color:#aaa;text-align:center;padding:20px">尚無方案碼</td></tr>';
+    tb.innerHTML = '<tr><td colspan="8"><div class="empty"><div class="eicon">🎫</div><div class="etxt">尚無方案碼</div></div></td></tr>';
     return;
   }
-  var TYPE_LABELS = { gift: '工坊贈送', student: '學員方案', custom: '自訂方案' };
+  var TYPE_LABELS = { gift:'🎁 工坊贈送', student:'📚 學員方案', custom:'🧪 自訂方案' };
   tb.innerHTML = codes.map(function(c) {
     var typeLabel = TYPE_LABELS[c.type] || c.type;
     var typeBadge = '<span class="badge badge-'+c.type+'">'+typeLabel+'</span>';
     var statusBadge = c.expired ? '<span class="badge badge-expired">已過期</span>'
-                    : c.enabled ? '<span class="badge badge-on">啟用</span>'
-                    : '<span class="badge badge-off">已停用</span>';
+                    : c.enabled ? '<span class="badge badge-on">✓ 啟用</span>'
+                    : '<span class="badge badge-off">✗ 停用</span>';
     var limits = c.type==='custom' ? (c.dailyQuick+'/'+c.dailyJourney+'/'+c.dailyWorkshop) : '—';
-    var disableBtn = (c.enabled && !c.expired)
-      ? '<button class="btn btn-sm btn-danger" onclick="quickDisable(\''+c.code+'\')" style="margin-right:4px">停用</button>'
-      : '';
-    var lookupBtn = '<button class="btn btn-sm btn-primary" onclick="lookupCode(\''+c.code+'\')">查誰兌換</button>';
+    var ops = '';
+    if (c.enabled && !c.expired) ops += '<button class="btn btn-danger btn-sm" onclick="quickDisable(\''+c.code+'\')" style="margin-right:4px">停用</button>';
+    ops += '<button class="btn btn-outline btn-sm" onclick="lookupCode(\''+c.code+'\')">🔍 查誰兌換</button>';
     return '<tr>'
-      +'<td><code style="font-size:11px">'+c.code+'</code></td>'
+      +'<td class="td-code">'+c.code+'</td>'
       +'<td>'+typeBadge+'</td>'
-      +'<td>'+limits+'</td>'
-      +'<td>'+(c.planDays||'—')+'天</td>'
-      +'<td>'+(c.redeemedCount||0)+'/'+(c.maxRedemptions||1)+'</td>'
-      +'<td>'+(c.expiresAt||'—')+' '+statusBadge+'</td>'
-      +'<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(c.note||'')+'</td>'
-      +'<td>'+disableBtn+lookupBtn+'</td>'
+      +'<td class="td-muted">'+limits+'</td>'
+      +'<td class="td-muted">'+(c.planDays||'—')+'天</td>'
+      +'<td style="font-weight:700;color:'+(c.redeemedCount>0?'var(--green)':'var(--gray)')+'">'+( c.redeemedCount||0)+'<span style="color:var(--gray);font-weight:400"> / '+(c.maxRedemptions||1)+'</span></td>'
+      +'<td>'+statusBadge+'<br><span class="td-muted" style="font-size:11px">'+(c.expiresAt||'')+'</span></td>'
+      +'<td class="td-muted" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(c.note||'')+'</td>'
+      +'<td style="white-space:nowrap">'+ops+'</td>'
       +'</tr>';
   }).join('');
 }
 
 async function quickDisable(code) {
-  if (!confirm('停用 '+code+' ？')) return;
+  if (!confirm('停用 '+code+' ？\n停用後無法再兌換。')) return;
   var r = await callApi('adminDisableCode', { code: code });
   if (r.ok) loadCodes();
   else alert(r.message);
@@ -429,25 +608,24 @@ async function searchMember() {
   }
   var m = r.member;
   var planExpired = m.planEndAt && new Date(m.planEndAt) < new Date();
-  box.innerHTML = [
-    ['userId',              m.userId],
-    ['方案',                m.planType + (planExpired ? ' (已過期)' : '')],
-    ['到期日',              m.planEndAt ? String(m.planEndAt).slice(0,10) : '—'],
-    ['bonus 餘額',          m.bonusBalance || 0],
-    ['今日快速已用',        m.dailyQuickUsed || 0],
-    ['今日旅程已用',        m.dailyJourneyUsed || 0],
-    ['今日工坊已用',        m.dailyWorkshopUsed || 0],
-    ['自訂快速上限',        m.customDailyQuick || '—'],
-    ['自訂旅程上限',        m.customDailyJourney || '—'],
-    ['自訂工坊上限',        m.customDailyWorkshop || '—'],
-    ['最後使用日期',        m.lastUsageDate || '—'],
-    ['建立時間',            m.createdAt ? String(m.createdAt).slice(0,10) : '—']
-  ].map(function(r){
-    return '<div class="row"><span class="k">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';
-  }).join('');
+  var fields = [
+    ['userId', m.userId],
+    ['方案', (m.planType||'free') + (planExpired?' ⚠️已過期':'')],
+    ['到期日', m.planEndAt ? String(m.planEndAt).slice(0,10) : '—'],
+    ['工坊 bonus', (m.bonusBalance||0)+' 次'],
+    ['今日快速已用', m.dailyQuickUsed||0],
+    ['今日旅程已用', m.dailyJourneyUsed||0],
+    ['今日工坊已用', m.dailyWorkshopUsed||0],
+    ['最後使用', m.lastUsageDate||'—'],
+    ['建立時間', m.createdAt ? String(m.createdAt).slice(0,10) : '—']
+  ];
+  box.innerHTML = '<div class="member-grid">'
+    + fields.map(function(f){
+        return '<div class="member-item"><div class="mk">'+f[0]+'</div><div class="mv">'+f[1]+'</div></div>';
+      }).join('')
+    + '</div>';
   box.style.display = 'block';
   showMsg('member-msg','', false);
-  document.getElementById('member-msg').style.display = 'none';
 }
 
 async function grantBonus() {
@@ -455,34 +633,34 @@ async function grantBonus() {
   var amount = parseInt(document.getElementById('grant-amount').value, 10);
   var note   = document.getElementById('grant-note').value.trim();
   if (!uid || !amount || amount <= 0) { showMsg('grant-msg','請填入 userId 與次數',true); return; }
-  var confirmMsg = '確認贈送工坊點數？'
+  var confirmMsg = '確認送出工坊點數？'
     + '\n\nuseId：' + uid
-    + '\n增加工坊點數：' + amount + ' 次'
+    + '\n贈送：' + amount + ' 次工坊點數'
     + '\n備註：' + (note || '（無）')
-    + '\n\n⚠️ 此為工坊 bonus，不影響快速/旅程額度';
+    + '\n\n⚠️ 只增加工坊 bonus，不影響快速/旅程額度';
   if (!confirm(confirmMsg)) return;
   var r = await callApi('adminGrantBonus', { userId: uid, amount: amount, note: note });
-  showMsg('grant-msg', r.message || (r.ok ? '成功' : '失敗'), !r.ok);
+  showMsg('grant-msg', r.message || (r.ok ? '✅ 成功送出' : '失敗'), !r.ok);
 }
 
 async function loadMembers() {
   var r = await callApi('adminListMembers', { limit: 50 });
   var tb = document.getElementById('members-tbody');
   if (!r.ok || !r.members || !r.members.length) {
-    tb.innerHTML = '<tr><td colspan="8" style="color:#aaa;text-align:center;padding:16px">尚無資料</td></tr>'; return;
+    tb.innerHTML = '<tr><td colspan="8"><div class="empty"><div class="eicon">👥</div><div class="etxt">尚無會員資料</div></div></td></tr>'; return;
   }
   tb.innerHTML = r.members.map(function(m) {
     var planExpired = m.planEndAt && new Date(m.planEndAt) < new Date();
-    var planLabel   = (m.planType||'free') + (planExpired ? '(過期)' : '');
+    var planLabel = (m.planType||'free') + (planExpired?'(過期)':'');
     return '<tr>'
-      +'<td style="font-size:11px;font-family:monospace">'+(m.userId||'')+'</td>'
+      +'<td class="td-code" style="font-size:11px">'+(m.userId||'')+'</td>'
       +'<td><span class="badge badge-'+(m.planType||'free')+'">'+planLabel+'</span></td>'
-      +'<td>'+(m.planEndAt ? String(m.planEndAt).slice(0,10) : '—')+'</td>'
-      +'<td>'+(m.bonusBalance||0)+'</td>'
-      +'<td>'+(m.dailyQuickUsed||0)+'</td>'
-      +'<td>'+(m.dailyJourneyUsed||0)+'</td>'
-      +'<td>'+(m.dailyWorkshopUsed||0)+'</td>'
-      +'<td>'+(m.lastUsageDate||'—')+'</td>'
+      +'<td class="td-muted">'+(m.planEndAt?String(m.planEndAt).slice(0,10):'—')+'</td>'
+      +'<td style="font-weight:700;color:var(--purple)">'+(m.bonusBalance||0)+'</td>'
+      +'<td class="td-muted">'+(m.dailyQuickUsed||0)+'</td>'
+      +'<td class="td-muted">'+(m.dailyJourneyUsed||0)+'</td>'
+      +'<td class="td-muted">'+(m.dailyWorkshopUsed||0)+'</td>'
+      +'<td class="td-muted">'+(m.lastUsageDate||'—')+'</td>'
       +'</tr>';
   }).join('');
 }
@@ -504,7 +682,9 @@ function lookupCode(code) {
   switchTab('codes');
   document.getElementById('lookup-code').value = code;
   lookupCodeRedemptions();
-  setTimeout(function(){ document.getElementById('lookup-result').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300);
+  setTimeout(function(){
+    document.getElementById('lookup-result').scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }, 300);
 }
 
 async function lookupCodeRedemptions() {
@@ -517,27 +697,23 @@ async function lookupCodeRedemptions() {
     var r = await callApi('adminListCodeRedemptions', { code: code });
     if (!r.ok) { showMsg('lookup-msg', r.message || '查詢失敗', true); return; }
     if (!r.redemptions || !r.redemptions.length) {
-      showMsg('lookup-msg','此碼尚無兌換紀錄（0 人）',false);
-      return;
+      showMsg('lookup-msg','此碼尚無兌換紀錄（0 人）',false); return;
     }
     showMsg('lookup-msg','共 ' + r.count + ' 人兌換過此碼',false);
-    var ACTION_LABELS = { REDEEM_GIFT: '工坊贈送碼', ACTIVATE_STUDENT: '學員方案', ACTIVATE_CUSTOM: '自訂方案' };
+    var ACTION_LABELS = { REDEEM_GIFT:'🎁 工坊贈送', ACTIVATE_STUDENT:'📚 學員方案', ACTIVATE_CUSTOM:'🧪 自訂方案' };
     document.getElementById('lookup-result').innerHTML =
-      '<table style="margin-top:8px"><thead><tr>'
+      '<div class="table-wrap"><table><thead><tr>'
       +'<th>userId</th><th>兌換時間</th><th>方案類型</th><th>獲得工坊點數</th>'
       +'</tr></thead><tbody>'
       + r.redemptions.map(function(row) {
-          var timeStr = row.time ? String(row.time).replace('T',' ').slice(0,16) : '—';
-          var actionLabel = ACTION_LABELS[row.action] || row.action;
-          var amountStr = row.action === 'REDEEM_GIFT' ? (row.amount + ' 次') : '—';
-          return '<tr>'
-            +'<td style="font-size:11px;font-family:monospace">'+row.userId+'</td>'
-            +'<td>'+timeStr+'</td>'
-            +'<td>'+actionLabel+'</td>'
-            +'<td>'+amountStr+'</td>'
-            +'</tr>';
+          var t = row.time ? String(row.time).replace('T',' ').slice(0,16) : '—';
+          var label = ACTION_LABELS[row.action] || row.action;
+          var amt = row.action === 'REDEEM_GIFT' ? row.amount+' 次' : '—';
+          return '<tr><td class="td-code" style="font-size:11px">'+row.userId+'</td>'
+            +'<td class="td-muted">'+t+'</td><td>'+label+'</td>'
+            +'<td style="font-weight:700;color:var(--purple)">'+amt+'</td></tr>';
         }).join('')
-      +'</tbody></table>';
+      +'</tbody></table></div>';
   } catch(e) {
     showMsg('lookup-msg','連線失敗：'+e.message,true);
   }
