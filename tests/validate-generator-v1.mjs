@@ -13,6 +13,11 @@
  * G7  三層路由（specific / conflict / general）（6 組）
  * G8  {input} 替換（general 層 truth）（3 組）
  * G9  邊界容錯（3 組）
+ * G10 角色語義標記（14 組：語氣辨識 11 + 禁用語氣 3）
+ * G11 pickVaried 不重複相鄰輪換（5 組）
+ * G12 全詞庫 BANNED_PATTERNS 靜態掃描（1 組）
+ * G13 comicWorld 不跳世界（9 組：3 pool × 3 world 標記）
+ * G14 每池幽默標記（9 組：3 pool × 誇飾 + 反差 + 自我解嘲）
  */
 
 import { classifyInput } from '../content-engine-v2.js';
@@ -22,6 +27,8 @@ import {
   isMouseOutput,
   isTigerOutput,
   BANNED_PATTERNS,
+  BANNED_TONE,
+  _CONTENT_DB,
   VERSION,
 } from '../character-generator-v1.js';
 
@@ -308,6 +315,128 @@ console.log('── G10 角色語義標記 ──');
   const MOUSE_UNIQUE = ['套餐', '先焦', '先冒煙', '嗶——'];
   assert('G10-11 tiger escalation 無 mouse 專屬嗆聲標記（semantic swap 失敗）',
     !MOUSE_UNIQUE.some(m => tigerEscalation(rSpec).includes(m)), tigerEscalation(rSpec).slice(0, 60));
+
+  // 禁用語氣：三組輸出全文均不含心理師/成功學語氣詞
+  function allGeneratedText(r) {
+    if (!r) return '';
+    return [
+      ...Object.values(r.mouseOutput || {}).filter(v => typeof v === 'string'),
+      ...Object.values(r.tigerOutput || {}).filter(v => typeof v === 'string'),
+    ].join('');
+  }
+  assert('G10-12 specific 無禁用語氣',
+    !BANNED_TONE.some(w => allGeneratedText(rSpec).includes(w)),
+    BANNED_TONE.filter(w => allGeneratedText(rSpec).includes(w)));
+  assert('G10-13 conflict 無禁用語氣',
+    !BANNED_TONE.some(w => allGeneratedText(rConf).includes(w)),
+    BANNED_TONE.filter(w => allGeneratedText(rConf).includes(w)));
+  assert('G10-14 general  無禁用語氣',
+    !BANNED_TONE.some(w => allGeneratedText(rGen).includes(w)),
+    BANNED_TONE.filter(w => allGeneratedText(rGen).includes(w)));
+}
+
+/* ════════════════════════════════════════════════
+   G11 pickVaried 不重複相鄰輪換
+   陣列長度 ≥ 2 時保證第 N 次與第 N-1 次不同
+════════════════════════════════════════════════ */
+console.log('── G11 pickVaried 輪換 ──');
+{
+  const specE = pipe('孩子不寫作業', '孩子');
+  const truths = [];
+  for (let i = 0; i < 6; i++) {
+    const r = generateRoast(specE, { targetKey: 'child', input: '孩子不寫作業' });
+    truths.push(r ? r.mouseOutput.truth : '');
+  }
+  for (let i = 1; i < truths.length; i++) {
+    assert(`G11-0${i} truth[${i}] ≠ truth[${i - 1}]（pickVaried 保證不相鄰重複）`,
+      truths[i] !== truths[i - 1],
+      [truths[i - 1].slice(0, 20), truths[i].slice(0, 20)]);
+  }
+}
+
+/* ════════════════════════════════════════════════
+   G12 全詞庫靜態 BANNED_PATTERNS 掃描
+   掃描 _CONTENT_DB 內所有字串，不依賴生成隨機性
+════════════════════════════════════════════════ */
+console.log('── G12 全詞庫 BANNED_PATTERNS ──');
+{
+  function collectAllDBText() {
+    const all = [];
+    Object.values(_CONTENT_DB).forEach(pool => {
+      ['truth', 'honest', 'boundary'].forEach(f => (pool[f] || []).forEach(t => all.push(t)));
+      Object.values(pool.worlds || {}).forEach(wd => {
+        ['analogy', 'selfOwn', 'comicExit', 'callback'].forEach(f => (wd[f] || []).forEach(t => all.push(t)));
+        const tiger = wd.tiger || {};
+        ['l1', 'l2', 'landing'].forEach(f => (tiger[f] || []).forEach(t => all.push(t)));
+      });
+    });
+    return all;
+  }
+  const allDBTexts = collectAllDBText();
+  const dbHits = [];
+  allDBTexts.forEach(text => {
+    BANNED_PATTERNS.forEach(p => { if (p.test(text)) dbHits.push({ text: text.slice(0, 40), pattern: String(p) }); });
+  });
+  assert('G12-01 全詞庫所有變體均不含 BANNED_PATTERNS', dbHits.length === 0, dbHits.slice(0, 3));
+}
+
+/* ════════════════════════════════════════════════
+   G13 comicWorld 不跳世界
+   chef 內容不含氣象/客服詞；weather 不含食材/客服詞；helpdesk 不含食材/氣象詞
+════════════════════════════════════════════════ */
+console.log('── G13 comicWorld 不跳世界 ──');
+{
+  const CONTAMINATION = {
+    chef:     ['氣象', '天氣', '颱風', '播報', '客服', '申訴', '待辦氣象台'],
+    weather:  ['食材', '備料', '主廚', '出菜', '廚房', '套餐', '客服', '申訴'],
+    helpdesk: ['食材', '備料', '主廚', '出菜', '廚房', '套餐', '氣象', '天氣', '颱風'],
+  };
+
+  Object.entries(_CONTENT_DB).forEach(([poolKey, pool]) => {
+    Object.entries(pool.worlds || {}).forEach(([worldKey, wd]) => {
+      const forbidden = CONTAMINATION[worldKey] || [];
+      if (forbidden.length === 0) return;
+
+      const worldTexts = [
+        ...['analogy','selfOwn','comicExit','callback'].flatMap(f => wd[f] || []),
+        ...['l1','l2','landing'].flatMap(f => (wd.tiger || {})[f] || []),
+      ];
+      const contaminated = worldTexts.filter(t => forbidden.some(w => t.includes(w)));
+      assert(`G13 ${poolKey}.${worldKey} 無跨世界污染`,
+        contaminated.length === 0,
+        contaminated.map(t => t.slice(0, 30)));
+    });
+  });
+}
+
+/* ════════════════════════════════════════════════
+   G14 每池幽默標記（誇飾 + 反差 + 自我解嘲）
+   每個詞庫的所有文案合併後，三類幽默至少命中二
+════════════════════════════════════════════════ */
+console.log('── G14 幽默標記 ──');
+{
+  const TIGER_EXG  = ['峰會', '認證', '宣布', '稽查員', '委員會', '歷史時刻', '緊急'];
+  const CONTRAST   = ['先不', '現在：'];
+  const SELF_MOCK  = ['我先', '我承認', '我以前', '先讓你', '先停', '先退', '先申報', '先收回', '先不敲', '先去補', '忘了', '失效了'];
+
+  Object.entries(_CONTENT_DB).forEach(([poolKey, pool]) => {
+    const allPoolTexts = [
+      ...['truth','honest','boundary'].flatMap(f => pool[f] || []),
+      ...Object.values(pool.worlds || {}).flatMap(wd => [
+        ...['analogy','selfOwn','comicExit','callback'].flatMap(f => wd[f] || []),
+        ...['l1','l2','landing'].flatMap(f => (wd.tiger || {})[f] || []),
+      ]),
+    ].join('');
+
+    const hasExg     = TIGER_EXG.some(w => allPoolTexts.includes(w));
+    const hasContrast = CONTRAST.some(w => allPoolTexts.includes(w));
+    const hasMock    = SELF_MOCK.some(w => allPoolTexts.includes(w));
+    const score = [hasExg, hasContrast, hasMock].filter(Boolean).length;
+
+    assert(`G14 ${poolKey} 幽默三類至少命中 2/3（誇飾:${hasExg} 反差:${hasContrast} 自嘲:${hasMock}）`,
+      score >= 2,
+      { score, pool: poolKey });
+  });
 }
 
 /* ════════════════════════════════════════════════
