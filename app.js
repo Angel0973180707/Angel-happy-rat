@@ -509,6 +509,25 @@ var TARGET_ROAST_DB={
             callback:['舞台就等那一句台詞——說了，燈亮，幕起，今天的演出就開始了。','導演退到後台，麥克風在主角面前，說一句，開演。'],
             songA:{hook:'舞台搭好了\n後台也準備好了\n觀眾席就等一句台詞\n主角說，今天就開演',lyrics:'劇場燈亮了\n座位都坐好了\n只缺主角走出來\n說第一句台詞\n\n舞台搭好了\n後台也準備好了\n觀眾席就等一句台詞\n主角說，今天就開演\n\n後台全就緒\n音效剪好了\n剩下那一件事\n只有主角說了算\n\n舞台搭好了\n後台也準備好了\n觀眾席就等一句台詞\n主角說，今天就開演\n\n技術公告：\n本場演出待命中。\n開演條件：主角說出第一幕從哪裡開始。\n後台已就緒，全場等你。\n\n舞台搭好了\n後台也準備好了\n觀眾席就等一句台詞\n主角說，今天就開演'},
             songB:{hook:'劇本只有一行台詞\n主角自己說出時間\n導演不用在旁邊提\n說了，今天就開演',lyrics:'把開始的時間\n交給孩子說出口\n說了，就讓它開始\n不說，就繼續等\n\n劇本只有一行台詞\n主角自己說出時間\n導演不用在旁邊提\n說了，今天就開演\n\n這齣戲就等一句話\n舞台已搭好了\n麥克風就在那裡\n主角說，開演\n\n劇本只有一行台詞\n主角自己說出時間\n導演不用在旁邊提\n說了，今天就開演\n\n唬爛虎公告：\n今日是否開演，\n取決於主角說出那句話。\n說了，開演。\n就這樣。\n\n劇本只有一行台詞\n主角自己說出時間\n導演不用在旁邊提\n說了，今天就開演'}
+          },
+          chef:{
+            name:'廚師',
+            songA:{
+              title:'《今天不供應我等等》',
+              style:'台灣流行 / 溫和嗆聲',
+              concept:'廚師（小天鼠）出場，今天不供應拖延套餐，先選一科開始。',
+              hook:'今天不供應　我等等套餐',
+              aiPrompt:'Taiwanese pop, light lo-fi beat, conversational verse, catchy singalong chorus, self-aware not angry tone, tempo 90bpm, warm vocal',
+              lyrics:'【Verse 1】\n作業在那邊　你在這邊\n中間有一段　叫做等一下\n我說去寫　你說等一下\n等完再等　等等是今晚\n\n【Pre-Chorus】\n書是書　你是你\n目前沒有交集\n\n【Chorus】\n今天不供應　我等等套餐\n作業就在那　你也在這裡\n今天只選一科　先說卡在哪\n\n【Verse 2】\n說在準備了\n準備了很久\n準備跟作業\n還沒有交集\n\n【Bridge】\n我也說過等一下\n所以我懂這招\n但今天不加演\n\n【Chorus】\n今天不供應　我等等套餐\n作業就在那　你也在這裡\n今天只選一科　先說卡在哪'
+            },
+            songB:{
+              title:'《主廚復出》',
+              style:'主廚喜劇流行 / 落地宣告',
+              concept:'唬爛虎扮主廚，廚房重新開火，今晚先出一道。',
+              hook:'主廚要復出了',
+              aiPrompt:'Mock-epic pop, pompous brass intro then lo-fi drop, cooking show narrator energy, tempo 100bpm, confident vocal with grounded bridge',
+              lyrics:'【Verse 1】\n本廚房休業已久\n菜單放著沒人看\n主廚說在構思\n食材說我等你\n\n【Pre-Chorus】\n火沒開　鍋沒熱\n主廚還在準備\n\n【Chorus】\n主廚要復出了\n今晚先選一道\n不用全菜上桌\n先說卡在哪一道\n\n【Verse 2】\n廚房燈開了沒\n醬油在哪裡\n先選一科開火\n其他的等就位\n\n【Bridge — 落地】\n打開作業本\n選一科\n說卡在哪\n剩下的主廚來\n\n【Outro】\n主廚入場\n醬油先借\n第一題先試'
+            }
           }
         }
       },
@@ -656,10 +675,10 @@ var TARGET_ROAST_DB={
   },
   other:{
     general:{
-      truth:['你說的是「{input}」——你有感覺，感覺就是真的，不需要解釋為什麼。','關於「{input}」，你不需要讓所有人都懂，但你需要有個地方把這個說出來。','你不是想贏，你是想把「{input}」這件事卡在心裡的那個部分說出去。'],
-      analogy:['你現在的感覺就像一首你說不清楚旋律的歌——你知道它存在，你感覺得到，但用話說出來有一點難。','你說不清楚的那個氣，就像鞋子裡的一顆石頭——不大，但一直在，讓你走路的感覺不太對。','這件事就像一張沒有標題的照片——你拍了，你知道那一刻發生了什麼，但跟別人解釋很麻煩。'],
-      honest:['你不敢說的是：你不確定說出來有沒有用，但不說讓你一直帶著這個重量。','你真正想說的是：「我只是需要有人知道這件事讓我不舒服，不一定要解決，但需要被知道。」','你沒說出口的是：你其實不需要答案，你需要的是有個地方可以說，說出來就輕一點了。'],
-      boundary:['說出來是第一步，說清楚是第二步，我現在在做第一步——一步一步來。','你可以不同意我的感受，但我的感受是存在的，這兩件事可以同時成立。','說完我繼續走，不一定要你改，但我需要說出來，說出來之後輕一點。']
+      truth:['生活，你最近很會喔。','「{input}」——還沒說清楚，煩度已先到現場了。','你說的我先接住。煩不用理由，但靶心要有名字。'],
+      analogy:['事情沒講清楚，煩度先開到最大聲。','待辦清單在旁邊裝不認識，它不理你，你先煩完再說。','問題還在排隊領號碼牌，情緒已先結帳出門了。'],
+      honest:['我不怕麻煩。','事情不說清楚，嗆起來會傷到無辜的。','你先讓我知道是哪一件。不說出來，我只能全場掃射。'],
+      boundary:['我怕麻煩連名字都不報。','選一個：煩的是人、事，還是錢？報上來，剩下的先排號。','今天只找一個靶心，其他的先下班。']
     },
     situations:{}
   }
@@ -1277,9 +1296,9 @@ function genSongVersionA(context){
     var wd=hwSit&&hwSit.worlds&&hwSit.worlds[cw];
     if(wd&&wd.songA){
       var sa=wd.songA;
-      return {version:'A',label:'小天鼠版',icon:'🐭',style:(wd.name||cw)+' / 嗆聲流行',title:'《作業·'+(wd.name||cw)+'版》',concept:'用'+( wd.name||cw)+'的角度說完，笑著下台，兩邊都有台階。',lyrics:sa.lyrics,hook:sa.hook,genre:'Comedy Pop / 嗆聲流行',bpm:'96 BPM',mood:'幽默、自我解嘲、界線清楚',instruments:'電子節拍、口語感旋律',vocal:'口語感、帶喜劇停頓',aiPrompt:'comedy pop, roast humor, child homework, BPM 96, '+cw};
+      return {version:'A',label:'小天鼠版',icon:'🐭',style:sa.style||(wd.name||cw)+' / 嗆聲流行',title:sa.title||'《作業·'+(wd.name||cw)+'版》',concept:sa.concept||'用'+(wd.name||cw)+'的角度說完，笑著下台，兩邊都有台階。',lyrics:sa.lyrics,hook:sa.hook,genre:'Comedy Pop / 嗆聲流行',bpm:'96 BPM',mood:'幽默、自我解嘲、界線清楚',instruments:'電子節拍、口語感旋律',vocal:'口語感、帶喜劇停頓',aiPrompt:sa.aiPrompt||'comedy pop, roast humor, child homework, BPM 96, '+cw};
     }
-    // W3/W4 尚未核准專屬歌曲，明確回傳世界摘要，不走通用
+    // W3 尚未核准專屬歌曲，明確回傳世界摘要，不走通用
     if(wd&&!wd.songA){
       return {version:'A',label:'小天鼠版',icon:'🐭',style:(wd.name||cw)+' / 摘要版（歌曲製作中）',title:'《'+( wd.name||cw)+'嗆聲摘要》',concept:(wd.name||cw)+'世界的專屬歌曲正在依核准內容製作中，以下是本次嗆聲的核心句。',lyrics:(context.boundary||wd.nextAction||'')+(context.comicExit?'\n\n——'+context.comicExit:'')+(context.callback?'\n\n「'+context.callback+'」':''),hook:context.callback||wd.nextAction||'',genre:'世界摘要版',bpm:'',mood:'',instruments:'',vocal:'',aiPrompt:''};
     }
@@ -1331,9 +1350,9 @@ function genSongVersionB(context){
     var wd=hwSit&&hwSit.worlds&&hwSit.worlds[cw];
     if(wd&&wd.songB){
       var sb=wd.songB;
-      return {version:'B',label:'唬爛虎版',icon:'🐯',style:(wd.name||cw)+' / 嗆聲宣言',title:'《作業·'+(wd.name||cw)+'宣言版》',concept:'同一世界 B 面，讓孩子和家長都有台階下。',lyrics:sb.lyrics,hook:sb.hook,genre:'Comedy Rock / 嗆聲宣言',bpm:'100 BPM',mood:'幽默、誇張、自嘲收尾',instruments:'銅管、電吉他、拍手聲',vocal:'帶戲劇感與喜劇停頓',aiPrompt:'comedy rock, roast declaration, child homework, BPM 100, '+cw};
+      return {version:'B',label:'唬爛虎版',icon:'🐯',style:sb.style||(wd.name||cw)+' / 嗆聲宣言',title:sb.title||'《作業·'+(wd.name||cw)+'宣言版》',concept:sb.concept||'同一世界 B 面，讓孩子和家長都有台階下。',lyrics:sb.lyrics,hook:sb.hook,genre:'Comedy Rock / 嗆聲宣言',bpm:'100 BPM',mood:'幽默、誇張、自嘲收尾',instruments:'銅管、電吉他、拍手聲',vocal:'帶戲劇感與喜劇停頓',aiPrompt:sb.aiPrompt||'comedy rock, roast declaration, child homework, BPM 100, '+cw};
     }
-    // W3/W4 尚未核准專屬歌曲，明確回傳世界摘要，不走通用
+    // W3 尚未核准專屬歌曲，明確回傳世界摘要，不走通用
     if(wd&&!wd.songB){
       return {version:'B',label:'唬爛虎版',icon:'🐯',style:(wd.name||cw)+' / 摘要版（歌曲製作中）',title:'《'+( wd.name||cw)+'宣言摘要》',concept:(wd.name||cw)+'世界的 B 面歌曲正在製作中，以下是唬爛虎接手後的解法摘要。',lyrics:(wd.tiger||'')+(context.resolutionWish?'\n\n'+context.resolutionWish:'')+(context.nextAction?'\n\n今天的入口：'+context.nextAction:''),hook:context.resolutionWish||wd.nextAction||'',genre:'世界摘要版',bpm:'',mood:'',instruments:'',vocal:'',aiPrompt:''};
     }
@@ -1909,12 +1928,11 @@ function renderWorkshopArea(){
 }
 
 function runWorkshop(){
-  // W3/W4 歌曲製作中：不進工坊、不扣額度
+  // W3（機場塔台）歌曲製作中：不進工坊、不扣額度
   var _cw=flow.context.comicWorld;
-  var _hwGated=_cw&&(_cw==='W3'||_cw==='W4')&&flow.context.situationCategory==='homework'&&flow.context.targetCategory==='child';
+  var _hwGated=_cw==='W3'&&flow.context.situationCategory==='homework'&&flow.context.targetCategory==='child';
   if(_hwGated){
-    var _wdName=_cw==='W3'?'機場塔台':'廚師';
-    els.results.innerHTML='<div class="info-box" style="padding:1em;border-radius:8px;background:#f5f5f5;margin:1em 0;"><b>'+_cw+' '+_wdName+'</b>的專屬歌曲正在依核准內容製作中。<br>歌曲完成前此世界不進入工坊，本次不扣除額度。</div>';
+    els.results.innerHTML='<div class="info-box" style="padding:1em;border-radius:8px;background:#f5f5f5;margin:1em 0;"><b>W3 機場塔台</b>的專屬歌曲正在依核准內容製作中。<br>歌曲完成前此世界不進入工坊，本次不扣除額度。</div>';
     return;
   }
   tryConsumeQuota('workshop').then(function(qResult){
@@ -1923,7 +1941,6 @@ function runWorkshop(){
     var extra=inputEl?inputEl.value.trim():'';
     if(extra) flow.context.topic=flow.context.topic||extra;
     flow.context.wish=flow.context.wish||flow.context.topic||extra;
-    /* Fix 1：讀取作品風格 chip，存入 context 供生成器使用 */
     var styleHint=getChipValue('style-chip')||'';
     flow.context.styleHint=styleHint;
 
@@ -1931,15 +1948,31 @@ function runWorkshop(){
     var vB=genSongVersionB(flow.context);
     flow.context.songVersions=[vA,vB];
 
-    /* Fix 2：加固定 mv-area 容器，重複選歌只覆蓋不追加 */
-    var html=renderSongVersionCard(vA)+renderSongVersionCard(vB);
-    html+='<div class="workshop-actions"><button class="btn-regen btn-workshop-regen" id="btn-workshop-regen">🔄 免費再生成兩版</button></div>';
+    var isFullPack=flow.context.situationCategory==='homework'&&flow.context.targetCategory==='child'&&flow.context.comicWorld==='chef';
+
+    var html='';
+    html+=renderWorkshopSection('🎵 歌曲成品包','歌詞 → Suno / Udio → Lyrics｜曲風 → Suno Custom Mode → Style of Music',
+      renderSongVersionCard(vA)+renderSongVersionCard(vB));
+
+    if(isFullPack){
+      var memeCards=genMemeCards(flow.context);
+      var illusPrompts=genIllustrationPrompts(flow.context);
+      var videoFrames=genThreeFrames(flow.context);
+      html+=renderWorkshopSection('🖼 社群梗圖卡','複製文案 → 貼到 Canva 模板，或直接截圖分享',
+        renderMemeCardsSection(memeCards));
+      html+=renderWorkshopSection('🎨 插畫 Prompt','貼到 Midjourney / DALL·E / Flux 生成插畫',
+        renderIllustrationSection(illusPrompts));
+      html+=renderWorkshopSection('🎞 短影片三畫面','複製三畫面 → 貼到 CapCut AI / Runway / Pika 場景輸入',
+        renderThreeFramesSection(videoFrames));
+    }else{
+      html+='<div class="workshop-pack-block"><div style="padding:14px 16px;background:#f9f5ef;border-radius:10px;font-size:13.5px;color:var(--coffee-soft);line-height:1.7;">🎨 梗圖卡、插畫 Prompt、短影片三畫面<br>正在為這個情境整理中，先帶走歌曲成品！</div></div>';
+    }
+
+    html+='<div class="workshop-actions"><button class="btn-regen btn-workshop-regen" id="btn-workshop-regen">🔄 再生成一版</button></div>';
     html+='<div id="mv-area"></div>';
 
     els.results.innerHTML=html;
-
     document.getElementById('btn-workshop-regen').addEventListener('click',runWorkshop);
-
     bindWorkshopSelect();
     logEvent('GENERATE_SONG',{styleHint:styleHint});
     saveDraft();
@@ -1948,36 +1981,159 @@ function runWorkshop(){
 }
 
 function renderSongVersionCard(v){
+  var lyricsCopy=v.lyrics||'';
+  var promptCopy=v.aiPrompt||'';
+  var fullPack=(v.title||'')+'\n\n'+lyricsCopy+'\n\n曲風 Prompt:\n'+promptCopy;
   return '<div class="song-card" data-version="'+v.version+'">'
-    +'<div class="song-card-head"><span class="song-icon">'+v.icon+'</span><span class="song-label">'+v.label+'</span><span class="song-style">'+v.style+'</span></div>'
+    +'<div class="song-card-head"><span class="song-icon">'+v.icon+'</span><span class="song-label">'+v.label+'</span><span class="song-style">'+escapeHtml(v.style)+'</span></div>'
     +'<div class="song-title">'+escapeHtml(v.title)+'</div>'
     +'<div class="song-concept">'+escapeHtml(v.concept)+'</div>'
-    +'<pre class="song-lyrics">'+escapeHtml(v.lyrics)+'</pre>'
-    +'<div class="song-meta"><span>🎵 '+escapeHtml(v.genre)+'</span><span>⏱ '+escapeHtml(v.bpm)+'</span></div>'
-    +'<div class="song-meta-ext">🎭 情緒：'+escapeHtml(v.mood)+'</div>'
-    +'<div class="song-meta-ext">🎸 編曲：'+escapeHtml(v.instruments)+'</div>'
-    +'<div class="song-meta-ext">🎤 演唱方式：'+escapeHtml(v.vocal)+'</div>'
-    +'<div class="song-ai-prompt"><strong>AI 音樂生成 Prompt：</strong><div class="prompt-box">'+escapeHtml(v.aiPrompt)+'</div></div>'
-    +'<div class="song-card-actions">'
-    +'<button class="btn-copy btn-copy-song" data-copy="'+escapeAttr(v.title+'\n'+v.lyrics+'\n\n情緒：'+v.mood+'\n編曲：'+v.instruments+'\n演唱：'+v.vocal+'\n\nAI Prompt: '+v.aiPrompt)+'">📋 複製'+v.icon+'指令</button>'
-    +'<button class="btn-primary btn-select-song" data-version="'+v.version+'" style="flex:1;">✅ 選擇此版本製作 MV</button>'
+    +'<pre class="song-lyrics">'+escapeHtml(lyricsCopy)+'</pre>'
+    +'<div style="margin-top:10px;font-size:13px;color:var(--maroon);font-weight:700;">🎸 曲風 Prompt</div>'
+    +'<div class="prompt-box" style="font-size:12px;">'+escapeHtml(promptCopy)+'</div>'
+    +'<div class="song-card-actions" style="flex-wrap:wrap;">'
+    +'<button class="btn-copy" data-copy="'+escapeAttr(lyricsCopy)+'">📋 複製歌詞</button>'
+    +'<button class="btn-copy" data-copy="'+escapeAttr(promptCopy)+'">🎸 複製曲風</button>'
+    +'<button class="btn-copy" style="width:100%;margin-top:8px;" data-copy="'+escapeAttr(fullPack)+'">📦 複製整包</button>'
     +'</div></div>';
 }
 
 function bindWorkshopSelect(){
-  Array.prototype.forEach.call(document.querySelectorAll('.btn-copy-song'),function(btn){
-    btn.addEventListener('click',function(){copyToClipboard(btn.dataset.copy);});
+  Array.prototype.forEach.call(document.querySelectorAll('#mode-results .btn-copy'),function(btn){
+    if(btn.dataset.copy!==undefined){
+      btn.addEventListener('click',function(){copyToClipboard(btn.dataset.copy);});
+    }
   });
-  Array.prototype.forEach.call(document.querySelectorAll('.btn-select-song'),function(btn){
-    btn.addEventListener('click',function(){
-      var ver=btn.dataset.version;
-      var chosen=(flow.context.songVersions||[]).filter(function(v){return v.version===ver;})[0];
-      if(!chosen) return;
-      flow.context.selectedSongVersion=ver;
-      saveDraft();
-      renderMVAndImageArea(chosen);
-    });
-  });
+}
+
+function renderWorkshopSection(title,hint,content){
+  return '<div class="workshop-pack-block">'
+    +'<div class="workshop-pack-header">'+title+'</div>'
+    +'<div class="workshop-hint-top">'+hint+'</div>'
+    +content
+    +'</div>';
+}
+
+function genMemeCards(context){
+  var isHW=context.situationCategory==='homework'&&context.targetCategory==='child';
+  if(isHW){
+    return [
+      {label:'🐭 小天鼠吐槽卡',text:'作業跟你很有禮貌：\n它不碰你，你也不碰它。'},
+      {label:'🐯 唬爛虎吹大卡',text:'打開作業本那一刻，\n主廚正式復出。'},
+      {label:'🐭🐯 雙角色反差卡',text:'🐭 今天不供應「我等等」套餐。\n🐯 主廚入場，醬油先借。'}
+    ];
+  }
+  var event=shortInput(context.event||'',12);
+  var truth=(context.truth||'').split('。')[0];
+  var boundary=(context.boundary||'').split('。')[0];
+  var comicExit=(context.comicExit||'').split('。')[0];
+  var wish=shortInput(context.wish||context.topic||'大夢想',10);
+  var card1=truth?(truth+'。'):('「'+(event||'這件事')+'」，先接住，再說。');
+  var card2=wish?('「'+wish+'」那一刻，\n主角正式復出。'):'準備好了，\n今天正式出發。';
+  var card3='🐭 '+(boundary||'先選一個，其他先排號')+'。\n🐯 '+(comicExit||'今天就這一步，先做再說')+'。';
+  return [
+    {label:'🐭 小天鼠吐槽卡',text:card1},
+    {label:'🐯 唬爛虎吹大卡',text:card2},
+    {label:'🐭🐯 雙角色反差卡',text:card3}
+  ];
+}
+
+function renderMemeCardsSection(cards){
+  return cards.map(function(c){
+    return '<div class="meme-card">'
+      +'<div class="meme-card-label">'+escapeHtml(c.label)+'</div>'
+      +'<div class="meme-card-text">'+escapeHtml(c.text).replace(/\n/g,'<br>')+'</div>'
+      +'<div class="meme-card-actions">'
+      +'<button class="btn-copy" data-copy="'+escapeAttr(c.text)+'">📋 複製文案</button>'
+      +'</div></div>';
+  }).join('');
+}
+
+function genIllustrationPrompts(context){
+  var isHW=context.situationCategory==='homework'&&context.targetCategory==='child';
+  if(isHW){
+    return [
+      {title:'插畫 1：封面圖',
+       spec:'用途：社群封面 / APP 主視覺\n畫面：作業本攤在燈下，小天鼠坐旁邊攤手，孩子不在畫面。\n角色：小天鼠（攤手，無奈表情）\n風格：溫暖手繪，橘黃夜燈，細線條\n比例：1:1\n可貼到：Midjourney / DALL·E / Flux',
+       en:'Open notebook under warm desk lamp, small cartoon mouse sitting beside with a helpless shrug, no child in frame, cozy fine-line illustration, warm orange palette —ar 1:1'},
+      {title:'插畫 2：主角卡住圖',
+       spec:'用途：嗆聲結果頁\n畫面：孩子背對觀眾坐書桌前，作業本合著。\n角色：孩子背影（圓頭無臉）\n風格：扁平插圖，夜間冷光，俯視角\n比例：16:9\n可貼到：Midjourney / DALL·E / Flux',
+       en:"Bird's eye view, child sitting at desk from behind, closed notebook, flat illustration, cool night light, faceless round-head character —ar 16:9"},
+      {title:'插畫 3：誇飾世界圖',
+       spec:'用途：唬爛虎段 / 歌曲視覺\n畫面：唬爛虎穿廚師服站廚房入口，菜單燈亮著，外頭有人等著。\n角色：唬爛虎（廚師帽，正式入場姿勢）\n風格：飽和喜劇插畫，誇張構圖\n比例：16:9\n可貼到：Midjourney / DALL·E / Flux',
+       en:"Cartoon tiger in chef's hat standing at kitchen doorway, menu sign lit up, audience waiting outside, dramatic entry pose, saturated comic style —ar 16:9"},
+      {title:'插畫 4：下樓梯和解圖',
+       spec:'用途：嗆聲「下樓梯版」結果頁\n畫面：深夜孩子翻開作業本，大人在旁邊喝茶，小天鼠坐在茶杯上。\n角色：小天鼠（放鬆版），孩子側臉，大人\n風格：繪本風，月光加暖燈\n比例：1:1\n可貼到：Midjourney / DALL·E / Flux',
+       en:'Late night, child opening notebook, adult beside with tea, small cartoon mouse sitting on the teacup, moonlight and warm lamp, soft picture book style —ar 1:1'},
+      {title:'插畫 5：梗圖模板圖',
+       spec:'用途：梗圖卡背景 / 分享圖\n畫面：純色背景，小天鼠舉空白牌子，表情誇張委屈。\n角色：小天鼠（全身，舉牌）\n風格：扁平迷因風，粗邊框，無陰影\n比例：1:1\n可貼到：Midjourney / DALL·E / Canva',
+       en:'Flat meme style, small cartoon mouse holding a blank sign, exaggerated sad face, solid background, thick outlines, no shadows —ar 1:1'}
+    ];
+  }
+  var event=shortInput(context.event||'這件事',14);
+  var targetMap={'child':'孩子','boss':'老闆','parent':'家長','partner':'另一半','friend':'朋友','colleague':'同事'};
+  var targetDesc=targetMap[context.targetCategory]||'對方';
+  return [
+    {title:'插畫 1：封面圖',
+     spec:'用途：社群封面 / APP 主視覺\n畫面：「'+event+'」場景，小天鼠在旁邊攤手。\n角色：小天鼠（攤手，無奈表情）\n風格：溫暖手繪，橘黃色調，細線條\n比例：1:1\n可貼到：Midjourney / DALL·E / Flux',
+     en:'Small cartoon mouse with helpless shrug, minimal scene about "'+event+'", warm fine-line illustration, orange tone —ar 1:1'},
+    {title:'插畫 2：卡住圖',
+     spec:'用途：嗆聲結果頁\n畫面：主角背對觀眾，面對「'+event+'」還沒動作。\n角色：主角背影（圓頭無臉）\n風格：扁平插圖，冷光，俯視角\n比例：16:9\n可貼到：Midjourney / DALL·E / Flux',
+     en:'Person from behind facing "'+event+'", flat illustration, cool light, bird\'s-eye view, faceless character —ar 16:9'},
+    {title:'插畫 3：唬爛虎出場圖',
+     spec:'用途：唬爛虎段 / 歌曲視覺\n畫面：唬爛虎舉手宣告，場景誇張，充滿氣勢。\n角色：唬爛虎（誇張宣告姿勢）\n風格：飽和喜劇插畫，誇張構圖\n比例：16:9\n可貼到：Midjourney / DALL·E / Flux',
+     en:'Cartoon tiger making a grand announcement, dramatic background, exaggerated entry pose, saturated comic style —ar 16:9'},
+    {title:'插畫 4：和解圖',
+     spec:'用途：嗆聲下樓梯版結果頁\n畫面：夜間，主角翻開新頁，小天鼠在旁邊放鬆坐著。\n角色：小天鼠（放鬆版），主角側臉\n風格：繪本風，月光加暖燈\n比例：1:1\n可貼到：Midjourney / DALL·E / Flux',
+     en:'Late night, person turning to a new page, small cartoon mouse sitting nearby relaxed, moonlight and warm lamp, soft picture book style —ar 1:1'},
+    {title:'插畫 5：梗圖模板',
+     spec:'用途：梗圖卡背景 / 分享圖\n畫面：純色背景，小天鼠舉空白牌子，表情誇張。\n角色：小天鼠（全身，舉牌）\n風格：扁平迷因風，粗邊框，無陰影\n比例：1:1\n可貼到：Midjourney / DALL·E / Canva',
+     en:'Flat meme style, small cartoon mouse holding a blank sign, exaggerated expression, solid background, thick outlines, no shadows —ar 1:1'}
+  ];
+}
+
+function renderIllustrationSection(prompts){
+  return prompts.map(function(p){
+    var fullCopy=p.spec+'\n\n英文 Prompt:\n'+p.en;
+    return '<div class="illus-card">'
+      +'<div class="illus-card-title">'+escapeHtml(p.title)+'</div>'
+      +'<div class="prompt-box" style="font-size:12px;white-space:pre-wrap;">'+escapeHtml(p.spec)+'</div>'
+      +'<div class="prompt-box" style="font-size:12px;margin-top:6px;">'+escapeHtml(p.en)+'</div>'
+      +'<div class="illus-card-actions">'
+      +'<button class="btn-copy" data-copy="'+escapeAttr(p.en)+'">📋 複製英文 Prompt</button>'
+      +'<button class="btn-copy" data-copy="'+escapeAttr(fullCopy)+'">📦 複製完整規格</button>'
+      +'</div></div>';
+  }).join('');
+}
+
+function genThreeFrames(context){
+  var isHW=context.situationCategory==='homework'&&context.targetCategory==='child';
+  if(isHW){
+    return [
+      '畫面 1：作業攤在桌上，孩子和作業互不打擾。',
+      '畫面 2：小天鼠拿著菜單吐槽「今天不供應我等等套餐」。',
+      '畫面 3：孩子翻開作業本，唬爛虎宣布主廚復出。'
+    ];
+  }
+  var event=shortInput(context.event||'這件事',14);
+  var truth=(context.truth||'').split('。')[0];
+  var comicExit=(context.comicExit||'').split('。')[0];
+  return [
+    '畫面 1：「'+event+'」，主角和問題各站一邊，互不打擾。',
+    '畫面 2：小天鼠出場吐槽——「'+(truth||'先笑一下再說')+'」。',
+    '畫面 3：唬爛虎宣告，主角翻開新頁，'+(comicExit||'今天就這一步')+'。'
+  ];
+}
+
+function renderThreeFramesSection(frames){
+  var allText=frames.join('\n');
+  return '<div class="three-frames-card">'
+    +frames.map(function(f,i){
+      return '<div class="frame-item"><span class="frame-no">'+(i+1)+'</span><span class="frame-text">'+escapeHtml(f)+'</span></div>';
+    }).join('')
+    +'<div class="three-frames-actions">'
+    +'<button class="btn-copy" style="width:100%;min-height:var(--tap-min);" data-copy="'+escapeAttr(allText)+'">📋 複製三畫面</button>'
+    +'</div></div>';
 }
 
 function renderNextStepsGuide(){
@@ -2221,7 +2377,7 @@ function renderRoastV2Block(result,input,targetLabel){
   // 小天鼠：三段式精簡版
   var mBody=[
     _v2Section('嗆聲版',[m.truth,m.analogy]),
-    _v2Section('得理不饒人版',[m.honest,m.boundary]),
+    _v2Section('給你好看版',[m.honest,m.boundary]),
     _v2Section('下樓梯版',[m.selfOwn,m.comicExit])
   ].join('');
   var mouseHtml='<div class="result-card '+tc+'"><div class="who">🐭 小天鼠開嗆</div><div class="body-text">'+mBody+'</div></div>';
