@@ -2,7 +2,7 @@
    目標：離線可開首頁與所有模式（純前端生成，不需要網路）。
    策略：app shell cache-first，其餘走 network-first 並回退快取。
 */
-var CACHE_NAME = 'Angel-happy-rat-shell-v4';
+var CACHE_NAME = 'Angel-happy-rat-shell-v5';
 var SHELL_FILES = [
   './',
   './index.html',
@@ -11,7 +11,12 @@ var SHELL_FILES = [
   './manifest.json',
   './rat.webp',
   './rat-safe.jpg',
-  './tiger.webp'
+  './tiger.webp',
+  './roast-engine-v2.js',
+  './content-engine-v2.js',
+  './evidence-checker-v2.js',
+  './character-generator-v1.js',
+  './guided-menu-v1.js'
 ];
 
 self.addEventListener('install', function(event){

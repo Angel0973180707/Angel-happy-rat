@@ -1639,7 +1639,7 @@ function renderInputArea(id,opts){
   if(id==='roast'){
     roastV2State.pendingGuidedInput=null;
     var roastNotice='<div class="roast-notice" style="font-size:0.85em;color:#888;margin-top:0.5em;line-height:1.5;">小天鼠幫你把悶氣說清楚，不幫你霸凌、威脅或公開羞辱別人。分享前請拿掉姓名與私人資料。<button id="roast-rules-btn" class="link-btn" style="font-size:inherit;color:#aaa;background:none;border:none;cursor:pointer;padding:0 0 0 0.3em;">完整守則 ▾</button><div id="roast-rules-detail" style="display:none;margin-top:0.4em;">禁止生成：① 暴力體罰意圖 ② 威脅報復 ③ 公開電話地址等個資 ④ 號召霸凌羞辱 ⑤ 仇恨歧視內容。高風險輸入不生成、不扣額度，只記匿名分類。</div></div>';
-    var guidedWrap='<div id="v2-guided-wrap" style="margin:0.4em 0 0.1em;"><button type="button" id="btn-v2-guided" class="link-btn" style="font-size:0.88em;color:#999;">幫我開個頭 ▾</button><div id="v2-guided-panel" style="display:none;margin-top:0.4em;padding:0.6em 0.7em;background:#f8f8f8;border-radius:8px;"></div></div>';
+    var guidedWrap='<div id="v2-guided-wrap" style="margin:0.4em 0 0.1em;"><button type="button" id="btn-v2-guided" class="link-btn" style="font-size:0.88em;color:#999;">幫我開個頭 ▾</button><div style="font-size:0.8em;color:#bbb;margin-top:0.15em;line-height:1.4;">懶得分類也沒關係，直接打一行，小天鼠會自己找靶心。</div><div id="v2-guided-panel" style="display:none;margin-top:0.4em;padding:0.6em 0.7em;background:#f8f8f8;border-radius:8px;"></div></div>';
     els.inputArea.innerHTML=sharedInput+chipBlock('target-chip','對象',['老闆/主管','客戶','同事','孩子','爸媽/長輩','兄弟姊妹','另一半','朋友','其他'])+guidedWrap+roastNotice;
     var rulesBtn=els.inputArea.querySelector('#roast-rules-btn');
     if(rulesBtn) rulesBtn.addEventListener('click',function(){toggleRoastRules(rulesBtn);});
@@ -2209,25 +2209,34 @@ function renderRoastV2Block(result,input,targetLabel){
   var m=result.roast.mouseOutput;
   var t=result.roast.tigerOutput;
   var tc='vent tag-rat';
-  var mouseSteps=[
-    ['🔥 你真正氣的是',m.truth],
-    ['🎭 幽默比喻版',m.analogy],
-    ['💬 不敢講的真心話',m.honest],
-    ['🧱 現實界線',m.boundary],
-    ['🪞 台階',m.selfOwn],
-    ['🚪 收尾',m.comicExit]
+  var lbl='font-size:0.8em;opacity:0.5;font-weight:600;';
+
+  // 小天鼠：合併成 1 張卡
+  var mFields=[
+    ['你真正氣的是',m.truth],
+    ['幽默比喻',m.analogy],
+    ['不敢講的真心話',m.honest],
+    ['現實界線',m.boundary],
+    ['給雙方台階',m.selfOwn],
+    ['笑著收尾',m.comicExit]
   ];
-  var mouseHtml=mouseSteps.filter(function(s){return s[1];}).map(function(s){
-    return '<div class="result-card '+tc+'"><div class="who">'+s[0]+'</div><div class="body-text">'+escapeHtml(s[1])+'</div></div>';
-  }).join('');
-  var tigerSteps=[
-    ['🐯 唬爛虎：起手式',t.l1],
-    ['🔊 升溫',t.l2],
-    ['🎯 反差落地',t.landing]
+  var mBody=mFields.filter(function(f){return f[1];}).map(function(f){
+    return '<span style="'+lbl+'">'+escapeHtml(f[0])+'</span>　'+escapeHtml(f[1]);
+  }).join('<br>');
+  var mouseHtml='<div class="result-card '+tc+'"><div class="who">🐭 小天鼠替你講</div><div class="body-text" style="line-height:1.9;">'+mBody+'</div></div>';
+
+  // 唬爛虎：合併成 1 張卡
+  var tFields=[
+    ['起手式',t.l1],
+    ['升溫',t.l2],
+    ['反差落地',t.landing]
   ];
-  var tigerHtml=tigerSteps.filter(function(s){return s[1];}).map(function(s){
-    return '<div class="result-card '+tc+'"><div class="who">'+s[0]+'</div><div class="body-text">'+escapeHtml(s[1])+'</div></div>';
-  }).join('');
+  var tBody=tFields.filter(function(f){return f[1];}).map(function(f){
+    return '<span style="'+lbl+'">'+escapeHtml(f[0])+'</span>　'+escapeHtml(f[1]);
+  }).join('<br>');
+  var tigerHtml='<div class="result-card '+tc+'"><div class="who">🐯 唬爛虎接手</div><div class="body-text" style="line-height:1.9;">'+tBody+'</div></div>';
+
+  // 補充選項（只在需要時出現，第 3 張）
   var clarifyHtml='';
   if(result.clarifyOpts&&result.clarifyOpts.length>0){
     clarifyHtml=renderRoastClarifyBlock(result.clarifyOpts[0],input,targetLabel);
