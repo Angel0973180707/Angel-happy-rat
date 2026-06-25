@@ -2204,38 +2204,36 @@ function runRoastV2(input,targetLabel,guidedInput){
   }catch(e){ return null; }
 }
 
+function _v2Section(title,lines){
+  var content=lines.filter(Boolean).map(function(l){return escapeHtml(l);}).join('<br>');
+  if(!content) return '';
+  return '<div style="margin-bottom:1em">'
+    +'<div style="font-size:0.72em;font-weight:800;color:#9333ea;letter-spacing:.07em;text-transform:uppercase;margin-bottom:0.35em">'+title+'</div>'
+    +'<div style="line-height:1.85">'+content+'</div>'
+    +'</div>';
+}
+
 function renderRoastV2Block(result,input,targetLabel){
   var m=result.roast.mouseOutput;
   var t=result.roast.tigerOutput;
   var tc='vent tag-rat';
-  var lbl='font-size:0.8em;opacity:0.5;font-weight:600;';
 
-  // 小天鼠：合併成 1 張卡
-  var mFields=[
-    ['你真正氣的是',m.truth],
-    ['幽默比喻',m.analogy],
-    ['不敢講的真心話',m.honest],
-    ['現實界線',m.boundary],
-    ['給雙方台階',m.selfOwn],
-    ['笑著收尾',m.comicExit]
-  ];
-  var mBody=mFields.filter(function(f){return f[1];}).map(function(f){
-    return '<span style="'+lbl+'">'+escapeHtml(f[0])+'</span>　'+escapeHtml(f[1]);
-  }).join('<br>');
-  var mouseHtml='<div class="result-card '+tc+'"><div class="who">🐭 小天鼠替你講</div><div class="body-text" style="line-height:1.9;">'+mBody+'</div></div>';
+  // 小天鼠：三段式精簡版
+  var mBody=[
+    _v2Section('嗆聲版',[m.truth,m.analogy]),
+    _v2Section('得理不饒人版',[m.honest,m.boundary]),
+    _v2Section('下樓梯版',[m.selfOwn,m.comicExit])
+  ].join('');
+  var mouseHtml='<div class="result-card '+tc+'"><div class="who">🐭 小天鼠開嗆</div><div class="body-text">'+mBody+'</div></div>';
 
-  // 唬爛虎：合併成 1 張卡
-  var tFields=[
-    ['起手式',t.l1],
-    ['升溫',t.l2],
-    ['反差落地',t.landing]
-  ];
-  var tBody=tFields.filter(function(f){return f[1];}).map(function(f){
-    return '<span style="'+lbl+'">'+escapeHtml(f[0])+'</span>　'+escapeHtml(f[1]);
-  }).join('<br>');
-  var tigerHtml='<div class="result-card '+tc+'"><div class="who">🐯 唬爛虎接手</div><div class="body-text" style="line-height:1.9;">'+tBody+'</div></div>';
+  // 唬爛虎：兩段精簡版
+  var tBody=[
+    _v2Section('吹大版',[t.l1,t.l2]),
+    _v2Section('落地版',[t.landing])
+  ].join('');
+  var tigerHtml='<div class="result-card '+tc+'"><div class="who">🐯 唬爛虎吹大</div><div class="body-text">'+tBody+'</div></div>';
 
-  // 補充選項（只在需要時出現，第 3 張）
+  // 補充選項（只在需要時出現）
   var clarifyHtml='';
   if(result.clarifyOpts&&result.clarifyOpts.length>0){
     clarifyHtml=renderRoastClarifyBlock(result.clarifyOpts[0],input,targetLabel);
@@ -2245,9 +2243,9 @@ function renderRoastV2Block(result,input,targetLabel){
 
 var _clarifyHeadIdx=0;
 var V2_CLARIFY_HEADS=[
-  '我現在嗆得有點泛，給我一個靶心。',
-  '你補一句，我少亂猜一點，大家都平安。',
-  '要不要補一刀？選一下是哪種狀況。'
+  '要嗆準一點？選靶心。',
+  '我現在有點泛，給我一個方向。',
+  '補一句，我少亂猜一點。'
 ];
 function renderRoastClarifyBlock(opt,input,targetLabel){
   var head=V2_CLARIFY_HEADS[_clarifyHeadIdx%V2_CLARIFY_HEADS.length];
