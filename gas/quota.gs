@@ -435,8 +435,9 @@ function handleQuotaAction(action, data) {
   if (action === 'adminDisableCode')   return adminDisableCode_(data.code, data.adminKey);
   if (action === 'adminGetMember')     return adminGetMember_(data.userId, data.adminKey);
   if (action === 'adminListMembers')   return adminListMembers_(data.limit, data.adminKey);
-  if (action === 'adminGrantBonus')    return adminGrantBonus_(data.userId, Number(data.amount), data.note, data.adminKey);
-  if (action === 'adminMigrateSchema') return adminMigrateSchema_(data.adminKey);
+  if (action === 'adminGrantBonus')           return adminGrantBonus_(data.userId, Number(data.amount), data.note, data.adminKey);
+  if (action === 'adminMigrateSchema')        return adminMigrateSchema_(data.adminKey);
+  if (action === 'adminListCodeRedemptions')  return adminListCodeRedemptions_(data.code, data.adminKey);
   return null;
 }
 
@@ -637,6 +638,36 @@ function adminMigrateSchema_(adminKey) {
   var current = ensureMemberColumns_(sheet);
   var added   = current.length - before;
   return { ok: true, message: '遷移完成，新增 ' + added + ' 個欄位', headers: current };
+}
+
+// ----------------------------------------------
+// adminListCodeRedemptions_ -- 查某個兌換碼的使用紀錄（從 23_額度異動紀錄 撈）
+// ----------------------------------------------
+function adminListCodeRedemptions_(code, adminKey) {
+  if (!checkAdminKey_(adminKey)) return { ok: false, message: '管理員金鑰錯誤' };
+  if (!code) return { ok: false, message: '請提供方案碼' };
+  var ss    = SpreadsheetApp.openById(QS_ID);
+  var sheet = ss.getSheetByName('23_額度異動紀錄');
+  if (!sheet || sheet.getLastRow() < 2) return { ok: true, code: code, count: 0, redemptions: [] };
+  var data = sheet.getDataRange().getValues();
+  var h    = data[0];
+  var REDEEM_ACTIONS = ['REDEEM_GIFT', 'ACTIVATE_STUDENT', 'ACTIVATE_CUSTOM'];
+  var results = [];
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    if (String(row[h.indexOf('code')])   === code &&
+        REDEEM_ACTIONS.indexOf(String(row[h.indexOf('action')])) >= 0) {
+      results.push({
+        userId:       String(row[h.indexOf('userId')]),
+        time:         String(row[h.indexOf('time')]).slice(0, 19),
+        action:       String(row[h.indexOf('action')]),
+        amount:       Number(row[h.indexOf('amount')]) || 0,
+        balanceAfter: Number(row[h.indexOf('balanceAfter')]) || 0,
+        reason:       String(row[h.indexOf('reason')])
+      });
+    }
+  }
+  return { ok: true, code: code, count: results.length, redemptions: results };
 }
 
 // ----------------------------------------------

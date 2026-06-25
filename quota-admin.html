@@ -67,8 +67,9 @@ tr:hover td{background:#fafafe}
 <div id="auth-panel">
   <h2>管理員登入</h2>
   <div class="field">
-    <label>GAS API URL</label>
+    <label>GAS API URL（與 index.html 第 22 行 GAS_API_URL 相同）</label>
     <input type="text" id="gas-url" value="https://script.google.com/macros/s/AKfycbzFkewVnwkmxQfHQACgjbrm0c6b4pj-tnhjEApqHDGZkanwAmQkqObV0bAMxFBNAV-E/exec" placeholder="GAS 部署網址">
+    <small style="color:#999;font-size:11px">⚠️ 若重新部署 GAS，需同步更新此欄位預設值與 index.html 第 22 行</small>
   </div>
   <div class="field">
     <label>管理員金鑰 (Script Properties: ADMIN_KEY)</label>
@@ -196,6 +197,17 @@ tr:hover td{background:#fafafe}
         </table>
       </div>
     </div>
+
+    <div class="card">
+      <h3>查兌換碼使用紀錄</h3>
+      <p style="font-size:12px;color:#888;margin-bottom:10px">輸入方案碼，查看哪些人兌換過、兌換時間。也可點上方表格的「查誰兌換」快速帶入。</p>
+      <div style="display:flex;gap:10px;margin-bottom:6px">
+        <input type="text" id="lookup-code" placeholder="例：LEARN-A4R3-K9FZ 或 HAPPY-XXXX-XXXX" style="flex:1">
+        <button class="btn btn-primary" onclick="lookupCodeRedemptions()">查詢</button>
+      </div>
+      <div class="msg" id="lookup-msg"></div>
+      <div id="lookup-result"></div>
+    </div>
   </div>
 
   <!-- 會員查詢 -->
@@ -210,14 +222,15 @@ tr:hover td{background:#fafafe}
       <div class="member-box" id="member-box"></div>
 
       <div style="margin-top:18px;border-top:1px solid #f0f0f0;padding-top:16px">
-        <h3 style="margin-bottom:10px">贈送工坊額度</h3>
+        <h3 style="margin-bottom:6px">直接贈送工坊點數</h3>
+        <p style="font-size:12px;color:#e07000;background:#fff8ee;border-radius:6px;padding:6px 10px;margin-bottom:12px">⚠️ 此功能只增加工坊模式（Workshop）的 bonus 次數，不影響快速/旅程每日額度。不需對方輸入兌換碼，直接入帳。</p>
         <div class="row3">
           <div class="field">
             <label>userId</label>
             <input type="text" id="grant-userid" placeholder="和上方查詢同步填入">
           </div>
           <div class="field">
-            <label>贈送次數</label>
+            <label>贈送工坊點數（次）</label>
             <input type="number" id="grant-amount" value="1" min="1">
           </div>
           <div class="field">
@@ -372,15 +385,18 @@ function renderCodesTable(codes) {
     tb.innerHTML = '<tr><td colspan="8" style="color:#aaa;text-align:center;padding:20px">尚無方案碼</td></tr>';
     return;
   }
+  var TYPE_LABELS = { gift: '工坊贈送', student: '學員方案', custom: '自訂方案' };
   tb.innerHTML = codes.map(function(c) {
-    var typeBadge = '<span class="badge badge-'+c.type+'">'+c.type+'</span>';
+    var typeLabel = TYPE_LABELS[c.type] || c.type;
+    var typeBadge = '<span class="badge badge-'+c.type+'">'+typeLabel+'</span>';
     var statusBadge = c.expired ? '<span class="badge badge-expired">已過期</span>'
                     : c.enabled ? '<span class="badge badge-on">啟用</span>'
                     : '<span class="badge badge-off">已停用</span>';
     var limits = c.type==='custom' ? (c.dailyQuick+'/'+c.dailyJourney+'/'+c.dailyWorkshop) : '—';
     var disableBtn = (c.enabled && !c.expired)
-      ? '<button class="btn btn-sm btn-danger" onclick="quickDisable(\''+c.code+'\')">停用</button>'
+      ? '<button class="btn btn-sm btn-danger" onclick="quickDisable(\''+c.code+'\')" style="margin-right:4px">停用</button>'
       : '';
+    var lookupBtn = '<button class="btn btn-sm btn-primary" onclick="lookupCode(\''+c.code+'\')">查誰兌換</button>';
     return '<tr>'
       +'<td><code style="font-size:11px">'+c.code+'</code></td>'
       +'<td>'+typeBadge+'</td>'
@@ -389,7 +405,7 @@ function renderCodesTable(codes) {
       +'<td>'+(c.redeemedCount||0)+'/'+(c.maxRedemptions||1)+'</td>'
       +'<td>'+(c.expiresAt||'—')+' '+statusBadge+'</td>'
       +'<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(c.note||'')+'</td>'
-      +'<td>'+disableBtn+'</td>'
+      +'<td>'+disableBtn+lookupBtn+'</td>'
       +'</tr>';
   }).join('');
 }
@@ -439,6 +455,12 @@ async function grantBonus() {
   var amount = parseInt(document.getElementById('grant-amount').value, 10);
   var note   = document.getElementById('grant-note').value.trim();
   if (!uid || !amount || amount <= 0) { showMsg('grant-msg','請填入 userId 與次數',true); return; }
+  var confirmMsg = '確認贈送工坊點數？'
+    + '\n\nuseId：' + uid
+    + '\n增加工坊點數：' + amount + ' 次'
+    + '\n備註：' + (note || '（無）')
+    + '\n\n⚠️ 此為工坊 bonus，不影響快速/旅程額度';
+  if (!confirm(confirmMsg)) return;
   var r = await callApi('adminGrantBonus', { userId: uid, amount: amount, note: note });
   showMsg('grant-msg', r.message || (r.ok ? '成功' : '失敗'), !r.ok);
 }
@@ -476,6 +498,49 @@ async function disableCode() {
   var r = await callApi('adminDisableCode', { code: code });
   showMsg('disable-msg', r.message || (r.ok ? '已停用' : '失敗'), !r.ok);
   if (r.ok) loadCodes();
+}
+
+function lookupCode(code) {
+  switchTab('codes');
+  document.getElementById('lookup-code').value = code;
+  lookupCodeRedemptions();
+  setTimeout(function(){ document.getElementById('lookup-result').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300);
+}
+
+async function lookupCodeRedemptions() {
+  var code = document.getElementById('lookup-code').value.trim().toUpperCase();
+  if (!code) { showMsg('lookup-msg','請填入方案碼',true); return; }
+  document.getElementById('lookup-code').value = code;
+  showMsg('lookup-msg','查詢中…',false);
+  document.getElementById('lookup-result').innerHTML = '';
+  try {
+    var r = await callApi('adminListCodeRedemptions', { code: code });
+    if (!r.ok) { showMsg('lookup-msg', r.message || '查詢失敗', true); return; }
+    if (!r.redemptions || !r.redemptions.length) {
+      showMsg('lookup-msg','此碼尚無兌換紀錄（0 人）',false);
+      return;
+    }
+    showMsg('lookup-msg','共 ' + r.count + ' 人兌換過此碼',false);
+    var ACTION_LABELS = { REDEEM_GIFT: '工坊贈送碼', ACTIVATE_STUDENT: '學員方案', ACTIVATE_CUSTOM: '自訂方案' };
+    document.getElementById('lookup-result').innerHTML =
+      '<table style="margin-top:8px"><thead><tr>'
+      +'<th>userId</th><th>兌換時間</th><th>方案類型</th><th>獲得工坊點數</th>'
+      +'</tr></thead><tbody>'
+      + r.redemptions.map(function(row) {
+          var timeStr = row.time ? String(row.time).replace('T',' ').slice(0,16) : '—';
+          var actionLabel = ACTION_LABELS[row.action] || row.action;
+          var amountStr = row.action === 'REDEEM_GIFT' ? (row.amount + ' 次') : '—';
+          return '<tr>'
+            +'<td style="font-size:11px;font-family:monospace">'+row.userId+'</td>'
+            +'<td>'+timeStr+'</td>'
+            +'<td>'+actionLabel+'</td>'
+            +'<td>'+amountStr+'</td>'
+            +'</tr>';
+        }).join('')
+      +'</tbody></table>';
+  } catch(e) {
+    showMsg('lookup-msg','連線失敗：'+e.message,true);
+  }
 }
 
 document.getElementById('admin-key').addEventListener('keydown', function(e){
