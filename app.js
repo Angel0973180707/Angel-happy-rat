@@ -163,21 +163,20 @@ function renderQuotaBadges(){
     wb.className='quota-badge'+(wTotal===0?' quota-empty':'');
   }
 }
-function redeemGiftCode(code){
+function redeemGiftCode(code, displayName){
   if(!code){toast('請輸入兌換碼');return;}
   if(!window.GAS_API_URL){toast('系統未就緒，請稍後再試');return;}
   toast('兌換中…');
   fetch(window.GAS_API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body:JSON.stringify({action:'redeemCode',code:code.trim().toUpperCase(),userId:USER_ID})})
+    body:JSON.stringify({action:'redeemCode',code:code.trim().toUpperCase(),userId:USER_ID,displayName:displayName||''})})
     .then(function(r){return r.json();}).then(function(res){
       if(res&&res.ok){
         toast(res.message||'兌換成功！');
         syncQuotaFromServer(res);
         renderQuotaBadges();
-        var box=document.getElementById('redeem-input');
-        if(box) box.value='';
-        var box2=document.getElementById('redeem-input-2');
-        if(box2) box2.value='';
+        ['redeem-input','redeem-input-2','redeem-name','redeem-name-2'].forEach(function(id){
+          var el=document.getElementById(id); if(el) el.value='';
+        });
       } else {
         toast(res&&res.message?res.message:'兌換失敗，請確認方案碼');
       }

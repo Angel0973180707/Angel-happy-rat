@@ -140,16 +140,20 @@
       <p>🎁 有方案碼可以獲得更多次數！</p>
       <div class="redeem-row">
         <input id="redeem-input" class="redeem-input" type="text" placeholder="輸入方案碼（如 HAPPY-X7K9）" autocapitalize="characters">
-        <button class="btn-redeem" onclick="window._redeemCode&&window._redeemCode(document.getElementById('redeem-input').value)">兌換</button>
+        <button class="btn-redeem" onclick="window._redeemCode&&window._redeemCode(document.getElementById('redeem-input').value,document.getElementById('redeem-name').value)">兌換</button>
       </div>
+      <input id="redeem-name" type="text" placeholder="你的名字（選填，方便老師查詢）" style="width:100%;margin-top:6px;padding:7px 10px;border:1px solid #ddd6fe;border-radius:7px;font-size:13px">
     </div>
 
     <!-- 方案碼兌換區（常駐，收合） -->
     <details class="redeem-details">
       <summary>🎟️ 有兌換碼？點此使用</summary>
-      <div class="redeem-row" style="margin-top:8px">
-        <input id="redeem-input-2" class="redeem-input" type="text" placeholder="輸入方案碼" autocapitalize="characters">
-        <button class="btn-redeem" onclick="window._redeemCode&&window._redeemCode(document.getElementById('redeem-input-2').value)">兌換</button>
+      <div style="margin-top:8px">
+        <div class="redeem-row">
+          <input id="redeem-input-2" class="redeem-input" type="text" placeholder="輸入方案碼" autocapitalize="characters">
+          <button class="btn-redeem" onclick="window._redeemCode&&window._redeemCode(document.getElementById('redeem-input-2').value,document.getElementById('redeem-name-2').value)">兌換</button>
+        </div>
+        <input id="redeem-name-2" type="text" placeholder="你的名字（選填，方便老師查詢）" style="width:100%;margin-top:6px;padding:7px 10px;border:1px solid #ddd6fe;border-radius:7px;font-size:13px">
       </div>
     </details>
 

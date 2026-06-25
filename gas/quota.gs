@@ -16,7 +16,8 @@ var MEMBER_HEADERS = [
   'userId','planType','planEndAt','bonusBalance',
   'lastSeenAt','createdAt',
   'lastUsageDate','dailyQuickUsed','dailyJourneyUsed','dailyWorkshopUsed',
-  'customDailyQuick','customDailyJourney','customDailyWorkshop'
+  'customDailyQuick','customDailyJourney','customDailyWorkshop',
+  'displayName'
 ];
 var CODE_HEADERS = [
   'code','type','value','planType','planDays',
@@ -320,7 +321,7 @@ function consumeQuota(userId, quotaType) {
 // redeemCode(code, userId)
 // 支援 type: 'gift' | 'student' | 'custom'
 // ----------------------------------------------
-function redeemCode(code, userId) {
+function redeemCode(code, userId, displayName) {
   var lock = LockService.getScriptLock();
   lock.waitLock(8000);
   try {
@@ -365,6 +366,12 @@ function redeemCode(code, userId) {
     var mRow   = member.rowIndex;
     var freshH = ensureMemberColumns_(mSheet);
     function mIdx(name) { return freshH.indexOf(name); }
+
+    // 儲存使用者填的名字（選填）
+    if (displayName) {
+      var dnIdx = mIdx('displayName');
+      if (dnIdx >= 0) mSheet.getRange(mRow, dnIdx + 1).setValue(String(displayName).slice(0, 30));
+    }
 
     var type = codeRow[cIdx('type')];
 
@@ -428,7 +435,7 @@ function redeemCode(code, userId) {
 function handleQuotaAction(action, data) {
   if (action === 'getQuota')     return getQuota(data.userId);
   if (action === 'consumeQuota') return consumeQuota(data.userId, data.quotaType);
-  if (action === 'redeemCode')   return redeemCode(data.code, data.userId);
+  if (action === 'redeemCode')   return redeemCode(data.code, data.userId, data.displayName || '');
   // 管理員 API（均需 adminKey 驗證）
   if (action === 'adminListCodes')     return adminListCodes_(data.adminKey);
   if (action === 'adminCreateCode')    return adminCreateCode_(data, data.adminKey);

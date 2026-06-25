@@ -199,6 +199,7 @@ tr:hover td{background:#faf5ff}
   <span class="logo">🐭</span>
   <h1>笑鼠後台</h1>
   <span class="ver">quota.gs v3</span>
+  <button onclick="doLogout()" style="margin-left:12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer">登出</button>
 </header>
 
 <!-- ════ 登入 ════ -->
@@ -414,11 +415,11 @@ tr:hover td{background:#faf5ff}
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>userId</th><th>方案</th><th>到期</th><th>工坊bonus</th>
+            <th>姓名／暱稱</th><th>userId</th><th>方案</th><th>到期</th><th>工坊bonus</th>
             <th>今日快速</th><th>今日旅程</th><th>今日工坊</th><th>最後使用</th>
           </tr></thead>
           <tbody id="members-tbody">
-            <tr><td colspan="8"><div class="empty"><div class="eicon">👥</div><div class="etxt">點「載入最新」</div></div></td></tr>
+            <tr><td colspan="9"><div class="empty"><div class="eicon">👥</div><div class="etxt">點「載入最新」</div></div></td></tr>
           </tbody>
         </table>
       </div>
@@ -464,6 +465,15 @@ async function callApi(action, extra) {
   return res.json();
 }
 
+function doLogout() {
+  localStorage.removeItem('hsr_gas_url');
+  localStorage.removeItem('hsr_admin_key');
+  API_URL = ''; ADMIN_KEY = '';
+  document.getElementById('main-panel').style.display = 'none';
+  document.getElementById('auth-panel').style.display = 'block';
+  document.getElementById('admin-key').value = '';
+}
+
 async function doLogin() {
   API_URL   = document.getElementById('gas-url').value.trim();
   ADMIN_KEY = document.getElementById('admin-key').value.trim();
@@ -472,6 +482,8 @@ async function doLogin() {
   try {
     var r = await callApi('adminListCodes');
     if (r.ok === false) { showMsg('auth-msg', r.message || '驗證失敗', true); return; }
+    localStorage.setItem('hsr_gas_url', API_URL);
+    localStorage.setItem('hsr_admin_key', ADMIN_KEY);
     document.getElementById('auth-panel').style.display = 'none';
     document.getElementById('main-panel').style.display = 'block';
     renderCodesTable(r.codes || []);
@@ -479,6 +491,17 @@ async function doLogin() {
     showMsg('auth-msg', '連線失敗：' + e.message, true);
   }
 }
+
+// 頁面載入時自動恢復登入
+window.addEventListener('DOMContentLoaded', function() {
+  var savedUrl = localStorage.getItem('hsr_gas_url');
+  var savedKey = localStorage.getItem('hsr_admin_key');
+  if (savedUrl) document.getElementById('gas-url').value = savedUrl;
+  if (savedUrl && savedKey) {
+    document.getElementById('admin-key').value = savedKey;
+    doLogin();
+  }
+});
 
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(function(t,i){
@@ -544,14 +567,30 @@ async function createCode() {
   btn.disabled = false;
 }
 
+function fallbackCopy(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+}
+
 function copyCode() {
   if (!_lastCode) return;
-  navigator.clipboard.writeText(_lastCode).then(function(){
-    var btn = document.getElementById('copy-btn');
+  var btn = document.getElementById('copy-btn');
+  function markCopied() {
     btn.textContent = '✅ 已複製！';
     btn.className = 'copy-btn copied';
     setTimeout(function(){ btn.textContent='📋 複製方案碼'; btn.className='copy-btn'; }, 2000);
-  });
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(_lastCode).then(markCopied).catch(function(){ fallbackCopy(_lastCode); markCopied(); });
+  } else {
+    fallbackCopy(_lastCode);
+    markCopied();
+  }
 }
 
 async function loadCodes() {
@@ -609,6 +648,7 @@ async function searchMember() {
   var m = r.member;
   var planExpired = m.planEndAt && new Date(m.planEndAt) < new Date();
   var fields = [
+    ['姓名／暱稱', m.displayName || '（未填）'],
     ['userId', m.userId],
     ['方案', (m.planType||'free') + (planExpired?' ⚠️已過期':'')],
     ['到期日', m.planEndAt ? String(m.planEndAt).slice(0,10) : '—'],
@@ -647,12 +687,14 @@ async function loadMembers() {
   var r = await callApi('adminListMembers', { limit: 50 });
   var tb = document.getElementById('members-tbody');
   if (!r.ok || !r.members || !r.members.length) {
-    tb.innerHTML = '<tr><td colspan="8"><div class="empty"><div class="eicon">👥</div><div class="etxt">尚無會員資料</div></div></td></tr>'; return;
+    tb.innerHTML = '<tr><td colspan="9"><div class="empty"><div class="eicon">👥</div><div class="etxt">尚無會員資料</div></div></td></tr>'; return;
   }
   tb.innerHTML = r.members.map(function(m) {
     var planExpired = m.planEndAt && new Date(m.planEndAt) < new Date();
     var planLabel = (m.planType||'free') + (planExpired?'(過期)':'');
+    var name = m.displayName || '<span style="color:var(--gray)">（未填）</span>';
     return '<tr>'
+      +'<td style="font-weight:600">'+name+'</td>'
       +'<td class="td-code" style="font-size:11px">'+(m.userId||'')+'</td>'
       +'<td><span class="badge badge-'+(m.planType||'free')+'">'+planLabel+'</span></td>'
       +'<td class="td-muted">'+(m.planEndAt?String(m.planEndAt).slice(0,10):'—')+'</td>'
