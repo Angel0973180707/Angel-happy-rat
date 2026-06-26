@@ -2151,51 +2151,65 @@ function bindResultActions(id){
     });
   }
   bindBigDreamEngineToggle();
-  /* 嗆聲 / 畫大餅：唱成歌 → 直接出 AI 指令 */
+  /* 嗆聲 / 畫大餅：唱成歌 → 產出完整歌詞 + Suno 指令 + AI 夥伴引導提示 */
   var makeSongBtn=document.getElementById('btn-make-song');
   if(makeSongBtn){ makeSongBtn.addEventListener('click',function(){
     var isRoast=(id==='roast');
-    var line1,line2,styleLabel,sunoPrompt;
+    var chorus,verse1,verse2,bridge,aiStyle,styleLabel;
+    var inp=shortInput((document.getElementById('main-input')||{}).value||'',18);
     if(isRoast){
-      var re=roastResult.activeEngine;
-      var rd=roastResult.engines[re]||{};
-      line1=(re==='spicy'&&rd.roast)?rd.roast.mouseOutput.truth||'':rd.truth||'';
-      line2=(re==='spicy'&&rd.roast)?rd.roast.mouseOutput.analogy||'':rd.analogy||'';
-      styleLabel=pickVaried('song_style_r',['台語搖滾','嘻哈嗆聲','憤世民謠','電音反叛']);
-      sunoPrompt='Taiwanese indie rock, angry but witty, verse-chorus, electric guitar, sardonic humor, 95bpm\nLyrics theme: '+line1.slice(0,40);
+      var re=roastResult.activeEngine;var rd=roastResult.engines[re]||{};
+      var truth=(re==='spicy'&&rd.roast)?rd.roast.mouseOutput.truth||'':rd.truth||'';
+      var analogy=(re==='spicy'&&rd.roast)?rd.roast.mouseOutput.analogy||'':rd.analogy||'';
+      var honest=(re==='spicy'&&rd.roast)?rd.roast.mouseOutput.honest||'':rd.honest||'';
+      chorus=truth;
+      verse1='說好了一件事\n結果又換了方向\n關於「'+inp+'」\n我解釋了很多遍';
+      verse2=analogy||'不是我太敏感\n只是這件事\n說不清楚卻要我負責\n這個邏輯我研究不透';
+      bridge=honest||'說出來就輕了一點\n說出來就清楚了一點\n原來這才是真正在氣的事';
+      styleLabel=re==='spicy'?'台語搖滾·嗆聲版':'民謠流行·原味版';
+      aiStyle=re==='spicy'
+        ?'[Taiwanese indie rock, electric guitar, sardonic wit, female or male vocal, verse-chorus-bridge, 95bpm]'
+        :'[Taiwanese folk pop, acoustic guitar, warm but frustrated, conversational, 85bpm]';
     } else {
-      var be=bigDreamResult.activeEngine;
-      var bd2=bigDreamResult.engines[be]||{};
-      line1=be==='crazy'?(bd2.brag||''):(bd2.wish||'');
-      line2=be==='crazy'?(bd2.parallel||'').split('\n')[0]:(bd2.pie||'');
-      styleLabel=pickVaried('song_style_b',['史詩搖滾','勵志流行','電子夢幻','溫暖民謠']);
-      sunoPrompt='Epic anthemic pop, inspirational, cinematic build, piano + electric guitar, 100bpm\nLyrics theme: '+line1.slice(0,40);
+      var be=bigDreamResult.activeEngine;var bd2=bigDreamResult.engines[be]||{};
+      var mainL=be==='crazy'?(bd2.brag||''):(bd2.wish||'');
+      var secL=be==='crazy'?(bd2.parallel||'').split('\n')[0]:(bd2.pie||'');
+      var stepL=bd2.step||'先說出來，明天就開始一步';
+      chorus=mainL;
+      verse1='不是每個人都說可以\n不是每條路都走得通\n但有一個夢\n一直在那裡等我';
+      verse2=secL||'先說出來再說能不能\n先畫出來再說值不值\n先吹一次看看\n不吹怎麼知道';
+      bridge=stepL;
+      styleLabel=be==='crazy'?'史詩搖滾·狂吹版':'溫暖民謠·小吹版';
+      aiStyle=be==='crazy'
+        ?'[Epic anthemic rock, orchestral build, inspirational, cinematic swell, 105bpm]'
+        :'[Warm indie folk, acoustic piano, hopeful and grounded, gentle build, 90bpm]';
     }
+    var lyrics='[Verse 1]\n'+verse1+'\n\n[Chorus]\n'+chorus+'\n\n[Verse 2]\n'+verse2+'\n\n[Chorus]\n'+chorus+'\n\n[Bridge]\n'+bridge+'\n\n[Chorus]\n'+chorus;
+    var sunoFull=aiStyle+'\n\n'+lyrics;
+    var aiGuide='我想在 Suno.ai 把這首歌生成出來，請一步步帶我完成。\n\n【風格】'+styleLabel+'\n\n【完整歌詞】\n'+lyrics+'\n\n【Suno 貼上用指令】\n'+sunoFull+'\n\n請幫我：\n1. 說明怎麼進入 Suno.ai（免費）\n2. 哪個欄位貼歌詞、哪個欄位貼風格\n3. 有什麼注意事項可以讓歌更好聽';
     var anchorId=isRoast?'roast-song-active':'bigdream-song-active';
     var old=document.getElementById(anchorId);if(old)old.remove();
-    var bg=isRoast?'#fff9f0':'#f0f9ff';
-    var tc=isRoast?'#3d1a00':'#1a3a5c';
+    var bg=isRoast?'#fff9f0':'#f0f9ff';var tc=isRoast?'#3d1a00':'#1a3a5c';
+    function copyBtn(label,text){
+      return '<button class="btn-copy" style="font-size:0.78em;padding:5px 12px;margin:4px 4px 0 0;" onclick="copyToClipboard('+JSON.stringify(text)+');showToast(\'已複製！\')">'+label+'</button>';
+    }
     var html='<div class="result-card" style="margin-top:12px;">'
       +'<div class="who">🎵 '+(isRoast?'你的嗆聲歌':'你的大夢之歌')+'</div>'
       +'<div class="body-text">'
-      +'<div style="font-size:0.82em;font-weight:700;color:'+tc+';margin-bottom:4px;">風格：'+styleLabel+'</div>'
-      +'<div style="white-space:pre-line;line-height:2;background:'+bg+';border-radius:8px;padding:12px 14px;margin:8px 0;font-size:0.93em;color:'+tc+';">'
-      +'[Verse]\n'+escapeHtml(line1||'（你的素材）')+'\n\n[副歌]\n'+escapeHtml(line2||'（繼續吹，讓它成真）')+'</div>'
-      +'<div style="font-size:0.82em;font-weight:700;color:'+tc+';margin-top:12px;">🤖 AI 音樂指令（複製貼到 Suno / Udio）</div>'
-      +'<div style="background:#f8f8f8;border:1px solid #e0d0c0;border-radius:7px;padding:10px 12px;margin:6px 0;font-family:monospace;font-size:0.8em;line-height:1.7;white-space:pre-wrap;">'+escapeHtml(sunoPrompt)+'</div>'
-      +'<div style="display:flex;gap:8px;margin:8px 0;">'
-      +'<button class="btn-copy" onclick="copyToClipboard('+JSON.stringify(sunoPrompt)+');showToast(\'已複製指令！\')">複製指令</button>'
-      +'</div>'
-      +'<div style="font-size:0.8em;color:#888;line-height:1.9;margin-top:8px;">'
-      +'<b>🎁 推薦免費工具：</b><br>'
-      +'・<b>Suno.ai</b> — 貼上指令直接生成完整歌曲，有免費額度<br>'
-      +'・<b>Udio.com</b> — 同樣免費，風格選項更多元<br>'
-      +'・<b>Mureka.ai</b> — 中文歌詞生成效果較好'
-      +'</div>'
+      +'<div style="font-size:0.8em;font-weight:700;color:'+tc+';margin-bottom:6px;">風格：'+styleLabel+'</div>'
+      +'<div style="white-space:pre-line;line-height:2.1;background:'+bg+';border-radius:8px;padding:14px 16px;font-size:0.93em;color:'+tc+';">'+escapeHtml(lyrics)+'</div>'
+      +'<div style="margin-top:8px;">'+copyBtn('📋 複製完整歌詞',lyrics)+'</div>'
+      +'<div style="font-size:0.82em;font-weight:700;color:'+tc+';margin:14px 0 4px;">🎛 Suno / Udio 直接貼上用</div>'
+      +'<div style="background:#f8f8f8;border:1px solid #e0d0c0;border-radius:7px;padding:10px 12px;font-family:monospace;font-size:0.78em;line-height:1.7;white-space:pre-wrap;max-height:160px;overflow-y:auto;">'+escapeHtml(sunoFull)+'</div>'
+      +'<div style="margin-top:6px;">'+copyBtn('🎛 複製 Suno 指令',sunoFull)+'</div>'
+      +'<div style="font-size:0.82em;font-weight:700;color:'+tc+';margin:14px 0 4px;">🤖 複製給你的 AI 夥伴，讓它帶你做</div>'
+      +'<div style="background:#f0fff4;border:1px solid #bbf7d0;border-radius:7px;padding:10px 12px;font-size:0.82em;line-height:1.7;color:#166534;white-space:pre-wrap;max-height:120px;overflow-y:auto;">'+escapeHtml(aiGuide)+'</div>'
+      +'<div style="margin-top:6px;">'+copyBtn('🤖 複製 AI 夥伴指令',aiGuide)+'</div>'
+      +'<div style="font-size:0.78em;color:#aaa;margin-top:12px;line-height:1.8;">推薦免費工具：Suno.ai ／ Udio.com ／ Mureka.ai（中文歌詞效果好）</div>'
       +'</div></div>';
     var wrap=document.createElement('div');wrap.id=anchorId;wrap.innerHTML=html;
     var el=document.getElementById('mode-results');if(el)el.appendChild(wrap);
-    logEvent('SONG_GEN',{mode:id});
+    logEvent('SONG_GEN',{mode:id,engine:isRoast?roastResult.activeEngine:bigDreamResult.activeEngine});
   }); }
   /* 嗆聲 / 畫大餅：拍成電影 → 直接出 AI 繪圖指令 */
   var makeFilmBtn=document.getElementById('btn-make-film');
