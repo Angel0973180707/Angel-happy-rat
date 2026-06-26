@@ -365,10 +365,18 @@ export const _CONTENT_DB = CONTENT_DB;
 
 // ── 內容查詢 ────────────────────────────────────────────────────────
 function lookupPool(layer, layerKey, targetKey) {
-  if (layer === 'specific') return CONTENT_DB[`specific_${targetKey}_${layerKey}`] || null;
-  if (layer === 'conflict') return CONTENT_DB[`conflict_${targetKey}_${layerKey}`] || null;
-  if (layer === 'general')  return CONTENT_DB[`general_${targetKey}`]              || null;
-  return null;
+  const fallback = CONTENT_DB['general_other'] || null;
+  if (layer === 'specific')
+    return CONTENT_DB[`specific_${targetKey}_${layerKey}`]
+        || CONTENT_DB[`general_${targetKey}`]
+        || fallback;
+  if (layer === 'conflict')
+    return CONTENT_DB[`conflict_${targetKey}_${layerKey}`]
+        || CONTENT_DB[`general_${targetKey}`]
+        || fallback;
+  if (layer === 'general')
+    return CONTENT_DB[`general_${targetKey}`] || fallback;
+  return fallback;
 }
 
 // ── 主要生成函式 ─────────────────────────────────────────────────────
