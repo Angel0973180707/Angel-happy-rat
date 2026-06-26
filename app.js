@@ -950,6 +950,8 @@ function emptyContext(){
 }
 var flow={routeB:false,stepIndex:0,input:'',context:emptyContext()};
 var roastV2State={lastWorld:null,pendingGuidedInput:null};
+var roastResult={activeFlavor:'original',original:null,spicy:null};
+var bigDreamResult={activeBlow:'small',small:null,crazy:null};
 
 function saveDraft(){
   try{ localStorage.setItem(DRAFT_KEY,JSON.stringify({ts:Date.now(),context:flow.context,stepIndex:flow.stepIndex,input:flow.input,routeB:flow.routeB})); }catch(e){}
@@ -1633,6 +1635,8 @@ function openMode(id,opts){
   if(flow.routeB&&STEP_QUESTIONS[flow.stepIndex]) sub=STEP_QUESTIONS[flow.stepIndex];
   els.modeSub.textContent=sub;
   els.results.innerHTML='';
+  if(id==='roast') roastResult.activeFlavor='original';
+  if(id==='bigdream') bigDreamResult.activeBlow='small';
   renderProgress();
   renderInputArea(id,opts);
   els.generateBtn.style.display=(id==='workshop'||id==='share')?'none':'block';
@@ -1787,7 +1791,9 @@ function renderOutputFor(id,input){
       flow.context.callback=_mv.callback||'';
       flow.context.nextAction='';flow.context.resolutionWish='';
       flow.context.v1={truth:_v1d.truth||'',analogy:_v1d.analogy||'',honest:_v1d.honest||'',boundary:_v1d.boundary||'',comicExit:_v1d.comicExit||'',nextAction:_v1d.nextAction||''};
-      html=renderRoastDualBlock(v2r,_v1d,input,_tLabel);
+      roastResult.spicy=v2r;
+      roastResult.original=_v1d;
+      html=renderRoastBlock(input,_tLabel);
       _usedRoastV2=true;
     } else {
       html='<div class="result-card" style="text-align:center;padding:2em 1em;">'
@@ -1803,10 +1809,12 @@ function renderOutputFor(id,input){
   } else if(id==='bigdream'){
     /* 使用者在輸入框確認或修改的願望草稿 */
     var wish=input||needToWish(flow.context.need)||flow.context.wish||flow.context.topic||'';
-    data=genBigDream(wish,getChipValue('topic-chip'));
     flow.context.topic=getChipValue('topic-chip')||shortInput(wish,14);
     flow.context.wish=wish;
-    html=renderTextBlocks(data);
+    bigDreamResult.small=genBigDreamSmall(wish,flow.context.topic);
+    bigDreamResult.crazy=genBigDreamCrazy(wish,flow.context.topic);
+    data=bigDreamResult.small;
+    html=renderBigDreamBlock();
   } else if(id==='lost'){
     var emo=getChipValue('emotion-chip')||detectEmotion(input);
     data=genLost(input,emo);
@@ -1831,18 +1839,46 @@ function renderOutputFor(id,input){
   if(data&&data.quote) flow.context.lastQuote=data.quote;
 
   var isQuick=QUICK_MODES.indexOf(id)!==-1&&!flow.routeB;
-  var actionHtml=_usedRoastV2
-    ?(roastDualActionRowHtml()+(flow.routeB?routeBNextHtml(id):''))
-    :(actionRowHtml()+(isQuick?'<button class="btn-primary btn-make-work" id="btn-make-work" style="margin-top:10px;">🎬 把這件事變成作品</button>':'')+(flow.routeB?routeBNextHtml(id):''));
+  var actionHtml;
+  if(_usedRoastV2){
+    actionHtml=roastDualActionRowHtml()+(flow.routeB?routeBNextHtml(id):'');
+  } else if(id==='bigdream'){
+    actionHtml=bigDreamActionRowHtml()+(flow.routeB?routeBNextHtml(id):'');
+  } else {
+    actionHtml=actionRowHtml()+(isQuick?'<button class="btn-primary btn-make-work" id="btn-make-work" style="margin-top:10px;">🎬 把這件事變成作品</button>':'')+(flow.routeB?routeBNextHtml(id):'');
+  }
   return html+actionHtml;
 }
 
 function bindResultActions(id){
   if(id==='roast') bindRoastClarifyEvents();
-  /* 複製（只複製內容文字，不含按鈕） */
+  /* 複製（roast/bigdream 依 activeFlavor；其他模式抓 .result-card 文字） */
   var copyBtn=document.getElementById('btn-copy-result');
   if(copyBtn){
     copyBtn.addEventListener('click',function(){
+      if(id==='roast'&&roastResult.original){
+        var isSpicyCopy=roastResult.activeFlavor==='spicy';
+        var lines=[];
+        if(isSpicyCopy&&roastResult.spicy){
+          var m=roastResult.spicy.roast.mouseOutput;
+          [m.truth,m.analogy,m.honest,m.boundary,m.selfOwn,m.comicExit].forEach(function(v){if(v) lines.push(v);});
+        } else {
+          var v1=roastResult.original;
+          [v1.truth,v1.analogy,v1.honest,v1.boundary,v1.comicExit].forEach(function(v){if(v) lines.push(v);});
+        }
+        copyToClipboard(lines.join('\n'));
+        logEvent('COPY',{mode:'roast',flavor:roastResult.activeFlavor});
+        return;
+      }
+      if(id==='bigdream'){
+        var isCrazyCopy=bigDreamResult.activeBlow==='crazy';
+        var bd=isCrazyCopy?bigDreamResult.crazy:bigDreamResult.small;
+        var lines2=[];
+        if(bd){[bd.wish,bd.pie,bd.brag,bd.parallel].forEach(function(v){if(v) lines2.push(v);});}
+        copyToClipboard(lines2.join('\n'));
+        logEvent('COPY',{mode:'bigdream',blow:bigDreamResult.activeBlow});
+        return;
+      }
       var texts=[];
       Array.prototype.forEach.call(els.results.querySelectorAll('.result-card'),function(card){
         var who=card.querySelector('.who'); var body=card.querySelector('.body-text'); var q=card.querySelector('.quote');
@@ -1865,47 +1901,118 @@ function bindResultActions(id){
       logEvent('REGENERATE',{mode:id});els.results.innerHTML=renderOutputFor(id,flow.input);bindResultActions(id);saveDraft();
     });
   }); }
-  /* 加辣版：複製 */
-  var copySpicyBtn=document.getElementById('btn-copy-spicy');
-  if(copySpicyBtn){ copySpicyBtn.addEventListener('click',function(){
-    var t=(flow.context.truth||'')+(flow.context.analogy?'\n'+flow.context.analogy:'')
-         +(flow.context.honest?'\n'+flow.context.honest:'')+(flow.context.boundary?'\n'+flow.context.boundary:'');
-    copyToClipboard(t.trim());logEvent('COPY',{mode:'roast',flavor:'spicy'});
+  /* 嗆聲：圖卡（依目前 activeFlavor） */
+  var roastCardBtn=document.getElementById('btn-roast-card');
+  if(roastCardBtn){ roastCardBtn.addEventListener('click',function(){
+    var isSpicy=roastResult.activeFlavor==='spicy';
+    var t,a,h;
+    if(isSpicy&&roastResult.spicy){
+      var m=roastResult.spicy.roast.mouseOutput;
+      t=m.truth||'';a=m.analogy||'';h=m.honest||'';
+    } else {
+      var v1=roastResult.original||{};
+      t=v1.truth||'';a=v1.analogy||'';h=v1.honest||'';
+    }
+    var flavorKey=isSpicy?'spicy':'original';
+    var card=drawRoastCard(t,a,h,flavorKey);
+    _showRoastCardInline('roast-card-active',card,t+(a?'\n'+a:''));
+    logEvent('SHARE_CARD',{mode:'roast',flavor:flavorKey});
   }); }
-  /* 加辣版：圖卡 */
-  var cardSpicyBtn=document.getElementById('btn-card-spicy');
-  if(cardSpicyBtn){ cardSpicyBtn.addEventListener('click',function(){
-    var card=drawRoastCard(flow.context.truth||'',flow.context.analogy||'',flow.context.honest||'','spicy');
-    var shareText=(flow.context.truth||'')+(flow.context.analogy?'\n'+flow.context.analogy:'');
-    _showRoastCardInline('roast-card-spicy',card,shareText);
-    logEvent('SHARE_CARD',{mode:'roast',flavor:'spicy'});
-  }); }
-  /* 原味版：複製 */
-  var copyOrigBtn=document.getElementById('btn-copy-original');
-  if(copyOrigBtn){ copyOrigBtn.addEventListener('click',function(){
-    var v1=flow.context.v1||{};
-    var t=(v1.truth||'')+(v1.analogy?'\n'+v1.analogy:'')
-         +(v1.honest?'\n'+v1.honest:'')+(v1.boundary?'\n'+v1.boundary:'');
-    copyToClipboard(t.trim());logEvent('COPY',{mode:'roast',flavor:'original'});
-  }); }
-  /* 原味版：圖卡 */
-  var cardOrigBtn=document.getElementById('btn-card-original');
-  if(cardOrigBtn){ cardOrigBtn.addEventListener('click',function(){
-    var v1=flow.context.v1||{};
-    var card=drawRoastCard(v1.truth||'',v1.analogy||'',v1.honest||'','original');
-    var shareText=(v1.truth||'')+(v1.analogy?'\n'+v1.analogy:'');
-    _showRoastCardInline('roast-card-original',card,shareText);
-    logEvent('SHARE_CARD',{mode:'roast',flavor:'original'});
-  }); }
-  /* 嗆聲 V2：分享（純文字） */
-  var shareBtn=document.getElementById('btn-roast-share');
-  if(shareBtn&&navigator.share){ shareBtn.addEventListener('click',function(){
-    var mainLine=flow.context.truth||'';
-    var subLine=flow.context.honest||'';
+  /* 嗆聲：分享（依目前 activeFlavor） */
+  var roastShareBtn=document.getElementById('btn-roast-share');
+  if(roastShareBtn&&navigator.share){ roastShareBtn.addEventListener('click',function(){
+    var isSpicy=roastResult.activeFlavor==='spicy';
+    var mainLine,subLine;
+    if(isSpicy&&roastResult.spicy){var m=roastResult.spicy.roast.mouseOutput;mainLine=m.truth||'';subLine=m.honest||'';}
+    else{var v1=roastResult.original||{};mainLine=v1.truth||'';subLine=v1.honest||'';}
     var txt='🐭 小天鼠開嗆\n'+(mainLine?mainLine+'\n':'')+(subLine?subLine+'\n':'')+'\n人生的荒謬哈哈 #笑鼠人了';
     navigator.share({text:txt}).catch(function(){copyToClipboard(txt);});
   }); }
-  /* 嗆聲 V2：把這句變成作品 */
+  /* 嗆聲：口味升級按鈕 */
+  function bindFlavorToggle(){
+    var fBtn=document.getElementById('btn-flavor-toggle');
+    if(!fBtn) return;
+    fBtn.addEventListener('click',function(){
+      var goingSpicy=roastResult.activeFlavor==='original';
+      roastResult.activeFlavor=goingSpicy?'spicy':'original';
+      var flavorBlock=document.getElementById('roast-flavor-block');
+      if(!flavorBlock) return;
+      if(goingSpicy){
+        fBtn.textContent='🐭 小天鼠：你今天火氣很大喔？好，那我不客氣了 🌶🌶🌶';
+        fBtn.style.pointerEvents='none';
+        setTimeout(function(){
+          var tmp=document.createElement('div');
+          tmp.innerHTML=renderRoastBlock(flow.input,getChipValue('target-chip')||'其他');
+          flavorBlock.parentNode.replaceChild(tmp.firstChild,flavorBlock);
+          bindFlavorToggle();
+        },900);
+      } else {
+        var tmp=document.createElement('div');
+        tmp.innerHTML=renderRoastBlock(flow.input,getChipValue('target-chip')||'其他');
+        flavorBlock.parentNode.replaceChild(tmp.firstChild,flavorBlock);
+        bindFlavorToggle();
+      }
+      logEvent('FLAVOR_TOGGLE',{mode:'roast',flavor:roastResult.activeFlavor});
+    });
+  }
+  bindFlavorToggle();
+  /* 畫大餅：吹牛升級按鈕 */
+  function bindBlowToggle(){
+    var bBtn=document.getElementById('btn-blow-toggle');
+    if(!bBtn) return;
+    bBtn.addEventListener('click',function(){
+      var goingCrazy=bigDreamResult.activeBlow==='small';
+      bigDreamResult.activeBlow=goingCrazy?'crazy':'small';
+      if(goingCrazy){
+        bBtn.textContent='🐯 吹牛不用繳稅金！唬爛虎幫你吹到宇宙去 🚀';
+        bBtn.style.pointerEvents='none';
+        setTimeout(function(){
+          var bdBlock=document.getElementById('bigdream-blow-block');
+          if(!bdBlock) return;
+          var tmp=document.createElement('div');
+          tmp.innerHTML=renderBigDreamBlock();
+          bdBlock.parentNode.replaceChild(tmp.firstChild,bdBlock);
+          bindBlowToggle();
+        },900);
+      } else {
+        var bdBlock=document.getElementById('bigdream-blow-block');
+        if(!bdBlock) return;
+        var tmp=document.createElement('div');
+        tmp.innerHTML=renderBigDreamBlock();
+        bdBlock.parentNode.replaceChild(tmp.firstChild,bdBlock);
+        bindBlowToggle();
+      }
+      logEvent('BLOW_TOGGLE',{mode:'bigdream',blow:bigDreamResult.activeBlow});
+    });
+  }
+  bindBlowToggle();
+  /* 嗆聲 / 畫大餅：唱成歌 → 進工坊 */
+  var makeSongBtn=document.getElementById('btn-make-song');
+  if(makeSongBtn){ makeSongBtn.addEventListener('click',function(){
+    tryConsumeQuota('journey').then(function(jq){
+      if(!jq.ok){showQuotaExhausted('journey',jq.reason);return;}
+      logEvent('MODE_SELECT',{mode:'workshop_from_'+id});
+      flow.routeB=true; flow.stepIndex=0; openMode(ROUTE_B_ORDER[0],{routeB:true});
+    });
+  }); }
+  /* 嗆聲 / 畫大餅：拍成電影 → 進工坊 */
+  var makeFilmBtn=document.getElementById('btn-make-film');
+  if(makeFilmBtn){ makeFilmBtn.addEventListener('click',function(){
+    tryConsumeQuota('journey').then(function(jq){
+      if(!jq.ok){showQuotaExhausted('journey',jq.reason);return;}
+      logEvent('MODE_SELECT',{mode:'film_from_'+id});
+      flow.routeB=true; flow.stepIndex=0; openMode(ROUTE_B_ORDER[0],{routeB:true});
+    });
+  }); }
+  /* 畫大餅：分享 */
+  var bigdreamShareBtn=document.getElementById('btn-bigdream-share');
+  if(bigdreamShareBtn&&navigator.share){ bigdreamShareBtn.addEventListener('click',function(){
+    var isCrazy=bigDreamResult.activeBlow==='crazy';
+    var d=isCrazy?bigDreamResult.crazy:bigDreamResult.small;
+    var txt='🐯 唬爛虎開吹\n'+((d&&(d.brag||d.wish))||'')+'\n\n吹牛不用繳稅金 #笑鼠人了';
+    navigator.share({text:txt}).catch(function(){copyToClipboard(txt);});
+  }); }
+  /* 舊版相容：把這句變成作品 */
   var makeWorkRoastBtn=document.getElementById('btn-make-work-roast');
   if(makeWorkRoastBtn){ makeWorkRoastBtn.addEventListener('click',function(){
     tryConsumeQuota('journey').then(function(jq){
@@ -1957,11 +2064,30 @@ function roastV2ActionRowHtml(){
 }
 function roastDualActionRowHtml(){
   var shareBtn=navigator.share?'<button class="btn-copy" id="btn-roast-share">↗ 分享</button>':'';
+  var secStyle='width:100%;margin-top:6px;padding:8px;background:transparent;border:1px solid #e0d0c0;border-radius:8px;color:#bbb;font-size:0.83em;cursor:pointer;';
   return '<div class="action-row">'
     +'<button class="btn-regen" id="btn-regen-result">🔁 再嗆一版</button>'
+    +'<button class="btn-copy" id="btn-copy-result">📋 複製</button>'
+    +'<button class="btn-copy" id="btn-roast-card">🖼 圖卡</button>'
     +shareBtn
     +'</div>'
-    +'<button type="button" id="btn-make-work-roast" style="width:100%;margin-top:8px;padding:9px;background:transparent;border:1px solid #e0d0c0;border-radius:8px;color:#bbb;font-size:0.85em;cursor:pointer;">把這句變成作品</button>';
+    +'<div style="display:flex;gap:6px;margin-top:6px;">'
+    +'<button type="button" id="btn-make-song" style="'+secStyle+'flex:1;">🎤 唱成歌</button>'
+    +'<button type="button" id="btn-make-film" style="'+secStyle+'flex:1;">🎬 拍成電影</button>'
+    +'</div>';
+}
+function bigDreamActionRowHtml(){
+  var shareBtn=navigator.share?'<button class="btn-copy" id="btn-bigdream-share">↗ 分享</button>':'';
+  var secStyle='width:100%;margin-top:6px;padding:8px;background:transparent;border:1px solid #e0d0c0;border-radius:8px;color:#bbb;font-size:0.83em;cursor:pointer;';
+  return '<div class="action-row">'
+    +'<button class="btn-regen" id="btn-regen-result">🔁 再吹一版</button>'
+    +'<button class="btn-copy" id="btn-copy-result">📋 複製</button>'
+    +shareBtn
+    +'</div>'
+    +'<div style="display:flex;gap:6px;margin-top:6px;">'
+    +'<button type="button" id="btn-make-song" style="'+secStyle+'flex:1;">🎤 唱成歌</button>'
+    +'<button type="button" id="btn-make-film" style="'+secStyle+'flex:1;">🎬 拍成電影</button>'
+    +'</div>';
 }
 function _showRoastCardInline(anchorId,card,shareText){
   var existing=document.getElementById(anchorId);
@@ -1992,6 +2118,107 @@ function _showRoastCardInline(anchorId,card,shareText){
   container.appendChild(actRow);
   els.results.appendChild(container);
 }
+/* ── genBigDreamSmall / genBigDreamCrazy ────────────────────────── */
+function genBigDreamSmall(input,topic){
+  topic=topic||shortInput(input,14);
+  var wishLine=fill(pickVaried('tiger_wish_s',TIGER_WISH),{topic:topic});
+  var pie=fill(pickVaried('tiger_pie_s',TIGER_PIE),{topic:topic});
+  return {role:'tiger',tagClass:'tag-tiger',
+    wish:wishLine,pie:pie,topic:topic,
+    quote:pickGoldenQuote('bigdream')};
+}
+function genBigDreamCrazy(input,topic){
+  topic=topic||shortInput(input,14);
+  var bragLine=fill(pickVaried('tiger_brag_c',TIGER_BRAG),{topic:topic});
+  var parallel=fill(pickVaried('tiger_parallel_c',TIGER_PARALLEL),{topic:topic});
+  return {role:'tiger',tagClass:'tag-tiger',
+    brag:bragLine,parallel:parallel,topic:topic,
+    quote:pickGoldenQuote('bigdream')};
+}
+
+/* ── renderRoastBlock ───────────────────────────────────────────── */
+function renderRoastBlock(input,targetLabel){
+  var isSpicy=roastResult.activeFlavor==='spicy';
+  var tc='vent tag-rat';
+  var flavorLabelStyle='display:inline-block;font-size:0.78em;font-weight:800;padding:0.22em 0.75em;border-radius:20px;margin-bottom:0.75em;';
+  var flavorLabel=isSpicy
+    ?'<span style="'+flavorLabelStyle+'background:#fef3c7;color:#b45309;">🌶 加辣版</span>'
+    :'<span style="'+flavorLabelStyle+'background:#f0fdf4;color:#166534;">🫙 原味版</span>';
+  var contentHtml;
+  if(isSpicy&&roastResult.spicy){
+    var m=roastResult.spicy.roast.mouseOutput;
+    contentHtml=[
+      _v2Section('嗆聲版',[m.truth,m.analogy]),
+      _v2Section('給你好看版',[m.honest,m.boundary]),
+      _v2Section('下樓梯版',[m.selfOwn,m.comicExit])
+    ].join('');
+  } else if(roastResult.original){
+    var v1=roastResult.original;
+    contentHtml=[
+      _v2Section('嗆聲版',[v1.truth,v1.analogy]),
+      _v2Section('給你好看版',[v1.honest,v1.boundary]),
+      _v2Section('下樓梯版',[v1.comicExit,v1.nextAction])
+    ].join('');
+  } else {
+    contentHtml='<div>資料載入中…</div>';
+  }
+  var upgradeStyle='width:100%;margin:10px 0 4px;padding:11px;border-radius:9px;font-weight:700;cursor:pointer;font-size:0.95em;';
+  var upgradeBtn=isSpicy
+    ?'<button type="button" id="btn-flavor-toggle" style="'+upgradeStyle+'background:#f0fdf4;border:1.5px dashed #4ade80;color:#166534;">🫙 回原味</button>'
+    :'<button type="button" id="btn-flavor-toggle" style="'+upgradeStyle+'background:#fff7ed;border:1.5px dashed #fb923c;color:#c2650a;">🤣 再辣一點</button>';
+  var clarifyHtml='';
+  if(!isSpicy&&roastResult.spicy&&roastResult.spicy.clarifyOpts&&roastResult.spicy.clarifyOpts.length>0){
+    clarifyHtml=renderRoastClarifyBlock(roastResult.spicy.clarifyOpts[0],input||'',targetLabel||'');
+  }
+  return '<div id="roast-flavor-block">'
+    +'<div class="result-card '+tc+'">'
+    +'<div class="who">🐭 小天鼠開嗆</div>'
+    +'<div class="body-text">'+flavorLabel+contentHtml+'</div>'
+    +'</div>'
+    +upgradeBtn
+    +'</div>'
+    +clarifyHtml;
+}
+
+/* ── renderBigDreamBlock ────────────────────────────────────────── */
+function renderBigDreamBlock(){
+  var isCrazy=bigDreamResult.activeBlow==='crazy';
+  var tc='tag-tiger';
+  var blowLabelStyle='display:inline-block;font-size:0.78em;font-weight:800;padding:0.22em 0.75em;border-radius:20px;margin-bottom:0.75em;';
+  var blowLabel=isCrazy
+    ?'<span style="'+blowLabelStyle+'background:#fef9c3;color:#a16207;">🚀 狂吹版</span>'
+    :'<span style="'+blowLabelStyle+'background:#e0f2fe;color:#0369a1;">☁️ 小吹版</span>';
+  var contentHtml;
+  if(isCrazy&&bigDreamResult.crazy){
+    var c=bigDreamResult.crazy;
+    contentHtml=[
+      _v2Section('你真正想要的是',[c.brag]),
+      _v2Section('吹到宇宙去',[c.parallel]),
+      _v2Section('今天偷一小步',['先說出來，明天再開始努力。吹牛不用繳稅金！🐯'])
+    ].join('');
+  } else if(bigDreamResult.small){
+    var s=bigDreamResult.small;
+    contentHtml=[
+      _v2Section('你真正想要的是',[s.wish]),
+      _v2Section('小吹一下',[s.pie]),
+      _v2Section('今天偷一小步',['先把「'+escapeHtml(s.topic)+'」說出口，這就是第一步。'])
+    ].join('');
+  } else {
+    contentHtml='<div>資料載入中…</div>';
+  }
+  var upgradeStyle='width:100%;margin:10px 0 4px;padding:11px;border-radius:9px;font-weight:700;cursor:pointer;font-size:0.95em;';
+  var upgradeBtn=isCrazy
+    ?'<button type="button" id="btn-blow-toggle" style="'+upgradeStyle+'background:#e0f2fe;border:1.5px dashed #38bdf8;color:#0369a1;">☁️ 回小吹</button>'
+    :'<button type="button" id="btn-blow-toggle" style="'+upgradeStyle+'background:#fef9c3;border:1.5px dashed #facc15;color:#a16207;">🚀 再吹大一點</button>';
+  return '<div id="bigdream-blow-block">'
+    +'<div class="result-card '+tc+'">'
+    +'<div class="who">🐯 唬爛虎開吹</div>'
+    +'<div class="body-text">'+blowLabel+contentHtml+'</div>'
+    +'</div>'
+    +upgradeBtn
+    +'</div>';
+}
+
 function renderRoastDualBlock(v2r,v1data,input,targetLabel){
   var m=v2r.roast.mouseOutput;
   var tc='vent tag-rat';
