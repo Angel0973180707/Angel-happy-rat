@@ -201,7 +201,7 @@ function logPartnerClick(partnerId,url){
    2. 安全防護
 --------------------------------------------------- */
 var SELF_HARM_WORDS=['想死','自殺','不想活','活不下去','傷害自己','自殘','結束生命'];
-var VIOLENCE_OTHERS_WORDS=['想殺','殺死','砍他','捅他','放火燒','打死他'];
+var VIOLENCE_OTHERS_WORDS=['想殺','殺死','砍他','捅他','放火燒','打死他','去死','去死啦','叫他去死','讓他去死','你去死','希望他死','希望她死'];
 var MILD_ANGER_WORDS=['想揍人','想打人','氣到想揍'];
 
 function checkSafety(text){
