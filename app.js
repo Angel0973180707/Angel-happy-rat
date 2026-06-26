@@ -1767,6 +1767,7 @@ function runGenerate(id){
 
 function renderOutputFor(id,input){
   var data, html='';
+  var _usedRoastV2=false;
   if(id==='roast'){
     var _tLabel=getChipValue('target-chip')||'其他';
     var v2r=runRoastV2(input,_tLabel,roastV2State.pendingGuidedInput);
@@ -1785,6 +1786,7 @@ function renderOutputFor(id,input){
       flow.context.callback=_mv.callback||'';
       flow.context.nextAction='';flow.context.resolutionWish='';
       html=renderRoastV2Block(v2r,input,_tLabel);
+      _usedRoastV2=true;
     } else {
       data=genRoast(input,_tLabel);
       flow.context.event=input;
@@ -1837,9 +1839,9 @@ function renderOutputFor(id,input){
   if(data&&data.quote) flow.context.lastQuote=data.quote;
 
   var isQuick=QUICK_MODES.indexOf(id)!==-1&&!flow.routeB;
-  var actionHtml=actionRowHtml()
-    +(isQuick?'<button class="btn-primary btn-make-work" id="btn-make-work" style="margin-top:10px;">🎬 把這件事變成作品</button>':'')
-    +(flow.routeB?routeBNextHtml(id):'');
+  var actionHtml=_usedRoastV2
+    ?(roastV2ActionRowHtml()+(flow.routeB?routeBNextHtml(id):''))
+    :(actionRowHtml()+(isQuick?'<button class="btn-primary btn-make-work" id="btn-make-work" style="margin-top:10px;">🎬 把這件事變成作品</button>':'')+(flow.routeB?routeBNextHtml(id):''));
   return html+actionHtml;
 }
 
@@ -1871,13 +1873,84 @@ function bindResultActions(id){
       logEvent('REGENERATE',{mode:id});els.results.innerHTML=renderOutputFor(id,flow.input);bindResultActions(id);saveDraft();
     });
   }); }
+  /* 嗆聲 V2：唬爛虎 toggle */
+  var tigerToggle=document.getElementById('btn-roast-tiger-toggle');
+  if(tigerToggle){ tigerToggle.addEventListener('click',function(){
+    var content=document.getElementById('roast-tiger-content');
+    if(!content) return;
+    var show=content.style.display==='none';
+    content.style.display=show?'block':'none';
+    tigerToggle.textContent=show?'🐯 收起唬爛虎':'🐯 讓唬爛虎吹大這件事';
+  }); }
+  /* 嗆聲 V2：產生分享圖卡 */
+  var shareCardBtn=document.getElementById('btn-roast-share-card');
+  if(shareCardBtn){ shareCardBtn.addEventListener('click',function(){
+    var mainLine=flow.context.truth||'笑鼠人了！';
+    var subLine=flow.context.honest||flow.context.analogy||'';
+    var card=drawRoastCard(mainLine,subLine);
+    var pw=Math.min(360,window.innerWidth-48);
+    var ph=pw;
+    var previewEl=document.createElement('canvas');
+    previewEl.width=pw;previewEl.height=ph;
+    previewEl.getContext('2d').drawImage(card,0,0,pw,ph);
+    previewEl.style.cssText='display:block;margin:12px auto;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.15);max-width:100%;';
+    var shareText=mainLine+(subLine?'\n'+subLine:'');
+    var cardHtml='<div id="roast-card-preview" style="margin-top:12px;">'
+      +'<div class="action-row" style="justify-content:center;">'
+      +'<button class="btn-copy" id="btn-roast-dl">⬇ 下載圖卡</button>'
+      +'<button class="btn-copy" id="btn-roast-copy-text">📋 複製文案</button>'
+      +(navigator.share?'<button class="btn-copy" id="btn-roast-share-img">↗ 分享</button>':'')
+      +'</div></div>';
+    var existing=document.getElementById('roast-card-preview');
+    if(existing) existing.remove();
+    var container=document.createElement('div');
+    container.id='roast-card-preview';
+    container.style.marginTop='12px';
+    container.appendChild(previewEl);
+    var actRow=document.createElement('div');
+    actRow.className='action-row';
+    actRow.style.justifyContent='center';
+    var dlBtn=document.createElement('button');
+    dlBtn.className='btn-copy';dlBtn.textContent='⬇ 下載圖卡';
+    dlBtn.addEventListener('click',function(){downloadCanvas(card,'laugh-mouse-roast.png');});
+    var cpBtn=document.createElement('button');
+    cpBtn.className='btn-copy';cpBtn.textContent='📋 複製文案';
+    cpBtn.addEventListener('click',function(){copyToClipboard(shareText);});
+    actRow.appendChild(dlBtn);actRow.appendChild(cpBtn);
+    if(navigator.share){
+      var shBtn=document.createElement('button');
+      shBtn.className='btn-copy';shBtn.textContent='↗ 分享';
+      shBtn.addEventListener('click',function(){shareCanvas(card,shareText);});
+      actRow.appendChild(shBtn);
+    }
+    container.appendChild(actRow);
+    els.results.appendChild(container);
+    logEvent('SHARE_CARD',{mode:'roast'});
+  }); }
+  /* 嗆聲 V2：分享（純文字） */
+  var shareBtn=document.getElementById('btn-roast-share');
+  if(shareBtn&&navigator.share){ shareBtn.addEventListener('click',function(){
+    var mainLine=flow.context.truth||'';
+    var subLine=flow.context.honest||'';
+    var txt='🐭 小天鼠開嗆\n'+(mainLine?mainLine+'\n':'')+(subLine?subLine+'\n':'')+'\n人生的荒謬哈哈 #笑鼠人了';
+    navigator.share({text:txt}).catch(function(){copyToClipboard(txt);});
+  }); }
+  /* 嗆聲 V2：把這句變成作品 */
+  var makeWorkRoastBtn=document.getElementById('btn-make-work-roast');
+  if(makeWorkRoastBtn){ makeWorkRoastBtn.addEventListener('click',function(){
+    tryConsumeQuota('journey').then(function(jq){
+      if(!jq.ok){showQuotaExhausted('journey',jq.reason);return;}
+      logEvent('MODE_SELECT',{mode:'workshop_from_roast'});
+      flow.routeB=true; flow.stepIndex=0; openMode(ROUTE_B_ORDER[0],{routeB:true});
+    });
+  }); }
   /* 下一步 */
   var nextBtn=document.getElementById('btn-route-next');
   if(nextBtn){ nextBtn.addEventListener('click',function(){flow.stepIndex=ROUTE_B_ORDER.indexOf(id)+1; openMode(ROUTE_B_ORDER[flow.stepIndex],{routeB:true}); saveDraft();}); }
   /* 完成 */
   var finishBtn=document.getElementById('btn-route-finish');
   if(finishBtn){ finishBtn.addEventListener('click',function(){ toast('創作之旅完成！記得分享出去讓朋友笑一下 🎉'); showScreen('home'); checkDraftBanner(); }); }
-  /* 把這件事變成作品 → 也要扣一次 journey */
+  /* 把這件事變成作品（舊版 V1 fallback 路徑） */
   var makeWorkBtn=document.getElementById('btn-make-work');
   if(makeWorkBtn){ makeWorkBtn.addEventListener('click',function(){
     tryConsumeQuota('journey').then(function(jq){
@@ -1901,6 +1974,48 @@ function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 function escapeAttr(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function actionRowHtml(){
   return '<div class="action-row"><button class="btn-copy" id="btn-copy-result">📋 複製</button><button class="btn-regen" id="btn-regen-result">🎲 再來一版</button></div>';
+}
+function roastV2ActionRowHtml(){
+  var shareBtn=navigator.share?'<button class="btn-copy" id="btn-roast-share">↗ 分享</button>':'';
+  return '<div class="action-row">'
+    +'<button class="btn-regen" id="btn-regen-result">🔁 再嗆一版</button>'
+    +'<button class="btn-copy" id="btn-copy-result">📋 複製</button>'
+    +'<button class="btn-copy" id="btn-roast-share-card">🖼 產生分享圖卡</button>'
+    +shareBtn
+    +'</div>'
+    +'<button type="button" id="btn-make-work-roast" style="width:100%;margin-top:8px;padding:9px;background:transparent;border:1px solid #e0d0c0;border-radius:8px;color:#bbb;font-size:0.85em;cursor:pointer;">把這句變成作品</button>';
+}
+function drawRoastCard(mainLine,subLine){
+  var width=1080,height=1080;
+  var canvas=document.createElement('canvas');
+  canvas.width=width;canvas.height=height;
+  var ctx=canvas.getContext('2d');
+  var s=width/1080;
+  var bg=ctx.createLinearGradient(0,0,width,height);
+  bg.addColorStop(0,'#FBF5E8');bg.addColorStop(1,'#F4EBD9');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,width,height);
+  ctx.globalAlpha=0.07;ctx.fillStyle='#D89A3E';
+  ctx.beginPath();ctx.arc(0,0,300*s,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(width,height,420*s,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=1;
+  var rat=IMG_CACHE['rat.webp'];
+  var charSize=190*s,charY=height*0.32;
+  if(rat) ctx.drawImage(rat,width/2-charSize/2,charY-charSize/2,charSize,charSize);
+  ctx.textAlign='center';
+  ctx.fillStyle='#3A2417';
+  ctx.font='900 '+Math.round(52*s)+'px "Noto Serif TC",serif';
+  wrapCanvasText(ctx,mainLine,width/2,charY+charSize*0.6+55*s,width*0.82,62*s);
+  ctx.fillStyle='rgba(58,36,23,0.65)';
+  ctx.font=Math.round(28*s)+'px "Noto Sans TC",sans-serif';
+  wrapCanvasText(ctx,'「'+subLine+'」',width/2,height*0.74,width*0.78,40*s);
+  ctx.fillStyle='#D89A3E';
+  ctx.fillRect(0,height-110*s,width,110*s);
+  ctx.fillStyle='#3A2417';
+  ctx.font='700 '+Math.round(30*s)+'px "Noto Sans TC",sans-serif';
+  ctx.fillText('人生的荒謬哈哈',width/2,height-66*s);
+  ctx.font='500 '+Math.round(24*s)+'px "Noto Sans TC",sans-serif';
+  ctx.fillText('笑鼠人了！',width/2,height-32*s);
+  return canvas;
 }
 function routeBNextHtml(currentId){
   var idx=ROUTE_B_ORDER.indexOf(currentId);
@@ -2382,19 +2497,20 @@ function renderRoastV2Block(result,input,targetLabel){
   ].join('');
   var mouseHtml='<div class="result-card '+tc+'"><div class="who">🐭 小天鼠開嗆</div><div class="body-text">'+mBody+'</div></div>';
 
-  // 唬爛虎：兩段精簡版
+  // 唬爛虎：預設收起，點 CTA 才展開
   var tBody=[
     _v2Section('吹大版',[t.l1,t.l2]),
     _v2Section('落地版',[t.landing])
   ].join('');
-  var tigerHtml='<div class="result-card '+tc+'"><div class="who">🐯 唬爛虎吹大</div><div class="body-text">'+tBody+'</div></div>';
+  var tigerContentHtml='<div id="roast-tiger-content" style="display:none"><div class="result-card '+tc+'"><div class="who">🐯 唬爛虎吹大</div><div class="body-text">'+tBody+'</div></div></div>';
+  var tigerToggleHtml='<button type="button" id="btn-roast-tiger-toggle" style="width:100%;margin:8px 0;padding:10px;background:#fff7ed;border:1.5px dashed #d89a3e;border-radius:8px;color:#c2650a;font-weight:700;cursor:pointer;font-size:0.95em;">🐯 讓唬爛虎吹大這件事</button>';
 
   // 補充選項（只在需要時出現）
   var clarifyHtml='';
   if(result.clarifyOpts&&result.clarifyOpts.length>0){
     clarifyHtml=renderRoastClarifyBlock(result.clarifyOpts[0],input,targetLabel);
   }
-  return mouseHtml+tigerHtml+clarifyHtml;
+  return mouseHtml+tigerToggleHtml+tigerContentHtml+clarifyHtml;
 }
 
 var _clarifyHeadIdx=0;
@@ -2463,10 +2579,7 @@ function rerunRoastV2(input,targetLabel,guidedInput){
   flow.context.callback=m.callback||'';
   flow.context.targetCategory=result.classification.targetRole||targetLabel;
   flow.context.situationCategory=result.evidence.layerKey||'general';
-  var isQuick=QUICK_MODES.indexOf('roast')!==-1&&!flow.routeB;
-  var actionHtml=actionRowHtml()
-    +(isQuick?'<button class="btn-primary btn-make-work" id="btn-make-work" style="margin-top:10px;">🎬 把這件事變成作品</button>':'')
-    +(flow.routeB?routeBNextHtml('roast'):'');
+  var actionHtml=roastV2ActionRowHtml()+(flow.routeB?routeBNextHtml('roast'):'');
   els.results.innerHTML=renderRoastV2Block(result,input,targetLabel)+actionHtml;
   bindResultActions('roast');
   saveDraft();
