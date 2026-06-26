@@ -1993,52 +1993,55 @@ function drawRoastCard(truthLine,analogyLine,subLine){
   var ctx=canvas.getContext('2d');
   var s=width/1080;
 
-  /* 背景 */
-  ctx.fillStyle='#FBF5E8';
+  /* 背景：純淨米白，讓文字對比最大 */
+  ctx.fillStyle='#FEFAF3';
   ctx.fillRect(0,0,width,height);
-  ctx.globalAlpha=0.05;ctx.fillStyle='#7c3aed';
-  ctx.beginPath();ctx.arc(width*0.88,height*0.22,260*s,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.arc(width*0.12,height*0.78,180*s,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=0.04;ctx.fillStyle='#6d28d9';
+  ctx.beginPath();ctx.arc(width*0.92,height*0.5,340*s,0,Math.PI*2);ctx.fill();
   ctx.globalAlpha=1;
 
-  /* 品牌色頂欄（紫色 = 嗆聲版識別色） */
-  var barH=72*s;
+  /* 頂欄：老鼠縮成 logo（44px），左對齊，右側加 #嗆聲 標籤 */
+  var barH=72*s,pad=32*s;
   ctx.fillStyle='#6d28d9';
   ctx.fillRect(0,0,width,barH);
-  ctx.fillStyle='#ffffff';
-  ctx.textAlign='center';
-  ctx.font='800 '+Math.round(38*s)+'px "Noto Sans TC",sans-serif';
-  ctx.fillText('🐭  笑鼠人了！',width/2,barH*0.70);
-
-  /* 老鼠角色：大、醒目 */
   var rat=IMG_CACHE['rat.webp'];
-  var charSize=290*s;
-  if(rat) ctx.drawImage(rat,width/2-charSize/2,barH+16*s,charSize,charSize);
+  var ratSz=44*s;
+  if(rat) ctx.drawImage(rat,pad,barH/2-ratSz/2,ratSz,ratSz);
+  ctx.fillStyle='#ffffff';
+  ctx.textAlign='left';
+  ctx.font='800 '+Math.round(34*s)+'px "Noto Sans TC",sans-serif';
+  ctx.fillText('笑鼠人了！',pad+ratSz+12*s,barH*0.70);
+  ctx.textAlign='right';
+  ctx.fillStyle='rgba(255,255,255,0.55)';
+  ctx.font='500 '+Math.round(24*s)+'px "Noto Sans TC",sans-serif';
+  ctx.fillText('#嗆聲',width-pad,barH*0.70);
 
-  /* 嗆聲版 line 1（大標，深色） */
-  var t1Y=barH+charSize+52*s;
-  ctx.fillStyle='#1a0500';
+  /* ── 主文字區：字是主角 ── */
   ctx.textAlign='center';
-  ctx.font='900 '+Math.round(68*s)+'px "Noto Serif TC",serif';
-  wrapCanvasText(ctx,truthLine,width/2,t1Y,width*0.84,78*s);
 
-  /* 嗆聲版 line 2（中標，品牌紫） */
-  var t2Y=t1Y+100*s;
+  /* 嗆聲版 line 1：超大標，視覺第一焦點 */
+  var t1Y=barH+200*s;
+  ctx.fillStyle='#1a0500';
+  ctx.font='900 '+Math.round(96*s)+'px "Noto Serif TC",serif';
+  wrapCanvasText(ctx,truthLine,width/2,t1Y,width*0.86,Math.round(110*s));
+
+  /* 嗆聲版 line 2：大標，品牌紫，視覺第二焦點 */
+  var t2Y=t1Y+230*s;
   ctx.fillStyle='#6d28d9';
-  ctx.font='700 '+Math.round(50*s)+'px "Noto Sans TC",sans-serif';
-  wrapCanvasText(ctx,analogyLine,width/2,t2Y,width*0.84,60*s);
+  ctx.font='700 '+Math.round(64*s)+'px "Noto Sans TC",sans-serif';
+  wrapCanvasText(ctx,analogyLine,width/2,t2Y,width*0.86,Math.round(76*s));
 
   /* 分隔線 */
-  var divY=height-170*s;
-  ctx.strokeStyle='rgba(215,154,62,0.4)';
-  ctx.lineWidth=2*s;
-  ctx.beginPath();ctx.moveTo(width*0.1,divY);ctx.lineTo(width*0.9,divY);ctx.stroke();
+  var divY=height-220*s;
+  ctx.strokeStyle='rgba(109,40,217,0.18)';
+  ctx.lineWidth=1.5*s;
+  ctx.beginPath();ctx.moveTo(width*0.08,divY);ctx.lineTo(width*0.92,divY);ctx.stroke();
 
-  /* 給你好看版 line 1（小字，灰棕） */
+  /* 給你好看版 line 1：分隔線下小字提示 */
   if(subLine){
-    ctx.fillStyle='rgba(58,36,23,0.55)';
-    ctx.font=Math.round(30*s)+'px "Noto Sans TC",sans-serif';
-    wrapCanvasText(ctx,subLine,width/2,divY+42*s,width*0.78,40*s);
+    ctx.fillStyle='rgba(58,36,23,0.45)';
+    ctx.font=Math.round(28*s)+'px "Noto Sans TC",sans-serif';
+    wrapCanvasText(ctx,subLine,width/2,divY+50*s,width*0.78,Math.round(38*s));
   }
 
   /* 底部品牌欄（橙） */
