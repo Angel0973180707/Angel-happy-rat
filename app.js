@@ -1847,20 +1847,36 @@ function situationChipsHtml(mode){
     +'<div class="chip-row">'+html+'</div>'
     +'</div>';
 }
+function _setSitSecondaryVisible(visible){
+  var names=['target-chip','topic-chip'];
+  names.forEach(function(n){
+    var g=document.querySelector('[data-chip-group="'+n+'"]');
+    if(g){var b=g.closest('.field-block');if(b)b.style.display=visible?'':'none';}
+  });
+  var gw=document.getElementById('v2-guided-wrap');
+  if(gw) gw.style.display=visible?'':'none';
+}
 function bindSituationChips(pool){
   Array.prototype.forEach.call(document.querySelectorAll('.sit-chip'),function(btn){
     btn.addEventListener('click',function(){
+      var wasSelected=btn.classList.contains('selected');
       Array.prototype.forEach.call(document.querySelectorAll('.sit-chip'),function(b){b.classList.remove('selected');});
+      var ta=document.getElementById('main-input');
+      if(wasSelected){
+        if(ta){ta.value='';ta.focus();}
+        _setSitSecondaryVisible(true);
+        return;
+      }
       btn.classList.add('selected');
       var text=btn.dataset.sitrnd
         ?pool[Math.floor(Math.random()*pool.length)].text
         :btn.dataset.sittext;
-      var ta=document.getElementById('main-input');
       if(!ta) return;
       ta.value=text;
       ta.focus();
       var len=ta.value.length;
       ta.setSelectionRange(len,len);
+      _setSitSecondaryVisible(false);
     });
   });
 }
