@@ -1828,7 +1828,7 @@ function situationChipsHtml(mode){
   var html=pool.map(function(c){
     return '<button type="button" class="chip sit-chip" data-sittext="'+escapeAttr(c.text)+'">'+c.label+'</button>';
   }).join('');
-  html+='<button type="button" class="chip sit-chip sit-chip-rnd" data-sitrnd="1">'+(isRoast?'🎲 今天隨便嗆我':'🎲 今天隨便吹')+'</button>';
+  html+='<button type="button" class="chip sit-chip sit-chip-rnd" data-sitrnd="1">'+(isRoast?'🎲 小天鼠幫我選':'🎲 唬爛虎幫我吹')+'</button>';
   return '<div class="sit-chips-wrap">'
     +'<div class="sit-chips-title">'+title+'</div>'
     +'<div class="chip-row">'+html+'</div>'
@@ -2073,6 +2073,17 @@ function bindResultActions(id){
     _showRoastCardInline('roast-card-active',card,t+(a?'\n'+a:''));
     logEvent('SHARE_CARD',{mode:'roast',engine:eng});
   }); }
+  /* 畫大餅：圖卡 */
+  var bigdreamCardBtn=document.getElementById('btn-bigdream-card');
+  if(bigdreamCardBtn){ bigdreamCardBtn.addEventListener('click',function(){
+    var eng=bigDreamResult.activeEngine;
+    var bd=bigDreamResult.engines[eng]||{};
+    var mainLine=eng==='crazy'?(bd.brag||''):(bd.wish||'');
+    var secondLine=eng==='crazy'?(bd.parallel||'').split('\n')[0]:(bd.pie||'');
+    var card=drawBigDreamCard(mainLine,secondLine,eng);
+    _showRoastCardInline('bigdream-card-active',card,mainLine+(secondLine?'\n'+secondLine:''));
+    logEvent('SHARE_CARD',{mode:'bigdream',engine:eng});
+  }); }
   /* 嗆聲：分享（依目前 activeEngine） */
   var roastShareBtn=document.getElementById('btn-roast-share');
   if(roastShareBtn&&navigator.share){ roastShareBtn.addEventListener('click',function(){
@@ -2247,6 +2258,7 @@ function bigDreamActionRowHtml(){
   return '<div class="action-row">'
     +'<button class="btn-regen" id="btn-regen-result">'+bdRegenLabel+'</button>'
     +'<button class="btn-copy" id="btn-copy-result">收下這個夢</button>'
+    +'<button class="btn-copy" id="btn-bigdream-card">🖼 圖卡</button>'
     +shareBtn
     +'</div>'
     +toggleBtn
@@ -2627,15 +2639,96 @@ function drawRoastCard(truthLine,analogyLine,subLine,flavor){
     wrapCanvasText(ctx,subLine,width/2,divY+50*s,width*0.78,Math.round(38*s));
   }
 
-  /* 底部品牌欄（橙） */
+  /* 底部品牌欄 */
+  var footH=130*s;
+  var catchphrase=isOrig?'「嗆得有水準，說得有才華」':'「今天是辣的，說話不客氣」';
   ctx.fillStyle='#D89A3E';
-  ctx.fillRect(0,height-100*s,width,100*s);
-  ctx.fillStyle='#1a0500';
+  ctx.fillRect(0,height-footH,width,footH);
+  ctx.textAlign='left';
+  ctx.fillStyle='rgba(26,5,0,0.5)';
+  ctx.font='400 '+Math.round(20*s)+'px "Noto Sans TC",sans-serif';
+  ctx.fillText(catchphrase,pad,height-footH+26*s);
   ctx.textAlign='center';
-  ctx.font='700 '+Math.round(32*s)+'px "Noto Sans TC",sans-serif';
-  ctx.fillText('人生的荒謬哈哈',width/2,height-60*s);
-  ctx.font='500 '+Math.round(22*s)+'px "Noto Sans TC",sans-serif';
-  ctx.fillText('笑鼠人了！',width/2,height-26*s);
+  ctx.fillStyle='#1a0500';
+  ctx.font='800 '+Math.round(36*s)+'px "Noto Serif TC",serif';
+  ctx.fillText('笑鼠人了！',width/2,height-footH+72*s);
+  ctx.font='400 '+Math.round(18*s)+'px "Noto Sans TC",sans-serif';
+  ctx.fillStyle='rgba(26,5,0,0.55)';
+  ctx.fillText('笑掉煩惱，吹大夢想，把人生活成作品',width/2,height-footH+102*s);
+
+  return canvas;
+}
+function drawBigDreamCard(mainLine,secondLine,flavor){
+  var isCrazy=flavor==='crazy';
+  var topColor=isCrazy?'#a16207':'#0369a1';
+  var topLabel=isCrazy?'🚀 狂吹版':'☁️ 小吹版';
+  var width=1080,height=1080;
+  var canvas=document.createElement('canvas');
+  canvas.width=width;canvas.height=height;
+  var ctx=canvas.getContext('2d');
+  var s=width/1080;
+
+  /* 背景 */
+  ctx.fillStyle=isCrazy?'#FFFBEB':'#F0F9FF';
+  ctx.fillRect(0,0,width,height);
+  ctx.globalAlpha=0.06;ctx.fillStyle=topColor;
+  ctx.beginPath();ctx.arc(width*0.9,height*0.45,320*s,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=1;
+
+  /* 頂欄 */
+  var barH=72*s,pad=32*s;
+  ctx.fillStyle=topColor;
+  ctx.fillRect(0,0,width,barH);
+  var tiger=IMG_CACHE['tiger.webp'];
+  var tigerSz=44*s;
+  if(tiger) ctx.drawImage(tiger,pad,barH/2-tigerSz/2,tigerSz,tigerSz);
+  ctx.fillStyle='#ffffff';
+  ctx.textAlign='left';
+  ctx.font='800 '+Math.round(28*s)+'px "Noto Sans TC",sans-serif';
+  ctx.fillText('唬爛虎',pad+tigerSz+12*s,barH*0.44);
+  ctx.font='400 '+Math.round(19*s)+'px "Noto Sans TC",sans-serif';
+  ctx.fillStyle='rgba(255,255,255,0.75)';
+  ctx.fillText('今天幫你吹一個',pad+tigerSz+12*s,barH*0.80);
+  ctx.textAlign='right';
+  ctx.fillStyle='rgba(255,255,255,0.65)';
+  ctx.font='600 '+Math.round(22*s)+'px "Noto Sans TC",sans-serif';
+  ctx.fillText(topLabel,width-pad,barH*0.68);
+
+  /* 主文字區 */
+  ctx.textAlign='center';
+  var t1Y=barH+200*s;
+  ctx.fillStyle='#1a0500';
+  ctx.font='900 '+Math.round(88*s)+'px "Noto Serif TC",serif';
+  wrapCanvasText(ctx,mainLine,width/2,t1Y,width*0.86,Math.round(104*s));
+
+  var t2Y=t1Y+220*s;
+  ctx.fillStyle=topColor;
+  ctx.font='700 '+Math.round(58*s)+'px "Noto Sans TC",sans-serif';
+  wrapCanvasText(ctx,secondLine,width/2,t2Y,width*0.86,Math.round(70*s));
+
+  /* 分隔線 */
+  var divY=height-220*s;
+  var rgbStr=isCrazy?'161,98,7':'3,105,161';
+  ctx.strokeStyle='rgba('+rgbStr+',0.18)';
+  ctx.lineWidth=1.5*s;
+  ctx.beginPath();ctx.moveTo(width*0.08,divY);ctx.lineTo(width*0.92,divY);ctx.stroke();
+
+  /* 底部品牌欄 */
+  var footH=130*s;
+  var catchphrase=isCrazy?'「吹牛不用繳稅金」':'「先吹，先開始」';
+  ctx.fillStyle=isCrazy?'#D89A3E':'#38BDF8';
+  ctx.fillRect(0,height-footH,width,footH);
+  ctx.textAlign='left';
+  ctx.fillStyle='rgba(26,5,0,0.5)';
+  ctx.font='400 '+Math.round(20*s)+'px "Noto Sans TC",sans-serif';
+  ctx.fillText(catchphrase,pad,height-footH+26*s);
+  ctx.textAlign='center';
+  ctx.fillStyle=isCrazy?'#1a0500':'#0c4a6e';
+  ctx.font='800 '+Math.round(36*s)+'px "Noto Serif TC",serif';
+  ctx.fillText('笑鼠人了！',width/2,height-footH+72*s);
+  ctx.font='400 '+Math.round(18*s)+'px "Noto Sans TC",sans-serif';
+  ctx.fillStyle='rgba(26,5,0,0.55)';
+  ctx.fillText('笑掉煩惱，吹大夢想，把人生活成作品',width/2,height-footH+102*s);
 
   return canvas;
 }
