@@ -2151,23 +2151,101 @@ function bindResultActions(id){
     });
   }
   bindBigDreamEngineToggle();
-  /* 嗆聲 / 畫大餅：唱成歌 → 進工坊 */
+  /* 嗆聲 / 畫大餅：唱成歌 → 直接出 AI 指令 */
   var makeSongBtn=document.getElementById('btn-make-song');
   if(makeSongBtn){ makeSongBtn.addEventListener('click',function(){
-    tryConsumeQuota('journey').then(function(jq){
-      if(!jq.ok){showQuotaExhausted('journey',jq.reason);return;}
-      logEvent('MODE_SELECT',{mode:'workshop_from_'+id});
-      flow.routeB=true; flow.stepIndex=0; openMode(ROUTE_B_ORDER[0],{routeB:true});
-    });
+    var isRoast=(id==='roast');
+    var line1,line2,styleLabel,sunoPrompt;
+    if(isRoast){
+      var re=roastResult.activeEngine;
+      var rd=roastResult.engines[re]||{};
+      line1=(re==='spicy'&&rd.roast)?rd.roast.mouseOutput.truth||'':rd.truth||'';
+      line2=(re==='spicy'&&rd.roast)?rd.roast.mouseOutput.analogy||'':rd.analogy||'';
+      styleLabel=pickVaried('song_style_r',['台語搖滾','嘻哈嗆聲','憤世民謠','電音反叛']);
+      sunoPrompt='Taiwanese indie rock, angry but witty, verse-chorus, electric guitar, sardonic humor, 95bpm\nLyrics theme: '+line1.slice(0,40);
+    } else {
+      var be=bigDreamResult.activeEngine;
+      var bd2=bigDreamResult.engines[be]||{};
+      line1=be==='crazy'?(bd2.brag||''):(bd2.wish||'');
+      line2=be==='crazy'?(bd2.parallel||'').split('\n')[0]:(bd2.pie||'');
+      styleLabel=pickVaried('song_style_b',['史詩搖滾','勵志流行','電子夢幻','溫暖民謠']);
+      sunoPrompt='Epic anthemic pop, inspirational, cinematic build, piano + electric guitar, 100bpm\nLyrics theme: '+line1.slice(0,40);
+    }
+    var anchorId=isRoast?'roast-song-active':'bigdream-song-active';
+    var old=document.getElementById(anchorId);if(old)old.remove();
+    var bg=isRoast?'#fff9f0':'#f0f9ff';
+    var tc=isRoast?'#3d1a00':'#1a3a5c';
+    var html='<div class="result-card" style="margin-top:12px;">'
+      +'<div class="who">🎵 '+(isRoast?'你的嗆聲歌':'你的大夢之歌')+'</div>'
+      +'<div class="body-text">'
+      +'<div style="font-size:0.82em;font-weight:700;color:'+tc+';margin-bottom:4px;">風格：'+styleLabel+'</div>'
+      +'<div style="white-space:pre-line;line-height:2;background:'+bg+';border-radius:8px;padding:12px 14px;margin:8px 0;font-size:0.93em;color:'+tc+';">'
+      +'[Verse]\n'+escapeHtml(line1||'（你的素材）')+'\n\n[副歌]\n'+escapeHtml(line2||'（繼續吹，讓它成真）')+'</div>'
+      +'<div style="font-size:0.82em;font-weight:700;color:'+tc+';margin-top:12px;">🤖 AI 音樂指令（複製貼到 Suno / Udio）</div>'
+      +'<div style="background:#f8f8f8;border:1px solid #e0d0c0;border-radius:7px;padding:10px 12px;margin:6px 0;font-family:monospace;font-size:0.8em;line-height:1.7;white-space:pre-wrap;">'+escapeHtml(sunoPrompt)+'</div>'
+      +'<div style="display:flex;gap:8px;margin:8px 0;">'
+      +'<button class="btn-copy" onclick="copyToClipboard('+JSON.stringify(sunoPrompt)+');showToast(\'已複製指令！\')">複製指令</button>'
+      +'</div>'
+      +'<div style="font-size:0.8em;color:#888;line-height:1.9;margin-top:8px;">'
+      +'<b>🎁 推薦免費工具：</b><br>'
+      +'・<b>Suno.ai</b> — 貼上指令直接生成完整歌曲，有免費額度<br>'
+      +'・<b>Udio.com</b> — 同樣免費，風格選項更多元<br>'
+      +'・<b>Mureka.ai</b> — 中文歌詞生成效果較好'
+      +'</div>'
+      +'</div></div>';
+    var wrap=document.createElement('div');wrap.id=anchorId;wrap.innerHTML=html;
+    var el=document.getElementById('mode-results');if(el)el.appendChild(wrap);
+    logEvent('SONG_GEN',{mode:id});
   }); }
-  /* 嗆聲 / 畫大餅：拍成電影 → 進工坊 */
+  /* 嗆聲 / 畫大餅：拍成電影 → 直接出 AI 繪圖指令 */
   var makeFilmBtn=document.getElementById('btn-make-film');
   if(makeFilmBtn){ makeFilmBtn.addEventListener('click',function(){
-    tryConsumeQuota('journey').then(function(jq){
-      if(!jq.ok){showQuotaExhausted('journey',jq.reason);return;}
-      logEvent('MODE_SELECT',{mode:'film_from_'+id});
-      flow.routeB=true; flow.stepIndex=0; openMode(ROUTE_B_ORDER[0],{routeB:true});
-    });
+    var isRoast=(id==='roast');
+    var scene1,scene2,scene3,imgPrompt1,imgPrompt2,imgPrompt3;
+    if(isRoast){
+      var re2=roastResult.activeEngine;
+      var rd2=roastResult.engines[re2]||{};
+      var t2=(re2==='spicy'&&rd2.roast)?rd2.roast.mouseOutput.truth||'':rd2.truth||'';
+      var h2=(re2==='spicy'&&rd2.roast)?rd2.roast.mouseOutput.honest||'':rd2.honest||'';
+      scene1='場景1：困住你的那個當下';scene2='場景2：說出那句話的瞬間';scene3='場景3：走出去之後';
+      imgPrompt1='Cinematic still, person staring at screen in dim office, frustrated, dramatic side lighting, film noir, 16:9';
+      imgPrompt2='Close-up portrait, person with slight confident smirk, warm golden backlight, decisive moment, shallow DOF';
+      imgPrompt3='Wide shot, person walking out into evening light, sunset glow, slow motion feel, hopeful mood, cinematic';
+    } else {
+      var be2=bigDreamResult.activeEngine;
+      var bd3=bigDreamResult.engines[be2]||{};
+      var m2=be2==='crazy'?(bd3.brag||''):(bd3.wish||'');
+      scene1='場景1：你現在在哪裡';scene2='場景2：夢想成真的那一刻';scene3='場景3：帶著這個夢繼續走';
+      imgPrompt1='Cinematic portrait, person looking at horizon at golden hour, contemplative, warm tones, 16:9';
+      imgPrompt2='Epic wide shot, person standing on rooftop or hilltop, arms open, triumphant, sunrise, lens flare';
+      imgPrompt3='Steadicam walk shot, person moving forward with purpose, city lights bokeh background, cinematic';
+    }
+    var tools='・<b>Bing Image Creator</b>（微軟免費）— 用 Edge 瀏覽器開，免費無限制<br>'
+      +'・<b>Adobe Firefly</b>（免費版）— 每月有額度，畫質乾淨<br>'
+      +'・<b>Leonardo.ai</b> — 每天贈送免費點數，功能最多<br>'
+      +'・<b>Canva AI</b> — 直接在設計稿裡生成，排版方便';
+    var anchorId2=isRoast?'roast-film-active':'bigdream-film-active';
+    var old2=document.getElementById(anchorId2);if(old2)old2.remove();
+    function sceneBlock(label,prompt){
+      return '<div style="margin-bottom:14px;">'
+        +'<div style="font-size:0.82em;font-weight:700;color:#3d1a00;margin-bottom:4px;">'+label+'</div>'
+        +'<div style="background:#f8f8f8;border:1px solid #e0d0c0;border-radius:7px;padding:9px 12px;font-family:monospace;font-size:0.8em;line-height:1.6;white-space:pre-wrap;">'+escapeHtml(prompt)+'</div>'
+        +'<button class="btn-copy" style="margin-top:5px;font-size:0.78em;padding:5px 10px;" onclick="copyToClipboard('+JSON.stringify(prompt)+');showToast(\'已複製！\')">複製此場景指令</button>'
+        +'</div>';
+    }
+    var html2='<div class="result-card" style="margin-top:12px;">'
+      +'<div class="who">🎬 '+(isRoast?'你的嗆聲微電影':'你的大夢微電影')+'</div>'
+      +'<div class="body-text">'
+      +sceneBlock(scene1,imgPrompt1)
+      +sceneBlock(scene2,imgPrompt2)
+      +sceneBlock(scene3,imgPrompt3)
+      +'<div style="font-size:0.8em;color:#888;line-height:1.9;margin-top:8px;">'
+      +'<b>🎁 推薦免費 AI 繪圖工具：</b><br>'+tools
+      +'</div>'
+      +'</div></div>';
+    var wrap2=document.createElement('div');wrap2.id=anchorId2;wrap2.innerHTML=html2;
+    var el2=document.getElementById('mode-results');if(el2)el2.appendChild(wrap2);
+    logEvent('FILM_GEN',{mode:id});
   }); }
   /* 畫大餅：分享 */
   var bigdreamShareBtn=document.getElementById('btn-bigdream-share');
