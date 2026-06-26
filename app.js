@@ -1895,7 +1895,7 @@ function bindResultActions(id){
     previewEl.width=pw;previewEl.height=ph;
     previewEl.getContext('2d').drawImage(card,0,0,pw,ph);
     previewEl.style.cssText='display:block;margin:12px auto;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.15);max-width:100%;';
-    var shareText=mainLine+(subLine?'\n'+subLine:'');
+    var shareText=truthLine+(analogyLine?'\n'+analogyLine:'')+(subLine?'\n'+subLine:'');
     var cardHtml='<div id="roast-card-preview" style="margin-top:12px;">'
       +'<div class="action-row" style="justify-content:center;">'
       +'<button class="btn-copy" id="btn-roast-dl">⬇ 下載圖卡</button>'
