@@ -123,7 +123,7 @@ const SITUATION_RULES = {
     { key: 'self_procrastinate', kw: ['拖延','一直拖','明天開始','之後再說','懶得開始','拖拖拉拉','不想動','存在感覺'] },
     { key: 'self_direction',     kw: ['不知道方向','人生方向','未來','迷惘','沒有目標','不知道要做什麼','找不到方向'] },
     { key: 'self_finance',       kw: ['存不到錢','存款','月光族','理財','負債','薪水不夠','花太多'] },
-    { key: 'self_comparison',    kw: ['社群','覺得別人都比我','焦慮','自我懷疑','不如別人','比較焦慮'] },
+    { key: 'self_comparison',    kw: ['社群','覺得別人都比我','焦慮','自我懷疑','不如別人','比較焦慮','羨慕','羨慕別人','別人成功','羨慕他','看別人'] },
     { key: 'self_diet',          kw: ['減肥','明天開始運動','沒去運動','健身','卡路里'] },
   ],
   other: [],
@@ -366,7 +366,7 @@ export function classifyInput(input, options) {
   const guided = (typeof options === 'object' && options && options.guidedSelection) || null;
 
   // ── Step 1: targetRole + roles
-  const targetRole = TARGET_MAP[targetLabel] || 'other';
+  let targetRole = TARGET_MAP[targetLabel] || 'other';
   const speakerRole = SPEAKER_ROLE_FROM_TARGET[targetRole] || 'unknown';
   const interactionType = targetRole === 'self' ? 'self' : 'directed';
 
@@ -385,7 +385,18 @@ export function classifyInput(input, options) {
     }
   }
 
-  const hasSituation = topScore >= MIN_SCORE;
+  let hasSituation = topScore >= MIN_SCORE;
+  // If 'other' target found nothing, fallback-check 'self' situations
+  if (!hasSituation && targetRole === 'other') {
+    const selfRules = SITUATION_RULES.self || [];
+    let selfTop = MIN_SCORE - 1; let selfKeys = [];
+    for (let si = 0; si < selfRules.length; si++) {
+      const sc = scoreKeywords(input, selfRules[si].kw);
+      if (sc > selfTop) { selfTop = sc; selfKeys = [selfRules[si].key]; }
+      else if (sc === selfTop && sc >= MIN_SCORE) { selfKeys.push(selfRules[si].key); }
+    }
+    if (selfTop >= MIN_SCORE) { targetRole = 'self'; topScore = selfTop; topKeys = selfKeys; hasSituation = true; }
+  }
   // Pick first (by rule order) as primary; rest are candidates
   let situationKey = hasSituation ? topKeys[0] : null;
   const candidateSituationKeys = hasSituation && topKeys.length > 1 ? topKeys : [];
