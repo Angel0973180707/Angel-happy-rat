@@ -1788,21 +1788,11 @@ function renderOutputFor(id,input){
       html=renderRoastV2Block(v2r,input,_tLabel);
       _usedRoastV2=true;
     } else {
-      data=genRoast(input,_tLabel);
-      flow.context.event=input;
-      flow.context.targetCategory=data.targetCategory;
-      flow.context.situationCategory=data.situationCategory;
-      flow.context.matchType=data.matchType;
-      flow.context.comicWorld=data.comicWorld||null;
-      flow.context.truth=data.truth||'';
-      flow.context.analogy=data.analogy||'';
-      flow.context.honest=data.honest||'';
-      flow.context.boundary=data.boundary||'';
-      flow.context.comicExit=data.comicExit||'';
-      flow.context.nextAction=data.nextAction||'';
-      flow.context.resolutionWish=data.resolutionWish||'';
-      flow.context.callback=data.callback||'';
-      html=renderTextBlocks(data);
+      html='<div class="result-card" style="text-align:center;padding:2em 1em;">'
+        +'<div style="font-size:1.5em;margin-bottom:0.5em">🐭</div>'
+        +'<div style="font-weight:700;margin-bottom:0.5em">嗆聲引擎啟動中</div>'
+        +'<div style="color:#888;font-size:0.9em">請重新整理頁面（Ctrl+Shift+R）後再試一次</div>'
+        +'</div>';
     }
   } else if(id==='selfmock'){
     data=genSelfmock(input);
