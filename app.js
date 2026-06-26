@@ -338,6 +338,27 @@ var TIGER_LOADING_SCRIPTS=[
   ['計算中……','太小了。','再大一點。'],
   ['等等。','這個比你想的還大。'],
 ];
+/* ── 情境入口 Chips ── */
+var ROAST_CHIPS=[
+  {label:'🙄 孩子又來了',text:'孩子今天又不寫功課，\n我已經講很多遍了。'},
+  {label:'💼 客戶又改稿',text:'客戶一直說感覺不對，\n可是又說不出哪裡不對。'},
+  {label:'😤 老闆又來了',text:'老闆一直叫我改，\n可是沒有說清楚要改什麼。'},
+  {label:'🥶 另一半不講話',text:'另一半一直不講話，\n我完全不知道發生什麼事。'},
+  {label:'📢 爸媽又開始了',text:'爸媽又在唸我了，\n我已經聽過很多遍了。'},
+  {label:'🙃 朋友放我鳥',text:'朋友臨時取消，\n我都已經到了。'},
+  {label:'🤦 我又搞砸了',text:'我又把事情搞砸了，\n現在很想罵自己。'},
+  {label:'😮‍💨 我一直想太多',text:'我一直在想，\n可是一直沒有開始。'},
+  {label:'😒 又在羨慕別人',text:'看到別人很好，\n我又開始懷疑自己。'},
+];
+var BIGDREAM_CHIPS=[
+  {label:'🚀 我想創業',text:'我想創業，\n做一個真正屬於自己的品牌。'},
+  {label:'💰 我想多賺錢',text:'我想賺更多錢，\n不用每天擔心生活。'},
+  {label:'✈️ 我想出去玩',text:'我想去一個很遠的地方旅行，\n真正放空一次。'},
+  {label:'🏡 我想有自己的家',text:'我想有自己的家，\n一個真正屬於我的地方。'},
+  {label:'❤️ 我想陪家人',text:'我想多陪家人，\n不要再那麼忙了。'},
+  {label:'🌏 我想做點大事',text:'我想做一件很大的事情，\n留下自己的作品。'},
+  {label:'✨ 我想做自己',text:'我想做一件真正屬於我自己的事，\n不再看別人臉色。'},
+];
 var RAT_ROAST=[
   '{target}不是在{action}。他是在玩「大家來找碴至尊無限版」，而你剛好是NPC。',
   '你不是反應太大，你是被「{action}」這四個字打到靈魂出竅，正常人都會。',
@@ -1741,7 +1762,8 @@ function renderInputArea(id,opts){
     roastV2State.pendingGuidedInput=null;
     var roastNotice='<div class="roast-notice" style="font-size:0.85em;color:#888;margin-top:0.5em;line-height:1.5;">小天鼠幫你把悶氣說清楚，不幫你霸凌、威脅或公開羞辱別人。分享前請拿掉姓名與私人資料。<button id="roast-rules-btn" class="link-btn" style="font-size:inherit;color:#aaa;background:none;border:none;cursor:pointer;padding:0 0 0 0.3em;">完整守則 ▾</button><div id="roast-rules-detail" style="display:none;margin-top:0.4em;">禁止生成：① 暴力體罰意圖 ② 威脅報復 ③ 公開電話地址等個資 ④ 號召霸凌羞辱 ⑤ 仇恨歧視內容。高風險輸入不生成、不扣額度，只記匿名分類。</div></div>';
     var guidedWrap='<div id="v2-guided-wrap" style="margin:0.4em 0 0.1em;"><button type="button" id="btn-v2-guided" class="link-btn" style="font-size:0.88em;color:#999;">幫我開個頭 ▾</button><div style="font-size:0.8em;color:#bbb;margin-top:0.15em;line-height:1.4;">懶得分類也沒關係，直接打一行，小天鼠會自己找靶心。</div><div id="v2-guided-panel" style="display:none;margin-top:0.4em;padding:0.6em 0.7em;background:#f8f8f8;border-radius:8px;"></div></div>';
-    els.inputArea.innerHTML=sharedInput+chipBlock('target-chip','對象',['老闆/主管','客戶','同事','孩子','爸媽/長輩','兄弟姊妹','另一半','朋友','其他'])+guidedWrap+roastNotice;
+    els.inputArea.innerHTML=situationChipsHtml('roast')+sharedInput+chipBlock('target-chip','對象',['老闆/主管','客戶','同事','孩子','爸媽/長輩','兄弟姊妹','另一半','朋友','其他'])+guidedWrap+roastNotice;
+    bindSituationChips(ROAST_CHIPS);
     var rulesBtn=els.inputArea.querySelector('#roast-rules-btn');
     if(rulesBtn) rulesBtn.addEventListener('click',function(){toggleRoastRules(rulesBtn);});
     /* 幫我開個頭 toggle */
@@ -1767,7 +1789,8 @@ function renderInputArea(id,opts){
       }
     );
   } else if(id==='bigdream'){
-    els.inputArea.innerHTML=sharedInput+chipBlock('topic-chip','主題',['財富','健康','事業','旅行','品牌','影響力']);
+    els.inputArea.innerHTML=situationChipsHtml('bigdream')+sharedInput+chipBlock('topic-chip','主題',['財富','健康','事業','旅行','品牌','影響力']);
+    bindSituationChips(BIGDREAM_CHIPS);
   } else if(id==='lost'){
     els.inputArea.innerHTML=sharedInput+chipBlock('emotion-chip','最接近的感覺',Object.keys(LOST_MAP));
   } else if(id==='strength'&&opts&&opts.standalone&&!flow.context.event){
@@ -1797,6 +1820,36 @@ function getChipValue(name){
   if(!group) return null;
   var sel=group.querySelector('.chip.selected');
   return sel?sel.dataset.value:null;
+}
+function situationChipsHtml(mode){
+  var isRoast=mode==='roast';
+  var title=isRoast?'🐭 今天誰惹你？':'🐯 今天想吹哪個夢？';
+  var pool=isRoast?ROAST_CHIPS:BIGDREAM_CHIPS;
+  var html=pool.map(function(c){
+    return '<button type="button" class="chip sit-chip" data-sittext="'+escapeAttr(c.text)+'">'+c.label+'</button>';
+  }).join('');
+  html+='<button type="button" class="chip sit-chip sit-chip-rnd" data-sitrnd="1">'+(isRoast?'🎲 今天隨便嗆我':'🎲 今天隨便吹')+'</button>';
+  return '<div class="sit-chips-wrap">'
+    +'<div class="sit-chips-title">'+title+'</div>'
+    +'<div class="chip-row">'+html+'</div>'
+    +'</div>';
+}
+function bindSituationChips(pool){
+  Array.prototype.forEach.call(document.querySelectorAll('.sit-chip'),function(btn){
+    btn.addEventListener('click',function(){
+      Array.prototype.forEach.call(document.querySelectorAll('.sit-chip'),function(b){b.classList.remove('selected');});
+      btn.classList.add('selected');
+      var text=btn.dataset.sitrnd
+        ?pool[Math.floor(Math.random()*pool.length)].text
+        :btn.dataset.sittext;
+      var ta=document.getElementById('main-input');
+      if(!ta) return;
+      ta.value=text;
+      ta.focus();
+      var len=ta.value.length;
+      ta.setSelectionRange(len,len);
+    });
+  });
 }
 
 /* 主生成邏輯 */

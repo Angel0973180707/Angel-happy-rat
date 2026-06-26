@@ -57,7 +57,7 @@ h1,h2,h3{
   font-weight:400;
 }
 
-button{font-family:inherit;}
+button{font-family:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 a{color:inherit;}
 
 .app-shell{
@@ -66,6 +66,7 @@ a{color:inherit;}
   min-height:100vh;
   padding:0 16px 90px;
   position:relative;
+  overflow-x:hidden;
 }
 
 /* ---------- Top bar ---------- */
@@ -274,6 +275,12 @@ textarea.input-error{
   background:var(--orange); border-color:var(--orange); color:#fff;
 }
 
+/* ---------- Situation entry chips ---------- */
+.sit-chips-wrap{margin-bottom:14px;}
+.sit-chips-title{font-size:0.82em;font-weight:700;color:var(--maroon);margin-bottom:8px;}
+.chip.sit-chip-rnd{background:var(--gold);border-color:var(--gold-deep);color:var(--coffee);}
+.chip.sit-chip-rnd.selected{background:var(--gold-deep);border-color:var(--gold-deep);color:#fff;}
+
 /* ---------- Result cards ---------- */
 .result-card{
   background:var(--cream-soft);
@@ -283,6 +290,7 @@ textarea.input-error{
   box-shadow:var(--shadow);
   position:relative;
   border-left:6px solid var(--gold-deep);
+  overflow-wrap:break-word;
 }
 .result-card.tag-rat{border-left-color:#B97D24;}
 .result-card.tag-tiger{border-left-color:#C97B2E;}
@@ -363,7 +371,7 @@ textarea.input-error{
 }
 
 .action-row{
-  display:flex; gap:10px; margin:18px 0;
+  display:flex; flex-wrap:wrap; gap:10px; margin:18px 0;
 }
 .action-row button{flex:1; min-height:var(--tap-min);}
 .btn-copy{
