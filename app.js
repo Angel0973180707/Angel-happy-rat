@@ -2191,24 +2191,53 @@ function bindResultActions(id){
       +'- 歌詞欄和風格欄分別在哪裡貼\n'
       +'- 有什麼小技巧讓生成結果更好';
     var anchorId=isRoast?'roast-song-active':'bigdream-song-active';
+    var taId=anchorId+'-ta';var outId=anchorId+'-out';
     var old=document.getElementById(anchorId);if(old)old.remove();
     var tc=isRoast?'#3d1a00':'#1a3a5c';
     var bg=isRoast?'#fff9f0':'#f0f9ff';
     function copyBtn(label,txt){
       return '<button class="btn-copy" style="font-size:0.78em;padding:5px 14px;margin:4px 4px 0 0;" onclick="copyToClipboard('+JSON.stringify(txt)+');showToast(\'已複製！\')">'+label+'</button>';
     }
+    /* 存到 window 供 inline onclick 呼叫 */
+    window._buildSunoOutput=function(){
+      var ta=document.getElementById(taId);
+      if(!ta||!ta.value.trim()){showToast('請先貼上 AI 寫好的歌詞');return;}
+      var lyrics=ta.value.trim();
+      var formatted='['+sunoStyle+']\n\n'+lyrics;
+      var steps='📌 怎麼在 Suno.ai 做成歌曲\n\n'
+        +'步驟1：開新分頁，前往 suno.ai\n'
+        +'步驟2：用 Google 帳號登入（完全免費）\n'
+        +'步驟3：點右上角「Create」按鈕\n'
+        +'步驟4：找到「Custom Mode」開關，打開它\n'
+        +'步驟5：在「Lyrics」欄貼上你的歌詞\n'
+        +'步驟6：在「Style of Music」欄貼上風格描述\n'
+        +'步驟7：點「Create」，等 30 秒就出來了！\n\n'
+        +'💡 小技巧：\n'
+        +'・歌詞超過 3000 字元 Suno 會截斷，請控制長度\n'
+        +'・風格欄用英文效果更好\n'
+        +'・可以生成兩次選你喜歡的版本';
+      var outEl=document.getElementById(outId);if(!outEl)return;
+      outEl.innerHTML='<div style="font-size:0.82em;font-weight:700;color:'+tc+';margin:14px 0 4px;">🎛 Suno 格式（複製貼到「Lyrics + Style」欄）</div>'
+        +'<div style="background:#f8f8f8;border:1px solid #ddd;border-radius:7px;padding:10px 12px;font-family:monospace;font-size:0.78em;line-height:1.7;white-space:pre-wrap;max-height:200px;overflow-y:auto;">'+escapeHtml(formatted)+'</div>'
+        +'<div>'+copyBtn('🎛 複製 Suno 格式',formatted)+'</div>'
+        +'<div style="font-size:0.82em;font-weight:700;color:'+tc+';margin:14px 0 4px;">📌 去 Suno 做成歌曲</div>'
+        +'<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:7px;padding:12px 14px;font-size:0.82em;line-height:2;white-space:pre-line;color:#92400e;">'+escapeHtml(steps)+'</div>'
+        +'<div>'+copyBtn('📌 複製操作步驟',steps)+'</div>';
+    };
     var html='<div class="result-card" style="margin-top:12px;">'
       +'<div class="who">🎵 你的歌 AI 協作指令</div>'
       +'<div class="body-text">'
-      +'<div style="font-size:0.8em;color:'+tc+';margin-bottom:8px;">以下這句話將成為你的副歌 👇</div>'
-      +'<div style="background:'+bg+';border-left:4px solid currentColor;border-radius:6px;padding:12px 14px;font-size:0.95em;font-weight:700;color:'+tc+';line-height:1.8;white-space:pre-line;">'+escapeHtml(chorus)+'</div>'
-      +'<div style="font-size:0.82em;font-weight:700;color:'+tc+';margin:14px 0 4px;">① 貼給你的 AI 夥伴（Claude / ChatGPT）幫你寫詞</div>'
-      +'<div style="background:#f8f8f8;border:1px solid #ddd;border-radius:7px;padding:10px 12px;font-size:0.82em;line-height:1.7;white-space:pre-wrap;max-height:160px;overflow-y:auto;color:#333;">'+escapeHtml(aiCollab)+'</div>'
-      +'<div>'+copyBtn('📋 複製寫詞指令',aiCollab)+'</div>'
-      +'<div style="font-size:0.82em;font-weight:700;color:'+tc+';margin:14px 0 4px;">② 歌詞寫好後，貼給 AI 夥伴生成 Suno 格式</div>'
-      +'<div style="background:#f0fff4;border:1px solid #bbf7d0;border-radius:7px;padding:10px 12px;font-size:0.82em;line-height:1.7;white-space:pre-wrap;max-height:130px;overflow-y:auto;color:#166534;">'+escapeHtml(sunoGuide)+'</div>'
-      +'<div>'+copyBtn('🎛 複製 Suno 格式指令',sunoGuide)+'</div>'
-      +'<div style="font-size:0.75em;color:#aaa;margin-top:12px;line-height:1.8;">推薦免費音樂 AI：Suno.ai ／ Udio.com ／ Mureka.ai</div>'
+      +'<div style="font-size:0.8em;color:'+tc+';margin-bottom:6px;">這句話將成為你的副歌 ↓</div>'
+      +'<div style="background:'+bg+';border-left:4px solid '+tc+';border-radius:6px;padding:12px 14px;font-size:0.95em;font-weight:700;color:'+tc+';line-height:1.8;white-space:pre-line;">'+escapeHtml(chorus)+'</div>'
+      +'<div style="font-size:0.82em;font-weight:700;color:'+tc+';margin:14px 0 4px;">① 複製指令 → <span style="color:#d97706;">開新分頁</span>找 AI 夥伴補完整歌詞</div>'
+      +'<div style="background:#f8f8f8;border:1px solid #ddd;border-radius:7px;padding:10px 12px;font-size:0.82em;line-height:1.7;white-space:pre-wrap;max-height:150px;overflow-y:auto;color:#333;">'+escapeHtml(aiCollab)+'</div>'
+      +'<div>'+copyBtn('📋 複製 AI 寫詞指令',aiCollab)+'</div>'
+      +'<div style="font-size:0.75em;color:#d97706;background:#fffbeb;border-radius:6px;padding:8px 10px;margin:8px 0;">⚠️ 請開<b>新分頁</b>去找 AI，不要關掉這個頁面，寫好的歌詞等一下要貼回這裡</div>'
+      +'<div style="font-size:0.82em;font-weight:700;color:'+tc+';margin:14px 0 4px;">② AI 寫好後，把歌詞貼在這裡 ↓</div>'
+      +'<textarea id="'+taId+'" rows="7" style="width:100%;border:1.5px solid #e0d0c0;border-radius:8px;padding:10px 12px;font-size:0.88em;line-height:1.8;resize:vertical;font-family:inherit;" placeholder="把 AI 生成的完整歌詞貼在這裡…"></textarea>'
+      +'<button class="btn-primary" style="width:100%;margin-top:8px;padding:12px;" onclick="window._buildSunoOutput()">幫我轉成 Suno 格式 + 教我做 🎛</button>'
+      +'<div id="'+outId+'"></div>'
+      +'<div style="font-size:0.75em;color:#aaa;margin-top:14px;line-height:1.8;">推薦免費音樂 AI：Suno.ai ／ Udio.com ／ Mureka.ai（中文歌詞效果好）</div>'
       +'</div></div>';
     var wrap=document.createElement('div');wrap.id=anchorId;wrap.innerHTML=html;
     var el=document.getElementById('mode-results');if(el)el.appendChild(wrap);
