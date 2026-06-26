@@ -2591,6 +2591,14 @@ function drawRoastCard(truthLine,analogyLine,subLine,flavor){
   ctx.globalAlpha=0.04;ctx.fillStyle=topColor;
   ctx.beginPath();ctx.arc(width*0.92,height*0.5,340*s,0,Math.PI*2);ctx.fill();
   ctx.globalAlpha=1;
+  /* 角色大水印 */
+  var ratWm=IMG_CACHE['rat.webp'];
+  if(ratWm){
+    var wmSz=420*s;
+    ctx.globalAlpha=0.10;
+    ctx.drawImage(ratWm,width-wmSz-24*s,height/2-wmSz/2,wmSz,wmSz);
+    ctx.globalAlpha=1;
+  }
 
   /* 頂欄：老鼠縮成 logo（44px），左對齊，右側加 #嗆聲 標籤 */
   var barH=72*s,pad=32*s;
@@ -2674,6 +2682,14 @@ function drawBigDreamCard(mainLine,secondLine,flavor){
   ctx.globalAlpha=0.06;ctx.fillStyle=topColor;
   ctx.beginPath();ctx.arc(width*0.9,height*0.45,320*s,0,Math.PI*2);ctx.fill();
   ctx.globalAlpha=1;
+  /* 角色大水印 */
+  var tigerWm=IMG_CACHE['tiger.webp'];
+  if(tigerWm){
+    var wmSz=420*s;
+    ctx.globalAlpha=0.10;
+    ctx.drawImage(tigerWm,width-wmSz-24*s,height/2-wmSz/2,wmSz,wmSz);
+    ctx.globalAlpha=1;
+  }
 
   /* 頂欄 */
   var barH=72*s,pad=32*s;
