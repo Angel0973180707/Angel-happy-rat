@@ -49,6 +49,7 @@ window.RoastEngineV2 = {
         evidence: evidence,
       };
     } catch (e) {
+      console.error('[RoastV2] run() 失敗:', e);
       return null;
     }
   },

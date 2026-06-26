@@ -2504,14 +2504,14 @@ var ROAST_TARGET_TO_KEY={
 };
 
 function runRoastV2(input,targetLabel,guidedInput){
-  if(!window.RoastEngineV2) return null;
+  if(!window.RoastEngineV2){console.error('[RoastV2] window.RoastEngineV2 未載入');return null;}
   try{
     var loi=guidedInput||targetLabel;
     var r=window.RoastEngineV2.run(input,loi,roastV2State.lastWorld);
-    if(!r) return null;
+    if(!r){console.warn('[RoastV2] run() 回傳 null，input:',input,'label:',loi);return null;}
     roastV2State.lastWorld=r.roast.mouseOutput.comicWorld||null;
     return r;
-  }catch(e){ return null; }
+  }catch(e){console.error('[RoastV2] runRoastV2 例外:',e);return null;}
 }
 
 function _v2Section(title,lines){
