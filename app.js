@@ -1771,6 +1771,7 @@ function renderOutputFor(id,input){
   if(id==='roast'){
     var _tLabel=getChipValue('target-chip')||'其他';
     var v2r=runRoastV2(input,_tLabel,roastV2State.pendingGuidedInput);
+    var _v1d=genRoast(input,_tLabel);
     if(v2r){
       var _mv=v2r.roast.mouseOutput;
       flow.context.event=input;
@@ -1785,7 +1786,8 @@ function renderOutputFor(id,input){
       flow.context.comicExit=_mv.comicExit||'';
       flow.context.callback=_mv.callback||'';
       flow.context.nextAction='';flow.context.resolutionWish='';
-      html=renderRoastV2Block(v2r,input,_tLabel);
+      flow.context.v1={truth:_v1d.truth||'',analogy:_v1d.analogy||'',honest:_v1d.honest||'',boundary:_v1d.boundary||'',comicExit:_v1d.comicExit||'',nextAction:_v1d.nextAction||''};
+      html=renderRoastDualBlock(v2r,_v1d,input,_tLabel);
       _usedRoastV2=true;
     } else {
       html='<div class="result-card" style="text-align:center;padding:2em 1em;">'
@@ -1830,7 +1832,7 @@ function renderOutputFor(id,input){
 
   var isQuick=QUICK_MODES.indexOf(id)!==-1&&!flow.routeB;
   var actionHtml=_usedRoastV2
-    ?(roastV2ActionRowHtml()+(flow.routeB?routeBNextHtml(id):''))
+    ?(roastDualActionRowHtml()+(flow.routeB?routeBNextHtml(id):''))
     :(actionRowHtml()+(isQuick?'<button class="btn-primary btn-make-work" id="btn-make-work" style="margin-top:10px;">🎬 把這件事變成作品</button>':'')+(flow.routeB?routeBNextHtml(id):''));
   return html+actionHtml;
 }
@@ -1863,60 +1865,37 @@ function bindResultActions(id){
       logEvent('REGENERATE',{mode:id});els.results.innerHTML=renderOutputFor(id,flow.input);bindResultActions(id);saveDraft();
     });
   }); }
-  /* 嗆聲 V2：唬爛虎 toggle */
-  var tigerToggle=document.getElementById('btn-roast-tiger-toggle');
-  if(tigerToggle){ tigerToggle.addEventListener('click',function(){
-    var content=document.getElementById('roast-tiger-content');
-    if(!content) return;
-    var show=content.style.display==='none';
-    content.style.display=show?'block':'none';
-    tigerToggle.textContent=show?'🐯 收起唬爛虎':'🐯 讓唬爛虎吹大這件事';
+  /* 加辣版：複製 */
+  var copySpicyBtn=document.getElementById('btn-copy-spicy');
+  if(copySpicyBtn){ copySpicyBtn.addEventListener('click',function(){
+    var t=(flow.context.truth||'')+(flow.context.analogy?'\n'+flow.context.analogy:'')
+         +(flow.context.honest?'\n'+flow.context.honest:'')+(flow.context.boundary?'\n'+flow.context.boundary:'');
+    copyToClipboard(t.trim());logEvent('COPY',{mode:'roast',flavor:'spicy'});
   }); }
-  /* 嗆聲 V2：產生分享圖卡 */
-  var shareCardBtn=document.getElementById('btn-roast-share-card');
-  if(shareCardBtn){ shareCardBtn.addEventListener('click',function(){
-    var truthLine=flow.context.truth||'笑鼠人了！';
-    var analogyLine=flow.context.analogy||'';
-    var subLine=flow.context.honest||'';
-    var card=drawRoastCard(truthLine,analogyLine,subLine);
-    var pw=Math.min(360,window.innerWidth-48);
-    var ph=pw;
-    var previewEl=document.createElement('canvas');
-    previewEl.width=pw;previewEl.height=ph;
-    previewEl.getContext('2d').drawImage(card,0,0,pw,ph);
-    previewEl.style.cssText='display:block;margin:12px auto;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.15);max-width:100%;';
-    var shareText=truthLine+(analogyLine?'\n'+analogyLine:'')+(subLine?'\n'+subLine:'');
-    var cardHtml='<div id="roast-card-preview" style="margin-top:12px;">'
-      +'<div class="action-row" style="justify-content:center;">'
-      +'<button class="btn-copy" id="btn-roast-dl">⬇ 下載圖卡</button>'
-      +'<button class="btn-copy" id="btn-roast-copy-text">📋 複製文案</button>'
-      +(navigator.share?'<button class="btn-copy" id="btn-roast-share-img">↗ 分享</button>':'')
-      +'</div></div>';
-    var existing=document.getElementById('roast-card-preview');
-    if(existing) existing.remove();
-    var container=document.createElement('div');
-    container.id='roast-card-preview';
-    container.style.marginTop='12px';
-    container.appendChild(previewEl);
-    var actRow=document.createElement('div');
-    actRow.className='action-row';
-    actRow.style.justifyContent='center';
-    var dlBtn=document.createElement('button');
-    dlBtn.className='btn-copy';dlBtn.textContent='⬇ 下載圖卡';
-    dlBtn.addEventListener('click',function(){downloadCanvas(card,'laugh-mouse-roast.png');});
-    var cpBtn=document.createElement('button');
-    cpBtn.className='btn-copy';cpBtn.textContent='📋 複製文案';
-    cpBtn.addEventListener('click',function(){copyToClipboard(shareText);});
-    actRow.appendChild(dlBtn);actRow.appendChild(cpBtn);
-    if(navigator.share){
-      var shBtn=document.createElement('button');
-      shBtn.className='btn-copy';shBtn.textContent='↗ 分享';
-      shBtn.addEventListener('click',function(){shareCanvas(card,shareText);});
-      actRow.appendChild(shBtn);
-    }
-    container.appendChild(actRow);
-    els.results.appendChild(container);
-    logEvent('SHARE_CARD',{mode:'roast'});
+  /* 加辣版：圖卡 */
+  var cardSpicyBtn=document.getElementById('btn-card-spicy');
+  if(cardSpicyBtn){ cardSpicyBtn.addEventListener('click',function(){
+    var card=drawRoastCard(flow.context.truth||'',flow.context.analogy||'',flow.context.honest||'','spicy');
+    var shareText=(flow.context.truth||'')+(flow.context.analogy?'\n'+flow.context.analogy:'');
+    _showRoastCardInline('roast-card-spicy',card,shareText);
+    logEvent('SHARE_CARD',{mode:'roast',flavor:'spicy'});
+  }); }
+  /* 原味版：複製 */
+  var copyOrigBtn=document.getElementById('btn-copy-original');
+  if(copyOrigBtn){ copyOrigBtn.addEventListener('click',function(){
+    var v1=flow.context.v1||{};
+    var t=(v1.truth||'')+(v1.analogy?'\n'+v1.analogy:'')
+         +(v1.honest?'\n'+v1.honest:'')+(v1.boundary?'\n'+v1.boundary:'');
+    copyToClipboard(t.trim());logEvent('COPY',{mode:'roast',flavor:'original'});
+  }); }
+  /* 原味版：圖卡 */
+  var cardOrigBtn=document.getElementById('btn-card-original');
+  if(cardOrigBtn){ cardOrigBtn.addEventListener('click',function(){
+    var v1=flow.context.v1||{};
+    var card=drawRoastCard(v1.truth||'',v1.analogy||'',v1.honest||'','original');
+    var shareText=(v1.truth||'')+(v1.analogy?'\n'+v1.analogy:'');
+    _showRoastCardInline('roast-card-original',card,shareText);
+    logEvent('SHARE_CARD',{mode:'roast',flavor:'original'});
   }); }
   /* 嗆聲 V2：分享（純文字） */
   var shareBtn=document.getElementById('btn-roast-share');
@@ -1976,7 +1955,89 @@ function roastV2ActionRowHtml(){
     +'</div>'
     +'<button type="button" id="btn-make-work-roast" style="width:100%;margin-top:8px;padding:9px;background:transparent;border:1px solid #e0d0c0;border-radius:8px;color:#bbb;font-size:0.85em;cursor:pointer;">把這句變成作品</button>';
 }
-function drawRoastCard(truthLine,analogyLine,subLine){
+function roastDualActionRowHtml(){
+  var shareBtn=navigator.share?'<button class="btn-copy" id="btn-roast-share">↗ 分享</button>':'';
+  return '<div class="action-row">'
+    +'<button class="btn-regen" id="btn-regen-result">🔁 再嗆一版</button>'
+    +shareBtn
+    +'</div>'
+    +'<button type="button" id="btn-make-work-roast" style="width:100%;margin-top:8px;padding:9px;background:transparent;border:1px solid #e0d0c0;border-radius:8px;color:#bbb;font-size:0.85em;cursor:pointer;">把這句變成作品</button>';
+}
+function _showRoastCardInline(anchorId,card,shareText){
+  var existing=document.getElementById(anchorId);
+  if(existing) existing.remove();
+  var pw=Math.min(360,window.innerWidth-48);
+  var previewEl=document.createElement('canvas');
+  previewEl.width=pw;previewEl.height=pw;
+  previewEl.getContext('2d').drawImage(card,0,0,pw,pw);
+  previewEl.style.cssText='display:block;margin:12px auto;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.15);max-width:100%;';
+  var container=document.createElement('div');
+  container.id=anchorId;container.style.marginTop='12px';
+  container.appendChild(previewEl);
+  var actRow=document.createElement('div');
+  actRow.className='action-row';actRow.style.justifyContent='center';
+  var dlBtn=document.createElement('button');
+  dlBtn.className='btn-copy';dlBtn.textContent='⬇ 下載';
+  dlBtn.addEventListener('click',function(){downloadCanvas(card,'laugh-mouse-roast.png');});
+  var cpBtn=document.createElement('button');
+  cpBtn.className='btn-copy';cpBtn.textContent='📋 複製文案';
+  cpBtn.addEventListener('click',function(){copyToClipboard(shareText);});
+  actRow.appendChild(dlBtn);actRow.appendChild(cpBtn);
+  if(navigator.share){
+    var shBtn=document.createElement('button');
+    shBtn.className='btn-copy';shBtn.textContent='↗ 分享';
+    shBtn.addEventListener('click',function(){shareCanvas(card,shareText);});
+    actRow.appendChild(shBtn);
+  }
+  container.appendChild(actRow);
+  els.results.appendChild(container);
+}
+function renderRoastDualBlock(v2r,v1data,input,targetLabel){
+  var m=v2r.roast.mouseOutput;
+  var tc='vent tag-rat';
+  var fTagStyle='display:inline-block;font-size:0.78em;font-weight:800;padding:0.22em 0.75em;border-radius:20px;margin-bottom:0.75em;';
+  var fActStyle='display:flex;gap:8px;margin-top:0.85em;';
+  var fBtnStyle='flex:1;padding:9px;border:1px solid #e0d0c0;border-radius:8px;background:#fff;font-size:0.88em;cursor:pointer;font-weight:600;';
+  var divider='<div style="margin:1.3em 0;border-top:1.5px dashed #e8dcc8;"></div>';
+  /* 加辣版 */
+  var spicyTag='<span style="'+fTagStyle+'background:#fef3c7;color:#b45309;">🌶 加辣版</span>';
+  var spicyBody=[
+    _v2Section('嗆聲版',[m.truth,m.analogy]),
+    _v2Section('給你好看版',[m.honest,m.boundary]),
+    _v2Section('下樓梯版',[m.selfOwn,m.comicExit])
+  ].join('');
+  var spicyActs='<div style="'+fActStyle+'">'
+    +'<button style="'+fBtnStyle+'" id="btn-copy-spicy">📋 複製</button>'
+    +'<button style="'+fBtnStyle+'" id="btn-card-spicy">🖼 圖卡</button>'
+    +'</div>';
+  /* 原味版 */
+  var origTag='<span style="'+fTagStyle+'background:#f0fdf4;color:#166534;">🫙 原味版</span>';
+  var origBody=[
+    _v2Section('嗆聲版',[v1data.truth,v1data.analogy]),
+    _v2Section('給你好看版',[v1data.honest,v1data.boundary]),
+    _v2Section('下樓梯版',[v1data.comicExit,v1data.nextAction])
+  ].join('');
+  var origActs='<div style="'+fActStyle+'">'
+    +'<button style="'+fBtnStyle+'" id="btn-copy-original">📋 複製</button>'
+    +'<button style="'+fBtnStyle+'" id="btn-card-original">🖼 圖卡</button>'
+    +'</div>';
+  var cardHtml='<div class="result-card '+tc+'">'
+    +'<div class="who">🐭 小天鼠開嗆</div>'
+    +'<div class="body-text">'
+    +spicyTag+spicyBody+spicyActs
+    +divider
+    +origTag+origBody+origActs
+    +'</div></div>';
+  var clarifyHtml='';
+  if(v2r.clarifyOpts&&v2r.clarifyOpts.length>0){
+    clarifyHtml=renderRoastClarifyBlock(v2r.clarifyOpts[0],input,targetLabel);
+  }
+  return cardHtml+clarifyHtml;
+}
+function drawRoastCard(truthLine,analogyLine,subLine,flavor){
+  var isOrig=flavor==='original';
+  var topColor=isOrig?'#166534':'#6d28d9';
+  var topLabel=isOrig?'🫙 原味版':'🌶 加辣版';
   var width=1080,height=1080;
   var canvas=document.createElement('canvas');
   canvas.width=width;canvas.height=height;
@@ -1986,13 +2047,13 @@ function drawRoastCard(truthLine,analogyLine,subLine){
   /* 背景：純淨米白，讓文字對比最大 */
   ctx.fillStyle='#FEFAF3';
   ctx.fillRect(0,0,width,height);
-  ctx.globalAlpha=0.04;ctx.fillStyle='#6d28d9';
+  ctx.globalAlpha=0.04;ctx.fillStyle=topColor;
   ctx.beginPath();ctx.arc(width*0.92,height*0.5,340*s,0,Math.PI*2);ctx.fill();
   ctx.globalAlpha=1;
 
   /* 頂欄：老鼠縮成 logo（44px），左對齊，右側加 #嗆聲 標籤 */
   var barH=72*s,pad=32*s;
-  ctx.fillStyle='#6d28d9';
+  ctx.fillStyle=topColor;
   ctx.fillRect(0,0,width,barH);
   var rat=IMG_CACHE['rat.webp'];
   var ratSz=44*s;
@@ -2004,7 +2065,7 @@ function drawRoastCard(truthLine,analogyLine,subLine){
   ctx.textAlign='right';
   ctx.fillStyle='rgba(255,255,255,0.55)';
   ctx.font='500 '+Math.round(24*s)+'px "Noto Sans TC",sans-serif';
-  ctx.fillText('#嗆聲',width-pad,barH*0.70);
+  ctx.fillText(topLabel,width-pad,barH*0.70);
 
   /* ── 主文字區：字是主角 ── */
   ctx.textAlign='center';
@@ -2597,6 +2658,7 @@ function bindRoastClarifyEvents(){
 function rerunRoastV2(input,targetLabel,guidedInput){
   var result=runRoastV2(input,targetLabel,guidedInput);
   if(!result) return;
+  var v1d=genRoast(input,targetLabel);
   var m=result.roast.mouseOutput;
   flow.context.event=input;
   flow.context.comicWorld=m.comicWorld||null;
@@ -2608,8 +2670,9 @@ function rerunRoastV2(input,targetLabel,guidedInput){
   flow.context.callback=m.callback||'';
   flow.context.targetCategory=result.classification.targetRole||targetLabel;
   flow.context.situationCategory=result.evidence.layerKey||'general';
-  var actionHtml=roastV2ActionRowHtml()+(flow.routeB?routeBNextHtml('roast'):'');
-  els.results.innerHTML=renderRoastV2Block(result,input,targetLabel)+actionHtml;
+  flow.context.v1={truth:v1d.truth||'',analogy:v1d.analogy||'',honest:v1d.honest||'',boundary:v1d.boundary||'',comicExit:v1d.comicExit||'',nextAction:v1d.nextAction||''};
+  var actionHtml=roastDualActionRowHtml()+(flow.routeB?routeBNextHtml('roast'):'');
+  els.results.innerHTML=renderRoastDualBlock(result,v1d,input,targetLabel)+actionHtml;
   bindResultActions('roast');
   saveDraft();
 }
