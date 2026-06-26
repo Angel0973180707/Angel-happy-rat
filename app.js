@@ -852,20 +852,34 @@ var TIGER_WISH=[
 ];
 
 var LOST_MAP={
-  '羨慕':{names:['豪宅檸檬精上身','玻璃牆外看人家','我也要那個版本'],brain:'你的大腦不是壞掉，\n是在說：我也想要那樣。',translate:'我也想要',need:['被看見','有成果','有選擇權'],action:'寫下：我最羨慕的是哪一個部分？',rat:'酸一下沒關係。\n不要醃到自己。',tiger:'你不是只想要那個結果，\n你是想要那種「到了」的感覺。'},
-  '嫉妒':{names:['暗黑版羨慕，有點燙','說不出口的我也要','卡住不想承認的那個'],brain:'你的大腦不是壞掉，\n是在說：原來這條路是真的。',translate:'我不敢承認我也想要',need:['被肯定','有選擇權','被看見'],action:'承認：我最嫉妒他的哪一件事？',rat:'嫉妒不是問題。\n是還沒說出「我要了」。',tiger:'你不是討厭他有，\n你是想證明你也可以。'},
-  '生氣':{names:['底線被踩警報啟動','文明體外殼快撐不住了','今日暴怒機率：滿'],brain:'你的大腦不是壞掉，\n是在說：有東西踩到我了。',translate:'有東西踩到我的底線',need:['被尊重','有界線'],action:'寫下：這次到底是哪一條線被踩了？',rat:'先去揍空氣。\n空氣比較耐打。',tiger:'你不是只想發洩，\n你是想讓對方知道你是認真的。'},
-  '委屈':{names:['做了沒人知道的那種','白費力氣等待版','努力了但沒被看見'],brain:'你的大腦不是壞掉，\n是在說：我做了，但沒人知道。',translate:'我其實很在意',need:['被理解','被重視'],action:'寫下：我希望對方知道的是什麼？',rat:'委屈不用忍。\n說出來比憋著值錢。',tiger:'你不是只想被謝謝，\n你是想讓人知道你在這裡。'},
-  '焦慮':{names:['大腦在自導自演災難片','腦內大雨今日機率100%','還沒發生就先輸了一局'],brain:'你的大腦不是壞掉，\n是在說：我需要確認沒問題。',translate:'我的大腦正在拼命保護我',need:['安全感','可預測性'],action:'寫下：我最擔心的最壞結果是什麼？',rat:'焦慮不是弱。\n是大腦今天太認真上班。',tiger:'你不是只想讓事情過去，\n你是想要一個「沒問題」的確認。'},
-  '煩躁':{names:['說不清哪件但全部都煩','什麼都有點不對的那種','今日煩度：不明來源'],brain:'你的大腦不是壞掉，\n是在說：太多事在同時拉我。',translate:'有太多事同時在干擾我',need:['空間','排列優先順序'],action:'選一件最近最煩的，先說清楚那一件。',rat:'煩躁先別分析。\n選一件最近的先說清楚。',tiger:'你不是只想清靜，\n你是想讓這堆事情先排個隊。'},
-  '拖延':{names:['等爆發力的人','計畫很多腳底沾黏','明天比較適合開始'],brain:'你的大腦不是壞掉，\n是在說：這件事在這裡太模糊。',translate:'我可能怕失敗，或任務太大',need:['安全感','小一點的第一步'],action:'把任務切到5分鐘以內的第一步。',rat:'拖延的人通常很會想。\n只是屁股還沒動。',tiger:'你不是只想動起來，\n你是想讓第一步不要太難看。'},
-  '空掉':{names:['電量3%但繼續亮著','連情緒都懶得有','什麼都提不起勁版'],brain:'你的大腦不是壞掉，\n是在說：我需要充電了。',translate:'我累了，電量真的很低',need:['休息','不被要求'],action:'今天只做一件讓自己舒服的小事就好。',rat:'空掉不是沒用。\n是手機需要插電而已。',tiger:'你不是只想休息，\n你是想要有人說「停下來也沒關係」。'},
-  '不甘心':{names:['這個結果我沒認','我不服但還沒想好怎樣','等我緩過來再說'],brain:'你的大腦不是壞掉，\n是在說：這不是我要的結局。',translate:'這個結果我還沒接受',need:['重來的機會','被理解'],action:'寫下：如果可以再來一次，你會怎麼做？',rat:'不甘心比放棄有力。\n你還沒決定要算了。',tiger:'你不是只想贏回來，\n你是想讓那個努力被看見。'},
-  '說不上來':{names:['情緒不明物體入侵中','就是怪怪的但不知道哪裡','還未命名的那個感覺'],brain:'你的大腦不是壞掉，\n是在說：有東西還沒說清楚。',translate:'我有一個還沒說出來的需求',need:['被理解','被看見'],action:'選一個最接近的感覺，試著說說看。',rat:'說不清楚沒關係。\n小天鼠先陪你坐一下。',tiger:'你不是只想想清楚，\n你是想要有人說「我懂你說的」。'},
-  '完美主義':{names:['高標準穿著焦慮的外套','怕被看見做不好的那種','草稿永遠不夠好版'],brain:'你的大腦不是壞掉，\n是在說：我不想被看見失敗。',translate:'我可能擔心做出來被否定',need:['安全感','被接納的失敗空間'],action:'先做一個「故意不完美」的版本。',rat:'完美主義是高標準\n穿著焦慮的外套。',tiger:'你不是只想做好，\n你是想做出一個連自己都信服的東西。'},
-  '想放棄':{names:['電量耗盡準備關機','撐著不知道為了什麼','再撐一下但不知道為什麼'],brain:'你的大腦不是壞掉，\n是在說：我需要充電了。',translate:'我累了，不一定是我不行',need:['休息','支持'],action:'先休息一天，再決定要不要放棄。',rat:'累的時候做的決定，\n通常不是真的。',tiger:'你不是只想停下來，\n你是想要有人說「你已經走很遠了」。'}
+  '羨慕':{names:['豪宅檸檬精上身','玻璃牆外看人家','我也要那個版本'],brain:['你的大腦不是壞掉，\n是在說：我也想要那樣。','你的大腦不是壞掉，\n是在說：我想要我的版本。','你的大腦不是壞掉，\n是在說：那條路是真的可以走的。'],rat:['酸一下沒關係。\n不要醃到自己。','羨慕說明你知道你要什麼。\n不說出來才浪費了。','看別人有，你說「好棒喔」。\n那個棒，其實也是你想要的。'],translate:'我也想要',need:['被看見','有成果','有選擇權'],action:'寫下：我最羨慕的是哪一個部分？',tiger:'你不是只想要那個結果，\n你是想要那種「到了」的感覺。'},
+  '嫉妒':{names:['暗黑版羨慕，有點燙','說不出口的我也要','卡住不想承認的那個'],brain:['你的大腦不是壞掉，\n是在說：原來這條路是真的。','你的大腦不是壞掉，\n是在說：我想要但還沒說出口。','你的大腦不是壞掉，\n是在說：那個可能性讓我坐立難安。'],rat:['嫉妒不是問題。\n是還沒說出「我要了」。','你討厭的不是他有。\n你討厭的是你還沒動。','那種卡住的感覺，\n是你自己也想走那條路。'],translate:'我不敢承認我也想要',need:['被肯定','有選擇權','被看見'],action:'承認：我最嫉妒他的哪一件事？',tiger:'你不是討厭他有，\n你是想證明你也可以。'},
+  '生氣':{names:['底線被踩警報啟動','文明體外殼快撐不住了','今日暴怒機率：滿'],brain:['你的大腦不是壞掉，\n是在說：有東西踩到我了。','你的大腦不是壞掉，\n是在說：這條線不能被這樣對待。','你的大腦不是壞掉，\n是在說：我值得被更好地對待。'],rat:['先去揍空氣。\n空氣比較耐打。','生氣是真的，靶心要選對。\n不要連自己也打進去。','你現在的狀態是認真的。\n不是在發瘋。'],translate:'有東西踩到我的底線',need:['被尊重','有界線'],action:'寫下：這次到底是哪一條線被踩了？',tiger:'你不是只想發洩，\n你是想讓對方知道你是認真的。'},
+  '委屈':{names:['做了沒人知道的那種','白費力氣等待版','努力了但沒被看見'],brain:['你的大腦不是壞掉，\n是在說：我做了，但沒人知道。','你的大腦不是壞掉，\n是在說：我在乎，所以才這麼難受。','你的大腦不是壞掉，\n是在說：我需要被看見。'],rat:['委屈不用忍。\n說出來比憋著值錢。','你做了那麼多，\n悶在心裡的那份，算是多給的。','委屈的人通常付出最多。\n只是沒有說出來。'],translate:'我其實很在意',need:['被理解','被重視'],action:'寫下：我希望對方知道的是什麼？',tiger:'你不是只想被謝謝，\n你是想讓人知道你在這裡。'},
+  '焦慮':{names:['大腦在自導自演災難片','腦內大雨今日機率100%','還沒發生就先輸了一局'],brain:['你的大腦不是壞掉，\n是在說：我需要確認沒問題。','你的大腦不是壞掉，\n是在說：它在努力保護你。','你的大腦不是壞掉，\n是在說：不確定的事讓我沒辦法休息。'],rat:['焦慮不是弱。\n是大腦今天太認真上班。','你的腦袋在替你排演壞結果。\n不是預言，是保護機制。','先不說「別想太多」。\n說說看你在擔心哪一件事。'],translate:'我的大腦正在拼命保護我',need:['安全感','可預測性'],action:'寫下：我最擔心的最壞結果是什麼？',tiger:'你不是只想讓事情過去，\n你是想要一個「沒問題」的確認。'},
+  '煩躁':{names:['說不清哪件但全部都煩','什麼都有點不對的那種','今日煩度：不明來源'],brain:['你的大腦不是壞掉，\n是在說：太多事在同時拉我。','你的大腦不是壞掉，\n是在說：我需要一個出口。','你的大腦不是壞掉，\n是在說：有什麼東西一直在騷擾我。'],rat:['煩躁先別分析。\n選一件最近的先說清楚。','全部都煩，說明你不是在無理取鬧。\n是真的有太多事了。','煩躁的人通常比你想的清醒。\n只是清單還沒列出來。'],translate:'有太多事同時在干擾我',need:['空間','排列優先順序'],action:'選一件最近最煩的，先說清楚那一件。',tiger:'你不是只想清靜，\n你是想讓這堆事情先排個隊。'},
+  '拖延':{names:['等爆發力的人','計畫很多腳底沾黏','明天比較適合開始'],brain:['你的大腦不是壞掉，\n是在說：這件事在這裡太模糊。','你的大腦不是壞掉，\n是在說：我需要一個更小的起點。','你的大腦不是壞掉，\n是在說：有一部分的我還沒準備好。'],rat:['拖延的人通常很會想。\n只是屁股還沒動。','動不了不是懶。\n是任務在等比較好進門的角度。','你今天對什麼都提不起勁，\n那是信號，不是你的個性。'],translate:'我可能怕失敗，或任務太大',need:['安全感','小一點的第一步'],action:'把任務切到5分鐘以內的第一步。',tiger:'你不是只想動起來，\n你是想讓第一步不要太難看。'},
+  '空掉':{names:['電量3%但繼續亮著','連情緒都懶得有','什麼都提不起勁版'],brain:['你的大腦不是壞掉，\n是在說：我需要充電了。','你的大腦不是壞掉，\n是在說：今天的電我用完了。','你的大腦不是壞掉，\n是在說：我需要先被允許休息。'],rat:['空掉不是沒用。\n是手機需要插電而已。','沒力氣有感覺，\n是因為你把力氣都用在別的地方了。','空掉不代表什麼都沒有。\n只是今天的容量滿了。'],translate:'我累了，電量真的很低',need:['休息','不被要求'],action:'今天只做一件讓自己舒服的小事就好。',tiger:'你不是只想休息，\n你是想要有人說「停下來也沒關係」。'},
+  '不甘心':{names:['這個結果我沒認','我不服但還沒想好怎樣','等我緩過來再說'],brain:['你的大腦不是壞掉，\n是在說：這不是我要的結局。','你的大腦不是壞掉，\n是在說：我還沒放棄這件事。','你的大腦不是壞掉，\n是在說：我值得一個不一樣的結果。'],rat:['不甘心比放棄有力。\n你還沒決定要算了。','卡住不等於輸。\n只是還沒想到下一步。','還在氣，說明你還在乎。\n在乎的事值得再想一次。'],translate:'這個結果我還沒接受',need:['重來的機會','被理解'],action:'寫下：如果可以再來一次，你會怎麼做？',tiger:'你不是只想贏回來，\n你是想讓那個努力被看見。'},
+  '說不上來':{names:['情緒不明物體入侵中','就是怪怪的但不知道哪裡','還未命名的那個感覺'],brain:['你的大腦不是壞掉，\n是在說：有東西還沒說清楚。','你的大腦不是壞掉，\n是在說：有一個需求我還沒找到名字。','你的大腦不是壞掉，\n是在說：這個感覺很真實，只是還沒報到。'],rat:['說不清楚沒關係。\n小天鼠先陪你坐一下。','說不上來，\n有時候是因為這件事比你想的大。','不知道叫什麼名字，\n不代表它不存在。'],translate:'我有一個還沒說出來的需求',need:['被理解','被看見'],action:'選一個最接近的感覺，試著說說看。',tiger:'你不是只想想清楚，\n你是想要有人說「我懂你說的」。'},
+  '完美主義':{names:['高標準穿著焦慮的外套','怕被看見做不好的那種','草稿永遠不夠好版'],brain:['你的大腦不是壞掉，\n是在說：我不想被看見失敗。','你的大腦不是壞掉，\n是在說：做得不夠好就等於不夠好的人。','你的大腦不是壞掉，\n是在說：我想做出連自己都信服的東西。'],rat:['完美主義是高標準\n穿著焦慮的外套。','你不是要做完美的東西。\n你是怕做出來被否定。','先做一版故意不完美的。\n那版永遠不會公開，放心。'],translate:'我可能擔心做出來被否定',need:['安全感','被接納的失敗空間'],action:'先做一個「故意不完美」的版本。',tiger:'你不是只想做好，\n你是想做出一個連自己都信服的東西。'},
+  '想放棄':{names:['電量耗盡準備關機','撐著不知道為了什麼','再撐一下但不知道為什麼'],brain:['你的大腦不是壞掉，\n是在說：我需要充電了。','你的大腦不是壞掉，\n是在說：累的時候需要的是停，不是決定。','你的大腦不是壞掉，\n是在說：我需要有人說「你已經走很遠了」。'],rat:['累的時候做的決定，\n通常不是真的。','想放棄是在說「我需要喘口氣」。\n不一定是在說「我要停」。','先休息一天，\n再決定要不要放棄。'],translate:'我累了，不一定是我不行',need:['休息','支持'],action:'先休息一天，再決定要不要放棄。',tiger:'你不是只想停下來，\n你是想要有人說「你已經走很遠了」。'}
 };
-var LOST_FALLBACK={names:['就是怪怪的但不知道哪裡','情緒不明物體','還未命名的感覺'],brain:'你的大腦不是壞掉，\n是在說：有東西還沒說清楚。',translate:'我有一個還沒說出來的需求',need:['被理解','被看見'],action:'先選一個最接近的感覺，試著說說看。',rat:'說不清楚沒關係。\n小天鼠先陪你坐一下。',tiger:'迷航不是退步。\n是還在找方向而已。'};
+var LOST_FALLBACK={names:['就是怪怪的但不知道哪裡','情緒不明物體','還未命名的感覺'],brain:['你的大腦不是壞掉，\n是在說：有東西還沒說清楚。'],translate:'我有一個還沒說出來的需求',need:['被理解','被看見'],action:'先選一個最接近的感覺，試著說說看。',rat:['說不清楚沒關係。\n小天鼠先陪你坐一下。'],tiger:'迷航不是退步。\n是還在找方向而已。'};
+var LOST_AI_SCENE_MAP={
+  '羨慕':'small cute mouse hugging a lemon, sitting by a city window at night, glowing buildings visible in the distance',
+  '嫉妒':'small cute mouse standing on tiptoe peeking over a wall at glowing light inside, conflicted expression',
+  '生氣':'small cute mouse holding a silence sign, something smoking beside them, arms crossed',
+  '委屈':'small cute mouse sitting in the rain, a broken umbrella flipped by wind nearby',
+  '焦慮':'small cute mouse hugging a stack of sticky notes, standing on a moving cloud',
+  '煩躁':'small cute mouse standing in the middle of a sticky note maze, question mark expression',
+  '拖延':'small cute mouse staring at a closed door with a note reading "later" stuck on it',
+  '空掉':'small cute mouse lying flat on a blank whiteboard, an uncapped pen beside them',
+  '不甘心':'small cute mouse with fist raised, standing in front of an unfinished finish line',
+  '說不上來':'small cute mouse holding a blank emotion instruction manual, puzzled expression',
+  '完美主義':'small cute mouse staring at a drawing covered with red correction marks',
+  '想放棄':'small cute mouse with a heavy backpack, looking back at the remaining path ahead'
+};
 
 var STRENGTH_MAP=[
   {kw:['健康','養生','料理','食療'],trait:'照顧力',power:'你會把照顧別人的細節做到位，這是很多人學不來的耐心。'},
@@ -1068,6 +1082,7 @@ var flow={routeB:false,stepIndex:0,input:'',context:emptyContext()};
 var roastV2State={lastWorld:null,pendingGuidedInput:null};
 var roastResult={activeEngine:'original',engines:{original:null,spicy:null}};
 var bigDreamResult={activeEngine:'small',engines:{small:null,crazy:null}};
+var lostResult={data:null};
 
 /* ── ENGINE_REGISTRY ────────────────────────────────────────────── */
 var ENGINE_REGISTRY={
@@ -1185,8 +1200,18 @@ function genBigDream(input,topic){
 }
 function genLost(input,emotionKey){
   var entry=LOST_MAP[emotionKey]||LOST_FALLBACK;
-  var name=entry.names[Math.floor(Math.random()*entry.names.length)];
-  return {role:'lost',tagClass:'tag-lost',need:entry.need,translation:entry.translate,emotionName:name,blocks:[['🏷️ 今日情緒名稱',name],['🧠 腦內翻譯',entry.brain],[RAT_ICON+' 小天鼠',entry.rat],[TIGER_ICON+' 唬爛虎',entry.tiger],['👣 今日小動作',entry.action]],quote:pickGoldenQuote('lost')};
+  var _pick=function(src,key){return Array.isArray(src)?pickVaried('lost_'+key+'_'+(emotionKey||'f'),src):src;};
+  var name=_pick(entry.names,'nm');
+  var brain=_pick(entry.brain,'br');
+  var rat=_pick(entry.rat,'rt');
+  var tiger=_pick(entry.tiger,'tg');
+  var action=_pick(entry.action,'ac');
+  var brainShort=brain.replace(/你的大腦不是壞掉，\n?是在說：/,'');
+  var ratFlat=rat.replace(/\n/g,'');
+  var cardCopy='【'+name+'】\n'+ratFlat+'\n'+brainShort;
+  var scene=LOST_AI_SCENE_MAP[emotionKey]||'small cute mouse standing quietly in an open space, thoughtful expression';
+  var aiPrompt='Cute cartoon mouse, '+scene+', warm hand-drawn style, humorous and healing, 9:16 portrait, text overlay center: "'+name+'" --ar 9:16';
+  return {role:'lost',tagClass:'tag-lost',need:entry.need,translation:entry.translate,emotionName:name,emotionKey:emotionKey||'',brain:brain,rat:rat,tiger:tiger,action:action,cardCopy:cardCopy,aiPrompt:aiPrompt,blocks:[['🏷️ 今日情緒名稱',name],['🧠 腦內翻譯',brain],[RAT_ICON+' 小天鼠',rat],[TIGER_ICON+' 唬爛虎',tiger],['👣 今日小動作',action]],quote:pickGoldenQuote('lost')};
 }
 function genStrength(input){
   // homework fast path：回收 comicWorld 資料
@@ -2022,11 +2047,12 @@ function renderOutputFor(id,input){
   } else if(id==='lost'){
     var emo=getChipValue('emotion-chip')||detectEmotion(input);
     data=genLost(input,emo);
+    lostResult.data=data;
     flow.context.emotion=emo;
     flow.context.need=data.need?data.need.join('、'):'';
     flow.context.translation=data.translation||'';
     flow.context.event=flow.context.event||input;
-    html=renderTextBlocks(data);
+    html=renderLostResult(data);
   } else if(id==='strength'){
     flow.context.action=input;
     var sInput=[flow.context.event,flow.context.wish,input].filter(Boolean).join(' ');
@@ -2095,6 +2121,15 @@ function bindResultActions(id){
       logEvent('COPY',{mode:id});
     });
   }
+  /* 腦內導航：圖卡文案 / Prompt 複製 */
+  Array.prototype.forEach.call(document.querySelectorAll('.btn-lost-copy'),function(btn){
+    btn.addEventListener('click',function(){
+      var type=btn.getAttribute('data-lost-copy');
+      if(!lostResult.data) return;
+      if(type==='card') copyToClipboard(lostResult.data.cardCopy,'圖卡文案已複製 ✓');
+      else if(type==='prompt') copyToClipboard(lostResult.data.aiPrompt,'Prompt 已複製 ✓');
+    });
+  });
   /* 再來一版 */
   var regenBtn=document.getElementById('btn-regen-result');
   if(regenBtn){ regenBtn.addEventListener('click',function(){
@@ -2377,8 +2412,31 @@ function bindResultActions(id){
 
 function renderTextBlocks(data){
   var tagClass=data.tagClass||'';
-  var html=data.blocks.map(function(b){return '<div class="result-card '+tagClass+'"><div class="who">'+b[0]+'</div><div class="body-text">'+escapeHtml(b[1])+'</div></div>';}).join('');
+  var html=data.blocks.map(function(b){return '<div class="result-card '+tagClass+'"><div class="who">'+b[0]+'</div><div class="body-text">'+escapeHtml(b[1]).replace(/\n/g,'<br>')+'</div></div>';}).join('');
   if(data.quote) html+='<div class="result-card '+tagClass+'"><div class="who">✨ 笑鼠金句</div><div class="quote">「'+escapeHtml(data.quote)+'」</div></div>';
+  return html;
+}
+function renderLostResult(data){
+  var tc=data.tagClass||'tag-lost';
+  var html=data.blocks.map(function(b){return '<div class="result-card '+tc+'"><div class="who">'+b[0]+'</div><div class="body-text">'+escapeHtml(b[1]).replace(/\n/g,'<br>')+'</div></div>';}).join('');
+  var cardLines=(data.cardCopy||'').split('\n');
+  html+='<div class="result-card '+tc+'">'
+    +'<div class="who">🖼️ 情緒圖卡文案</div>'
+    +'<div style="background:#f5f0ff;border-radius:12px;padding:1.2em 1em;margin-top:0.6em;text-align:center;">'
+    +'<div style="font-size:1.35em;font-weight:800;color:#6d28d9;letter-spacing:.03em;line-height:1.4;">'+escapeHtml(cardLines[0]||'')+'</div>'
+    +'<div style="font-size:0.9em;color:#555;margin-top:0.6em;line-height:1.6;">'+escapeHtml(cardLines[1]||'')+'</div>'
+    +'<div style="font-size:0.76em;color:#888;margin-top:0.3em;line-height:1.5;">'+escapeHtml(cardLines[2]||'')+'</div>'
+    +'</div>'
+    +'<button class="btn-copy btn-lost-copy" style="margin-top:0.6em;font-size:0.82em;" data-lost-copy="card">📋 複製圖卡文案</button>'
+    +'</div>';
+  if(data.aiPrompt){
+    html+='<div class="result-card '+tc+'">'
+      +'<div class="who">🤖 AI 圖卡 Prompt</div>'
+      +'<div class="body-text" style="font-size:0.82em;color:#666;background:#f5f5f5;border-radius:8px;padding:0.7em;line-height:1.6;word-break:break-word;">'+escapeHtml(data.aiPrompt)+'</div>'
+      +'<button class="btn-copy btn-lost-copy" style="margin-top:0.6em;font-size:0.82em;" data-lost-copy="prompt">📋 複製 Prompt</button>'
+      +'</div>';
+  }
+  if(data.quote) html+='<div class="result-card '+tc+'"><div class="who">✨ 笑鼠金句</div><div class="quote">「'+escapeHtml(data.quote)+'」</div></div>';
   return html;
 }
 function renderCinemaTicket(d){
