@@ -1885,9 +1885,10 @@ function bindResultActions(id){
   /* 嗆聲 V2：產生分享圖卡 */
   var shareCardBtn=document.getElementById('btn-roast-share-card');
   if(shareCardBtn){ shareCardBtn.addEventListener('click',function(){
-    var mainLine=flow.context.truth||'笑鼠人了！';
-    var subLine=flow.context.honest||flow.context.analogy||'';
-    var card=drawRoastCard(mainLine,subLine);
+    var truthLine=flow.context.truth||'笑鼠人了！';
+    var analogyLine=flow.context.analogy||'';
+    var subLine=flow.context.honest||'';
+    var card=drawRoastCard(truthLine,analogyLine,subLine);
     var pw=Math.min(360,window.innerWidth-48);
     var ph=pw;
     var previewEl=document.createElement('canvas');
@@ -1985,36 +1986,71 @@ function roastV2ActionRowHtml(){
     +'</div>'
     +'<button type="button" id="btn-make-work-roast" style="width:100%;margin-top:8px;padding:9px;background:transparent;border:1px solid #e0d0c0;border-radius:8px;color:#bbb;font-size:0.85em;cursor:pointer;">把這句變成作品</button>';
 }
-function drawRoastCard(mainLine,subLine){
+function drawRoastCard(truthLine,analogyLine,subLine){
   var width=1080,height=1080;
   var canvas=document.createElement('canvas');
   canvas.width=width;canvas.height=height;
   var ctx=canvas.getContext('2d');
   var s=width/1080;
-  var bg=ctx.createLinearGradient(0,0,width,height);
-  bg.addColorStop(0,'#FBF5E8');bg.addColorStop(1,'#F4EBD9');
-  ctx.fillStyle=bg;ctx.fillRect(0,0,width,height);
-  ctx.globalAlpha=0.07;ctx.fillStyle='#D89A3E';
-  ctx.beginPath();ctx.arc(0,0,300*s,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.arc(width,height,420*s,0,Math.PI*2);ctx.fill();
+
+  /* 背景 */
+  ctx.fillStyle='#FBF5E8';
+  ctx.fillRect(0,0,width,height);
+  ctx.globalAlpha=0.05;ctx.fillStyle='#7c3aed';
+  ctx.beginPath();ctx.arc(width*0.88,height*0.22,260*s,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(width*0.12,height*0.78,180*s,0,Math.PI*2);ctx.fill();
   ctx.globalAlpha=1;
-  var rat=IMG_CACHE['rat.webp'];
-  var charSize=190*s,charY=height*0.32;
-  if(rat) ctx.drawImage(rat,width/2-charSize/2,charY-charSize/2,charSize,charSize);
+
+  /* 品牌色頂欄（紫色 = 嗆聲版識別色） */
+  var barH=72*s;
+  ctx.fillStyle='#6d28d9';
+  ctx.fillRect(0,0,width,barH);
+  ctx.fillStyle='#ffffff';
   ctx.textAlign='center';
-  ctx.fillStyle='#3A2417';
-  ctx.font='900 '+Math.round(52*s)+'px "Noto Serif TC",serif';
-  wrapCanvasText(ctx,mainLine,width/2,charY+charSize*0.6+55*s,width*0.82,62*s);
-  ctx.fillStyle='rgba(58,36,23,0.65)';
-  ctx.font=Math.round(28*s)+'px "Noto Sans TC",sans-serif';
-  wrapCanvasText(ctx,'「'+subLine+'」',width/2,height*0.74,width*0.78,40*s);
+  ctx.font='800 '+Math.round(38*s)+'px "Noto Sans TC",sans-serif';
+  ctx.fillText('🐭  笑鼠人了！',width/2,barH*0.70);
+
+  /* 老鼠角色：大、醒目 */
+  var rat=IMG_CACHE['rat.webp'];
+  var charSize=290*s;
+  if(rat) ctx.drawImage(rat,width/2-charSize/2,barH+16*s,charSize,charSize);
+
+  /* 嗆聲版 line 1（大標，深色） */
+  var t1Y=barH+charSize+52*s;
+  ctx.fillStyle='#1a0500';
+  ctx.textAlign='center';
+  ctx.font='900 '+Math.round(68*s)+'px "Noto Serif TC",serif';
+  wrapCanvasText(ctx,truthLine,width/2,t1Y,width*0.84,78*s);
+
+  /* 嗆聲版 line 2（中標，品牌紫） */
+  var t2Y=t1Y+100*s;
+  ctx.fillStyle='#6d28d9';
+  ctx.font='700 '+Math.round(50*s)+'px "Noto Sans TC",sans-serif';
+  wrapCanvasText(ctx,analogyLine,width/2,t2Y,width*0.84,60*s);
+
+  /* 分隔線 */
+  var divY=height-170*s;
+  ctx.strokeStyle='rgba(215,154,62,0.4)';
+  ctx.lineWidth=2*s;
+  ctx.beginPath();ctx.moveTo(width*0.1,divY);ctx.lineTo(width*0.9,divY);ctx.stroke();
+
+  /* 給你好看版 line 1（小字，灰棕） */
+  if(subLine){
+    ctx.fillStyle='rgba(58,36,23,0.55)';
+    ctx.font=Math.round(30*s)+'px "Noto Sans TC",sans-serif';
+    wrapCanvasText(ctx,subLine,width/2,divY+42*s,width*0.78,40*s);
+  }
+
+  /* 底部品牌欄（橙） */
   ctx.fillStyle='#D89A3E';
-  ctx.fillRect(0,height-110*s,width,110*s);
-  ctx.fillStyle='#3A2417';
-  ctx.font='700 '+Math.round(30*s)+'px "Noto Sans TC",sans-serif';
-  ctx.fillText('人生的荒謬哈哈',width/2,height-66*s);
-  ctx.font='500 '+Math.round(24*s)+'px "Noto Sans TC",sans-serif';
-  ctx.fillText('笑鼠人了！',width/2,height-32*s);
+  ctx.fillRect(0,height-100*s,width,100*s);
+  ctx.fillStyle='#1a0500';
+  ctx.textAlign='center';
+  ctx.font='700 '+Math.round(32*s)+'px "Noto Sans TC",sans-serif';
+  ctx.fillText('人生的荒謬哈哈',width/2,height-60*s);
+  ctx.font='500 '+Math.round(22*s)+'px "Noto Sans TC",sans-serif';
+  ctx.fillText('笑鼠人了！',width/2,height-26*s);
+
   return canvas;
 }
 function routeBNextHtml(currentId){
