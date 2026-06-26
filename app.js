@@ -1549,14 +1549,19 @@ function preloadImages(cb){
 }
 
 function wrapCanvasText(ctx,text,x,y,maxWidth,lineHeight){
-  var chars=text.split(''), line='', lines=[];
-  for(var i=0;i<chars.length;i++){
-    var test=line+chars[i];
-    if(ctx.measureText(test).width>maxWidth&&line.length){lines.push(line);line=chars[i];}else line=test;
-  }
-  lines.push(line);
+  var lines=[];
+  text.split('\n').forEach(function(seg){
+    if(!seg){lines.push('');return;}
+    var chars=seg.split(''),line='';
+    for(var i=0;i<chars.length;i++){
+      var test=line+chars[i];
+      if(ctx.measureText(test).width>maxWidth&&line.length){lines.push(line);line=chars[i];}else line=test;
+    }
+    lines.push(line);
+  });
   var startY=y-(lines.length-1)*lineHeight/2;
   lines.forEach(function(l,i){ctx.fillText(l,x,startY+i*lineHeight);});
+  return startY+(lines.length-1)*lineHeight;
 }
 
 function drawSocialCard(type,width,height,context,selectedSong){
@@ -2779,10 +2784,10 @@ function drawRoastCard(truthLine,analogyLine,subLine,flavor){
   var t1Y=barH+200*s;
   ctx.fillStyle='#1a0500';
   ctx.font='900 '+Math.round(96*s)+'px "Noto Serif TC",serif';
-  wrapCanvasText(ctx,truthLine,width/2,t1Y,width*0.86,Math.round(110*s));
+  var t1Bot=wrapCanvasText(ctx,truthLine,width/2,t1Y,width*0.86,Math.round(110*s));
 
   /* 嗆聲版 line 2：大標，品牌紫，視覺第二焦點 */
-  var t2Y=t1Y+230*s;
+  var t2Y=Math.max(t1Bot+80*s,t1Y+230*s);
   ctx.fillStyle='#6d28d9';
   ctx.font='700 '+Math.round(64*s)+'px "Noto Sans TC",sans-serif';
   wrapCanvasText(ctx,analogyLine,width/2,t2Y,width*0.86,Math.round(76*s));
@@ -2868,9 +2873,9 @@ function drawBigDreamCard(mainLine,secondLine,flavor){
   var t1Y=barH+200*s;
   ctx.fillStyle='#1a0500';
   ctx.font='900 '+Math.round(88*s)+'px "Noto Serif TC",serif';
-  wrapCanvasText(ctx,mainLine,width/2,t1Y,width*0.86,Math.round(104*s));
+  var t1Bot=wrapCanvasText(ctx,mainLine,width/2,t1Y,width*0.86,Math.round(104*s));
 
-  var t2Y=t1Y+220*s;
+  var t2Y=Math.max(t1Bot+75*s,t1Y+220*s);
   ctx.fillStyle=topColor;
   ctx.font='700 '+Math.round(58*s)+'px "Noto Sans TC",sans-serif';
   wrapCanvasText(ctx,secondLine,width/2,t2Y,width*0.86,Math.round(70*s));
